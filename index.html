@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#2d6a4f" />
+  <title>Δίαυλος</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <button id="back-btn" hidden aria-label="Πίσω">←</button>
+    <h1 id="screen-title">Κάρτες Συζήτησης</h1>
+  </header>
+
+  <main id="content"></main>
+
+  <button id="add-custom-btn" aria-label="Προσθήκη κάρτας">+</button>
+
+  <nav class="tabbar">
+    <button class="tab active">
+      <span class="tab-icon">💬</span>
+      Κάρτες
+    </button>
+    <button class="tab" disabled title="Έρχεται σύντομα">
+      <span class="tab-icon">🗺️</span>
+      Χάρτης
+    </button>
+    <button class="tab" disabled title="Έρχεται σύντομα">
+      <span class="tab-icon">🎙️</span>
+      Μεταγραφή
+    </button>
+  </nav>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(console.error);
+      });
+    }
+  </script>
+</body>
+</html>
