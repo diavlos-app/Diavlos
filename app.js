@@ -1,6 +1,6 @@
 // Δίαυλος — app.js
 // Οθόνες: αρχική (5 κάρτες) → λίστες φράσεων, Έκτακτη Ανάγκη, Αγαπημένα.
-// Το DOM χτίζεται με createElement/textContent (όχι innerHTML).
+// Το DOM χτίζεται με createElement/textContent/SVG (όχι innerHTML).
 
 "use strict";
 
@@ -21,10 +21,10 @@ const TABS = {
 };
 
 const EMERGENCY_NUMBERS = [
-  { number: "100", label: "Αστυνομία",  icon: "👮" },
-  { number: "166", label: "ΕΚΑΒ",       icon: "🚑" },
-  { number: "199", label: "Πυροσβεστική", icon: "🚒" },
-  { number: "112", label: "Ευρωπαϊκός Αριθμός Έκτακτης Ανάγκης", icon: "🇪🇺" }
+  { number: "100", label: "Αστυνομία",     iconId: "icon-police" },
+  { number: "166", label: "ΕΚΑΒ",          iconId: "icon-ambulance" },
+  { number: "199", label: "Πυροσβεστική",  iconId: "icon-fire" },
+  { number: "112", label: "Ευρωπαϊκός Αριθμός Έκτακτης Ανάγκης", iconId: "icon-eu" }
 ];
 
 const EMERGENCY_FIELD_PHRASES = [
@@ -40,9 +40,9 @@ const EMERGENCY_FIELD_PHRASES = [
 
 let currentView = VIEWS.HOME;
 let currentTab = TABS.CARDS;
-let selectedTags = [];           // φίλτρα για τα Αγαπημένα (AND logic)
-let pendingDelete = null;        // { type: "custom" | "favorite", id, text }
-let editingFavoriteId = null;    // null = νέο, αλλιώς edit υπάρχοντος
+let selectedTags = [];
+let pendingDelete = null;
+let editingFavoriteId = null;
 let dialogOpener = null;
 let toastTimer = null;
 const els = {};
@@ -54,6 +54,23 @@ function h(tag, className, text) {
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
+}
+
+// Δημιουργεί SVG <svg><use href="#icon-name"/></svg>.
+// Χρησιμοποιεί createElementNS γιατί τα SVG στοιχεία ΔΕΝ είναι HTML.
+// Το xlink:href κρατείται για συμβατότητα με παλιά Safari.
+function svgIcon(name, className) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", className || "icon");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+
+  const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  use.setAttribute("href", "#" + name);
+  use.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "#" + name);
+
+  svg.appendChild(use);
+  return svg;
 }
 
 function clear(node) {
@@ -105,7 +122,6 @@ function goBack() {
 function switchTab(tab) {
   if (tab === currentTab) return;
   currentTab = tab;
-  // Το tab switching ΔΕΝ μπαίνει στο history — αλλάζει ενότητα, δεν πλοηγεί.
   history.replaceState({ view: tab === TABS.FAVORITES ? VIEWS.FAVORITES : VIEWS.HOME }, "");
   render(tab === TABS.FAVORITES ? VIEWS.FAVORITES : VIEWS.HOME, true);
 }
@@ -125,19 +141,15 @@ function updateTabBar() {
 function render(view, moveFocus) {
   currentView = view;
 
-  // Το πίσω κουμπί φαίνεται σε όποια οθόνη δεν είναι αρχική
   els.back.hidden = (view === VIEWS.HOME || view === VIEWS.FAVORITES);
 
-  // Το FAB φαίνεται μόνο στις «Κάρτες μου» ή στα Αγαπημένα
   const showFab = (view === VIEWS.CUSTOM || view === VIEWS.FAVORITES);
   els.fab.hidden = !showFab;
-  els.fab.textContent = view === VIEWS.FAVORITES ? "+" : "+";
   els.fab.setAttribute(
     "aria-label",
     view === VIEWS.FAVORITES ? "Νέο Αγαπημένο" : "Προσθήκη κάρτας"
   );
 
-  // Ενημέρωση tab bar
   if (view === VIEWS.FAVORITES) currentTab = TABS.FAVORITES;
   else if (view === VIEWS.HOME || CARD_CATEGORIES.some((c) => c.id === view)) currentTab = TABS.CARDS;
   updateTabBar();
@@ -159,15 +171,13 @@ function renderHome() {
   els.title.textContent = "Δίαυλος";
   const frag = document.createDocumentFragment();
 
-  // Έκτακτη Ανάγκη — full-width
   const emergency = CARD_CATEGORIES.find((c) => c.id === "emergency");
   frag.appendChild(emergencyCard(emergency));
 
-  // Υπόλοιπες 4 σε 2x2 grid
   const grid = h("div", "category-grid");
   CARD_CATEGORIES.forEach((cat) => {
     if (cat.id === "emergency") return;
-    grid.appendChild(categoryButton(cat.icon, cat.name, cat.id));
+    grid.appendChild(categoryButton(cat.iconId, cat.name, cat.id));
   });
   frag.appendChild(grid);
 
@@ -175,19 +185,18 @@ function renderHome() {
   els.content.appendChild(frag);
 }
 
-function emergencyCard(cat) {
+// Ειδικό κόκκινο πλακίδιο με «SOS» + «ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ» και δύο κουμπιά.
+function emergencyCard() {
   const wrap = h("div", "emergency-card");
 
-  const header = h("div", "emergency-header");
-  const icon = h("span", "emergency-icon", cat.icon);
-  icon.setAttribute("aria-hidden", "true");
-  const title = h("span", "emergency-title", cat.name);
-  header.append(icon, title);
-  wrap.appendChild(header);
+  const sos = h("div", "emergency-sos");
+  sos.appendChild(h("span", "sos-big", "SOS"));
+  sos.appendChild(h("span", "sos-small", "ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ"));
+  wrap.appendChild(sos);
 
   const actions = h("div", "emergency-actions");
 
-  const callBtn = h("button", "btn-emergency-call", "📞 ΚΛΗΣΗ");
+  const callBtn = h("button", "btn-emergency-call", "ΚΛΗΣΗ");
   callBtn.type = "button";
   callBtn.addEventListener("click", () => navigateTo(VIEWS.EMERGENCY_CALL));
 
@@ -201,12 +210,10 @@ function emergencyCard(cat) {
   return wrap;
 }
 
-function categoryButton(icon, name, view) {
+function categoryButton(iconId, name, view) {
   const btn = h("button", "category-card");
   btn.type = "button";
-  const iconEl = h("span", "category-icon", icon);
-  iconEl.setAttribute("aria-hidden", "true");
-  btn.append(iconEl, h("span", "category-name", name));
+  btn.append(svgIcon(iconId, "category-icon"), h("span", "category-name", name));
   btn.addEventListener("click", () => navigateTo(view));
   return btn;
 }
@@ -224,11 +231,11 @@ function renderEmergencyCall() {
   EMERGENCY_NUMBERS.forEach((item) => {
     const btn = h("button", "emergency-number-btn");
     btn.type = "button";
-    const iconEl = h("span", "emergency-number-icon", item.icon);
-    iconEl.setAttribute("aria-hidden", "true");
-    const numEl = h("span", "emergency-number-num", item.number);
-    const lblEl = h("span", "emergency-number-label", item.label);
-    btn.append(iconEl, numEl, lblEl);
+    btn.append(
+      svgIcon(item.iconId, "emergency-number-icon"),
+      h("span", "emergency-number-num", item.number),
+      h("span", "emergency-number-label", item.label)
+    );
     btn.addEventListener("click", () => {
       window.location.href = "tel:" + item.number;
     });
@@ -253,21 +260,17 @@ function renderEmergencyField() {
   header.appendChild(h("p", "field-statement", "Επικοινωνούμε γραπτώς."));
 
   const yesNo = h("div", "yesno-grid");
+
   const yesBtn = h("button", "yesno-btn yesno-yes");
   yesBtn.type = "button";
   yesBtn.setAttribute("aria-label", "Ναι");
-  const yesIcon = h("span", "yesno-icon", "✓");
-  yesIcon.setAttribute("aria-hidden", "true");
-  yesBtn.append(yesIcon, h("span", "yesno-label", "ΝΑΙ"));
+  yesBtn.append(svgIcon("icon-check", "yesno-icon"), h("span", "yesno-label", "ΝΑΙ"));
 
   const noBtn = h("button", "yesno-btn yesno-no");
   noBtn.type = "button";
   noBtn.setAttribute("aria-label", "Όχι");
-  const noIcon = h("span", "yesno-icon", "✗");
-  noIcon.setAttribute("aria-hidden", "true");
-  noBtn.append(noIcon, h("span", "yesno-label", "ΟΧΙ"));
+  noBtn.append(svgIcon("icon-close", "yesno-icon"), h("span", "yesno-label", "ΟΧΙ"));
 
-  // Προς το παρόν απλά full-screen display — θα το εμπλουτίσουμε αργότερα
   yesBtn.addEventListener("click", () => openFullscreen("ΝΑΙ"));
   noBtn.addEventListener("click", () => openFullscreen("ΟΧΙ"));
 
@@ -276,8 +279,7 @@ function renderEmergencyField() {
   const phraseTitle = h("h2", "field-phrases-title", "Γρήγορες φράσεις");
   const phraseList = h("div", "card-list");
   EMERGENCY_FIELD_PHRASES.forEach((text, i) => {
-    const card = phraseCard({ id: "ef-" + i, text: text }, false, false);
-    phraseList.appendChild(card);
+    phraseList.appendChild(phraseCard({ id: "ef-" + i, text: text }, false, false));
   });
 
   clear(els.content);
@@ -316,9 +318,7 @@ function renderCustom() {
   }
 
   const list = h("div", "card-list");
-  cards.forEach((card) => {
-    list.appendChild(phraseCard(card, true, true));
-  });
+  cards.forEach((card) => list.appendChild(phraseCard(card, true, true)));
 
   clear(els.content);
   els.content.appendChild(list);
@@ -330,7 +330,6 @@ function renderFavorites() {
   els.title.textContent = "Αγαπημένα";
 
   const favorites = sortFavoritesAlphabetically(getFavorites());
-
   const frag = document.createDocumentFragment();
   frag.appendChild(favoritesFilterBar());
 
@@ -347,9 +346,7 @@ function renderFavorites() {
   const filtered = filterFavoritesByTags(favorites, selectedTags);
 
   if (filtered.length === 0) {
-    frag.appendChild(
-      h("p", "empty-state", "Κανένα αποτέλεσμα με τα επιλεγμένα φίλτρα.")
-    );
+    frag.appendChild(h("p", "empty-state", "Κανένα αποτέλεσμα με τα επιλεγμένα φίλτρα."));
     clear(els.content);
     els.content.appendChild(frag);
     return;
@@ -379,9 +376,7 @@ function favoritesFilterBar() {
     const chip = h("button", "filter-chip" + (active ? " filter-chip-active" : ""));
     chip.type = "button";
     chip.setAttribute("aria-pressed", active ? "true" : "false");
-    const icon = h("span", "filter-chip-icon", tag.icon);
-    icon.setAttribute("aria-hidden", "true");
-    chip.append(icon, h("span", null, tag.label));
+    chip.append(svgIcon(tag.iconId, "filter-chip-icon"), h("span", null, tag.label));
     chip.addEventListener("click", () => {
       const i = selectedTags.indexOf(tag.id);
       if (i === -1) selectedTags.push(tag.id);
@@ -400,25 +395,26 @@ function favoriteRow(fav) {
   const main = h("button", "favorite-main");
   main.type = "button";
   main.addEventListener("click", () => openFullscreen(fav.value, fav.label));
-
-  const labelEl = h("span", "favorite-label", fav.label);
-  const valueEl = h("span", "favorite-value", fav.value);
-  main.append(labelEl, valueEl);
+  main.append(
+    h("span", "favorite-label", fav.label),
+    h("span", "favorite-value", fav.value)
+  );
 
   const actions = h("div", "favorite-actions");
 
-  const editBtn = h("button", "icon-btn", "✏️");
+  const editBtn = h("button", "icon-btn", "");
   editBtn.type = "button";
   editBtn.setAttribute("aria-label", "Επεξεργασία");
+  editBtn.appendChild(svgIcon("icon-edit", "icon-btn-icon"));
   editBtn.addEventListener("click", () => openFavoriteDialog(fav));
 
-  const delBtn = h("button", "icon-btn icon-btn-danger", "🗑️");
+  const delBtn = h("button", "icon-btn icon-btn-danger", "");
   delBtn.type = "button";
   delBtn.setAttribute("aria-label", "Διαγραφή");
+  delBtn.appendChild(svgIcon("icon-trash", "icon-btn-icon"));
   delBtn.addEventListener("click", () => askDelete("favorite", fav.id, fav.label, delBtn));
 
   actions.append(editBtn, delBtn);
-
   row.append(main, actions);
   return row;
 }
@@ -431,30 +427,32 @@ function phraseCard(card, isCustom, showFavorite) {
 
   const actions = h("div", "phrase-actions");
 
-  const speakBtn = h("button", "speak-btn", "🔊");
+  const speakBtn = h("button", "speak-btn");
   speakBtn.type = "button";
   speakBtn.setAttribute("aria-label", "Ανάγνωση φωνητικά");
-  speakBtn.addEventListener("click", () => speak(card.text));
+  speakBtn.appendChild(svgIcon("icon-speak", "btn-icon"));
   actions.appendChild(speakBtn);
 
-  const showBtn = h("button", "show-btn", "👁️");
+  const showBtn = h("button", "show-btn");
   showBtn.type = "button";
   showBtn.setAttribute("aria-label", "Εμφάνιση σε μεγάλα γράμματα");
-  showBtn.addEventListener("click", () => openFullscreen(card.text));
+  showBtn.appendChild(svgIcon("icon-show", "btn-icon"));
   actions.appendChild(showBtn);
 
   if (showFavorite) {
-    const favBtn = h("button", "fav-btn", "⭐");
+    const favBtn = h("button", "fav-btn");
     favBtn.type = "button";
     favBtn.setAttribute("aria-label", "Αποθήκευση στα Αγαπημένα");
+    favBtn.appendChild(svgIcon("icon-star", "btn-icon"));
     favBtn.addEventListener("click", () => quickSaveFavorite(card.text, favBtn));
     actions.appendChild(favBtn);
   }
 
   if (isCustom) {
-    const delBtn = h("button", "delete-btn", "🗑️");
+    const delBtn = h("button", "delete-btn");
     delBtn.type = "button";
     delBtn.setAttribute("aria-label", "Διαγραφή κάρτας");
+    delBtn.appendChild(svgIcon("icon-trash", "btn-icon"));
     delBtn.addEventListener("click", () => askDelete("custom", card.id, card.text, delBtn));
     actions.appendChild(delBtn);
   }
@@ -546,7 +544,6 @@ function openFavoriteDialog(favorite) {
   els.favValue.value = favorite ? favorite.value : "";
   els.favError.hidden = true;
 
-  // Reset tag buttons
   const activeTags = favorite ? favorite.tags : [];
   els.favTags.querySelectorAll("button").forEach((btn) => {
     const tagId = btn.dataset.tagId;
@@ -591,14 +588,13 @@ function onFavSubmit(event) {
     return;
   }
 
+  const wasEditing = editingFavoriteId !== null;
   closeDialog(els.favDialog);
   editingFavoriteId = null;
   render(VIEWS.FAVORITES, false);
-  showToast(editingFavoriteId ? "Ενημερώθηκε." : "Αποθηκεύτηκε στα Αγαπημένα.");
+  showToast(wasEditing ? "Ενημερώθηκε." : "Αποθηκεύτηκε στα Αγαπημένα.");
 }
 
-// Γρήγορη αποθήκευση φράσης από κατηγορία: ανοίγει το dialog με
-// προσυμπληρωμένο το value και ζητά μόνο label + tags.
 function quickSaveFavorite(text, opener) {
   editingFavoriteId = null;
   els.favDialogTitle.textContent = "Αποθήκευση στα Αγαπημένα";
@@ -642,7 +638,6 @@ function onConfirmDelete() {
 // ─── Εκκίνηση ─────────────────────────────────────────────────────
 
 function init() {
-  // Cache DOM
   els.content = document.getElementById("content");
   els.title = document.getElementById("screen-title");
   els.back = document.getElementById("back-btn");
@@ -679,14 +674,11 @@ function init() {
     btn.type = "button";
     btn.dataset.tagId = tag.id;
     btn.setAttribute("aria-pressed", "false");
-    const icon = h("span", "tag-btn-icon", tag.icon);
-    icon.setAttribute("aria-hidden", "true");
-    btn.append(icon, h("span", null, tag.label));
+    btn.append(svgIcon(tag.iconId, "tag-btn-icon"), h("span", null, tag.label));
     btn.addEventListener("click", onFavTagToggle);
     els.favTags.appendChild(btn);
   });
 
-  // Events
   els.back.addEventListener("click", goBack);
   els.fab.addEventListener("click", () => {
     if (currentView === VIEWS.FAVORITES) openFavoriteDialog(null);
