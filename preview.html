@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Δίαυλος — Preview Εικονιδίων</title>
+<style>
+  :root {
+    --bg: #f7f7fa; --surface: #fff; --text: #1a1a1a;
+    --muted: #6b6b6b; --border: #e0e0e5; --accent: #2d6a4f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14161a; --surface:#1e2126; --text:#f0f0f0; --muted:#a0a0a8; --border:#33363c; --accent:#52b788; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:20px; font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
+         background:var(--bg); color:var(--text); }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  h2 { font-size:1rem; margin:32px 0 12px; color:var(--muted);
+       text-transform:uppercase; letter-spacing:0.05em; }
+  p.intro { color:var(--muted); margin:0 0 20px; font-size:0.9rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:12px; }
+  .cell { background:var(--surface); border:1px solid var(--border);
+          border-radius:12px; padding:14px 8px; text-align:center; }
+  .cell-name { font-size:0.7rem; color:var(--muted); margin-top:8px;
+               word-break:break-all; line-height:1.2; }
+  .sizes { display:flex; align-items:center; justify-content:center;
+           gap:10px; margin-bottom:6px; }
+  .sizes svg { color:var(--accent); }
+  .sizes svg.s48 { width:48px; height:48px; }
+  .sizes svg.s24 { width:24px; height:24px; }
+  .sizes svg.s16 { width:16px; height:16px; }
+  .alt { background:var(--surface); border:1px solid var(--border);
+         border-radius:12px; padding:16px; margin-bottom:12px; }
+  .alt-name { font-size:0.75rem; color:var(--muted); margin-bottom:8px; }
+  .alt-row { display:flex; align-items:center; gap:20px; }
+  .alt-row svg { color:var(--accent); }
+  .demo-btn { display:inline-flex; align-items:center; gap:8px;
+              padding:12px 18px; border:none; border-radius:10px;
+              background:var(--accent); color:#fff; font-size:1rem;
+              font-weight:600; cursor:pointer; }
+  .demo-btn svg { width:20px; height:20px; }
+</style>
+</head>
+<body>
+
+<h1>Δίαυλος — Preview Εικονιδίων</h1>
+<p class="intro">Όλα τα εικονίδια σε 3 μεγέθη (48px / 24px / 16px). Τα 6 με κόκκινο τίτλο είναι τα διορθωμένα.</p>
+
+<!-- ═══ SVG SPRITE ═══ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+
+  <symbol id="icon-cards" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v10H8l-4 4V5z"/>
+  </symbol>
+
+  <symbol id="icon-favorites" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3z"/>
+  </symbol>
+
+  <symbol id="icon-map" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 18 3 20V6l6-2 6 2 6-2v14l-6 2-6-2z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 10a2 2 0 1 0-4 0c0 2 2 4 2 4s2-2 2-4z"/>
+  </symbol>
+
+  <symbol id="icon-map-fixed" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3 4 6v12l8 3 8-3V6l-8-3z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 21V3"/>
+  </symbol>
+
+  <symbol id="icon-transcribe" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3M9 21h6"/>
+  </symbol>
+
+  <symbol id="icon-emergency" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 11h8l-1-5H9l-1 5zm-2 0h12v6H6z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 2v2M4 6l1.5 1.5M20 6l-1.5 1.5M2 12h2M20 12h2"/>
+  </symbol>
+
+  <symbol id="icon-services" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 8h14M4 8l8-5 8 5M6 8v10M10 8v10M14 8v10M18 8v10"/>
+  </symbol>
+
+  <symbol id="icon-cafe" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 10h10v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 11h2a2 2 0 0 1 0 4h-2M8 3c0 2 1 2 1 4M12 3c0 2 1 2 1 4"/>
+  </symbol>
+
+  <symbol id="icon-pharmacy-old" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z"/>
+  </symbol>
+
+  <symbol id="icon-pharmacy" viewBox="0 0 24 24">
+    <rect x="3" y="9" width="18" height="6" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 9v6"/>
+  </symbol>
+
+  <symbol id="icon-shopping-old" viewBox="0 0 24 24">
+    <circle cx="9" cy="19" r="1" fill="currentColor"/>
+    <circle cx="17" cy="19" r="1" fill="currentColor"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 5h2l2.5 9h9.5l2-6H7.5M8 14h10"/>
+  </symbol>
+
+  <symbol id="icon-shopping" viewBox="0 0 24 24">
+    <circle cx="9" cy="19" r="1" fill="currentColor"/>
+    <circle cx="17" cy="19" r="1" fill="currentColor"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 5h2l2.5 9h9.5l2-6H7.5"/>
+  </symbol>
+
+  <symbol id="icon-speak" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 10h3l4-3v10l-4-3H5z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M16 9a4 4 0 0 1 0 6M18.5 7a7 7 0 0 1 0 10"/>
+  </symbol>
+
+  <symbol id="icon-show" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/>
+    <circle cx="12" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+
+  <symbol id="icon-star" viewBox="0 0 24 24">
+    <path fill="currentColor" d="m12 2.8 2.7 5.6 6.2.9-4.5 4.3 1.1 6.2L12 16.9 6.5 19.8l1.1-6.2L3.1 9.3l6.2-.9z"/>
+  </symbol>
+
+  <symbol id="icon-trash" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 3h6l1 2H8l1-2zm1 4v12m4-12v12m4-12-1 13H8L7 7"/>
+  </symbol>
+
+  <symbol id="icon-police-old" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3 19 6v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 7v6M9 10h6"/>
+  </symbol>
+
+  <symbol id="icon-police" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3 19 6v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m12 8 1.2 2.4 2.8.4-2 2 .5 2.7L12 14.2 9.5 15.5l.5-2.7-2-2 2.8-.4z"/>
+  </symbol>
+
+  <symbol id="icon-ambulance" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 8h11v8H3zM14 10h4l3 3v3h-7z"/>
+    <circle cx="7" cy="18" r="1.5" fill="currentColor"/>
+    <circle cx="17" cy="18" r="1.5" fill="currentColor"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8.5 10v4M6.5 12h4"/>
+  </symbol>
+
+  <symbol id="icon-fire" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3s3 3 3 6a3 3 0 0 1-6 0c0 5-4 5-4 9a7 7 0 0 0 14 0c0-5-3-7-7-15z"/>
+  </symbol>
+
+  <symbol id="icon-eu" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+    <text x="12" y="16" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="currentColor" text-anchor="middle">112</text>
+  </symbol>
+
+  <symbol id="icon-check" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+  </symbol>
+
+  <symbol id="icon-close" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/>
+  </symbol>
+
+  <symbol id="icon-tag-personal" viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 20a7 7 0 0 1 14 0"/>
+  </symbol>
+
+  <symbol id="icon-tag-contact" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 4h3l2 5-2 1.5a14 14 0 0 0 5.5 5.5L15 14l5 2v3a2 2 0 0 1-2 2C10 21 3 14 3 6a2 2 0 0 1 2-2z"/>
+  </symbol>
+
+  <symbol id="icon-tag-health" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 9v4M10 11h4"/>
+  </symbol>
+
+  <symbol id="icon-tag-preferences" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m12 7 1.4 2.9 3.1.5-2.2 2.2.5 3.2L12 14.4 9.2 15.8l.5-3.2-2.2-2.2 3.1-.5z"/>
+  </symbol>
+
+  <symbol id="icon-tag-other" viewBox="0 0 24 24">
+    <circle cx="6" cy="12" r="1.5" fill="currentColor"/>
+    <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+    <circle cx="18" cy="12" r="1.5" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="icon-back" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M12 5l-7 7 7 7"/>
+  </symbol>
+
+  <symbol id="icon-plus" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+  </symbol>
+
+  <symbol id="icon-edit" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10-10-4-4L4 16v4zM13 5l4 4"/>
+  </symbol>
+
+  <symbol id="icon-filter" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/>
+  </symbol>
+
+  <symbol id="icon-info" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 11v5M12 8h.01"/>
+  </symbol>
+
+</svg>
+
+<!-- ═══ ΠΛΟΗΓΗΣΗ ═══ -->
+<h2>Κάτω πλοήγηση</h2>
+<div class="grid" id="grid-nav"></div>
+
+<!-- ═══ ΚΑΤΗΓΟΡΙΕΣ ═══ -->
+<h2>Κατηγορίες αρχικής</h2>
+<div class="grid" id="grid-cat"></div>
+
+<!-- ═══ ΕΝΕΡΓΕΙΕΣ ═══ -->
+<h2>Ενέργειες σε κάρτα φράσης</h2>
+<div class="grid" id="grid-act"></div>
+
+<!-- ═══ ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ ═══ -->
+<h2>Έκτακτη Ανάγκη — νούμερα</h2>
+<div class="grid" id="grid-emg"></div>
+
+<!-- ═══ ΝΑΙ/ΟΧΙ + TAGS ═══ -->
+<h2>ΝΑΙ/ΟΧΙ &amp; Tags</h2>
+<div class="grid" id="grid-tags"></div>
+
+<!-- ═══ UI CHROME ═══ -->
+<h2>UI στοιχεία</h2>
+<div class="grid" id="grid-ui"></div>
+
+<!-- ═══ ΔΙΟΡΘΩΜΕΝΑ (σύγκριση) ═══ -->
+<h2>Διορθώσεις — σύγκριση</h2>
+
+<div class="alt">
+  <div class="alt-name">Φαρμακείο — ΑΡΙΣΤΕΡΑ παλιό (σταυρός) / ΔΕΞΙΑ νέο (χάπι)</div>
+  <div class="alt-row">
+    <svg class="s48" style="width:48px;height:48px;color:var(--accent)"><use href="#icon-pharmacy-old"/></svg>
+    <svg style="width:48px;height:48px;color:var(--accent)"><use href="#icon-pharmacy"/></svg>
+  </div>
+</div>
+
+<div class="alt">
+  <div class="alt-name">Ψώνια — ΑΡΙΣΤΕΡΑ παλιό (με περιττή γραμμή) / ΔΕΞΙΑ νέο (καθαρό)</div>
+  <div class="alt-row">
+    <svg style="width:48px;height:48px;color:var(--accent)"><use href="#icon-shopping-old"/></svg>
+    <svg style="width:48px;height:48px;color:var(--accent)"><use href="#icon-shopping"/></svg>
+  </div>
+</div>
+
+<div class="alt">
+  <div class="alt-name">Αστυνομία — ΑΡΙΣΤΕΡΑ παλιό (σταυρός) / ΔΕΞΙΑ νέο (αστέρι)</div>
+  <div class="alt-row">
+    <svg style="width:48px;height:48px;color:var(--accent)"><use href="#icon-police-old"/></svg>
+    <svg style="width:48px;height:48px;color:var(--accent)"><use href="#icon-police"/></svg>
+  </div>
+</div>
+
+<div class="alt">
+  <div class="alt-name">Χάρτης — ΑΡΙΣΤΕΡΑ παλιός (διπλό) / ΔΕΞΙΑ νέος (απλός)</div>
+  <div class="alt-row">
+    <svg style="width:48px;height:48px;color:var(--accent)"><use href="#icon-map"/></svg>
+    <svg style="width:48px;height:48px;color:var(--accent)"><use href="#icon-map-fixed"/></svg>
+  </div>
+</div>
+
+<div class="alt">
+  <div class="alt-name">Φίλτρο — τώρα χωνί</div>
+  <div class="alt-row">
+    <svg style="width:48px;height:48px;color:var(--accent)"><use href="#icon-filter"/></svg>
+  </div>
+</div>
+
+<div class="alt">
+  <div class="alt-name">EU 112 — απλοποιημένο</div>
+  <div class="alt-row">
+    <svg style="width:48px;height:48px;color:var(--accent)"><use href="#icon-eu"/></svg>
+  </div>
+</div>
+
+<!-- ═══ ΠΑΡΑΔΕΙΓΜΑ ΣΕ ΚΟΥΜΠΙ ═══ -->
+<h2>Παράδειγμα σε κουμπί</h2>
+<button class="demo-btn">
+  <svg><use href="#icon-speak"/></svg>
+  Ανάγνωση
+</button>
+
+<script>
+  function renderGrid(targetId, items) {
+    const container = document.getElementById(targetId);
+    items.forEach(function(item) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.innerHTML =
+        '<div class="sizes">' +
+          '<svg class="s48"><use href="#' + item.id + '"/></svg>' +
+          '<svg class="s24"><use href="#' + item.id + '"/></svg>' +
+          '<svg class="s16"><use href="#' + item.id + '"/></svg>' +
+        '</div>' +
+        '<div class="cell-name">' + item.name + '</div>';
+      container.appendChild(cell);
+    });
+  }
+
+  renderGrid("grid-nav", [
+    { id: "icon-cards", name: "cards" },
+    { id: "icon-favorites", name: "favorites" },
+    { id: "icon-map", name: "map" },
+    { id: "icon-transcribe", name: "transcribe" }
+  ]);
+
+  renderGrid("grid-cat", [
+    { id: "icon-emergency", name: "emergency" },
+    { id: "icon-services", name: "services" },
+    { id: "icon-cafe", name: "cafe" },
+    { id: "icon-pharmacy", name: "pharmacy" },
+    { id: "icon-shopping", name: "shopping" }
+  ]);
+
+  renderGrid("grid-act", [
+    { id: "icon-speak", name: "speak" },
+    { id: "icon-show", name: "show" },
+    { id: "icon-star", name: "star" },
+    { id: "icon-trash", name: "trash" }
+  ]);
+
+  renderGrid("grid-emg", [
+    { id: "icon-police", name: "police" },
+    { id: "icon-ambulance", name: "ambulance" },
+    { id: "icon-fire", name: "fire" },
+    { id: "icon-eu", name: "eu/112" }
+  ]);
+
+  renderGrid("grid-tags", [
+    { id: "icon-check", name: "check" },
+    { id: "icon-close", name: "close" },
+    { id: "icon-tag-personal", name: "tag-personal" },
+    { id: "icon-tag-contact", name: "tag-contact" },
+    { id: "icon-tag-health", name: "tag-health" },
+    { id: "icon-tag-preferences", name: "tag-preferences" },
+    { id: "icon-tag-other", name: "tag-other" }
+  ]);
+
+  renderGrid("grid-ui", [
+    { id: "icon-back", name: "back" },
+    { id: "icon-plus", name: "plus" },
+    { id: "icon-edit", name: "edit" },
+    { id: "icon-filter", name: "filter" },
+    { id: "icon-info", name: "info" }
+  ]);
+</script>
+
+</body>
+</html>
