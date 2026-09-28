@@ -1,77 +1,137 @@
 // Δίαυλος — data.js
-// Περιεχόμενο καρτών + αποθήκευση προσωπικών καρτών (μόνο τοπικά, στη συσκευή).
+// Περιεχόμενο καρτών + αποθήκευση προσωπικών δεδομένων (μόνο τοπικά, στη συσκευή).
 //
 // ΣΚΟΠΙΜΑ μόνο γενικές, σταθερές φράσεις επικοινωνίας — όχι συγκεκριμένα
 // δικαιολογητικά ή κόστη που αλλάζουν συχνά και μπορεί να είναι λάθος.
 // Το περιεχόμενο των καρτών είναι ενδεικτικό και θα επεκταθεί.
 
+"use strict";
+
+// ─── Κατηγορίες αρχικής οθόνης ────────────────────────────────────
+// type: "emergency" → ειδική οθόνη (Κλήση + ΝΑΙ/ΟΧΙ)
+// type: "phrases"   → λίστα φράσεων
+
 const CARD_CATEGORIES = [
   {
-    id: "kep",
-    name: "ΚΕΠ",
+    id: "emergency",
+    name: "Έκτακτη Ανάγκη",
+    icon: "🚨",
+    type: "emergency"
+  },
+  {
+    id: "services",
+    name: "Υπηρεσίες",
     icon: "🏛️",
+    type: "phrases",
     cards: [
-      { id: "kep-1", text: "Θέλω να υποβάλω αίτηση." },
-      { id: "kep-2", text: "Θέλω πιστοποιητικό. Ποια δικαιολογητικά χρειάζομαι;" },
-      { id: "kep-3", text: "Πόσο θα κοστίσει αυτή η διαδικασία;" },
-      { id: "kep-4", text: "Πόσες μέρες θα χρειαστούν;" },
-      { id: "kep-5", text: "Μπορείτε να μου το γράψετε, παρακαλώ;" },
-      { id: "kep-6", text: "Μπορείτε να μιλήσετε πιο αργά ή να το επαναλάβετε;" },
-      { id: "kep-7", text: "Δεν κατάλαβα. Μπορείτε να το εξηγήσετε διαφορετικά;" },
-      { id: "kep-8", text: "Ευχαριστώ, κατάλαβα." },
-      { id: "kep-9", text: "Είμαι κωφός/κωφή. Θα επικοινωνήσουμε γραπτώς, σας παρακαλώ." }
+      { id: "srv-1", text: "Θέλω να υποβάλω αίτηση." },
+      { id: "srv-2", text: "Θέλω πιστοποιητικό. Ποια δικαιολογητικά χρειάζομαι;" },
+      { id: "srv-3", text: "Πόσο θα κοστίσει αυτή η διαδικασία;" },
+      { id: "srv-4", text: "Πόσες μέρες θα χρειαστούν;" },
+      { id: "srv-5", text: "Μπορείτε να μου το γράψετε, παρακαλώ;" },
+      { id: "srv-6", text: "Δεν κατάλαβα. Μπορείτε να το εξηγήσετε διαφορετικά;" },
+      { id: "srv-7", text: "Έχω ραντεβού. Πού πρέπει να πάω;" },
+      { id: "srv-8", text: "Ευχαριστώ, κατάλαβα." }
     ]
   },
   {
-    id: "general",
-    name: "Γενικά",
-    icon: "💬",
+    id: "cafe",
+    name: "Καφέ/Φαγητό",
+    icon: "☕",
+    type: "phrases",
     cards: [
-      { id: "gen-1", text: "Γεια σας, είμαι κωφός/κωφή. Μπορούμε να επικοινωνήσουμε γραπτώς;" },
-      { id: "gen-2", text: "Παρακαλώ, γράψτε μου ό,τι θέλετε να πείτε." },
-      { id: "gen-3", text: "Ευχαριστώ πολύ για την υπομονή σας." },
-      { id: "gen-4", text: "Μια στιγμή, παρακαλώ, να το διαβάσω." },
-      { id: "gen-5", text: "Συγγνώμη, μπορείτε να το επαναλάβετε γραπτώς;" }
+      { id: "caf-1", text: "Τι θα μου προτείνατε;" },
+      { id: "caf-2", text: "Θα πάρω αυτό, παρακαλώ." },
+      { id: "caf-3", text: "Έχετε κάτι χωρίς γλουτένη;" },
+      { id: "caf-4", text: "Έχετε κάτι χωρίς λακτόζη;" },
+      { id: "caf-5", text: "Τον λογαριασμό, παρακαλώ." },
+      { id: "caf-6", text: "Μπορώ να πληρώσω με κάρτα;" }
+    ]
+  },
+  {
+    id: "pharmacy",
+    name: "Φαρμακείο",
+    icon: "💊",
+    type: "phrases",
+    cards: [
+      { id: "phm-1", text: "Έχω αυτή τη συνταγή. Μπορείτε να με εξυπηρετήσετε;" },
+      { id: "phm-2", text: "Χρειάζομαι κάτι για πονοκέφαλο." },
+      { id: "phm-3", text: "Χρειάζομαι κάτι για βήχα." },
+      { id: "phm-4", text: "Υπάρχει γενόσημο;" },
+      { id: "phm-5", text: "Πόσες φορές την ημέρα να το πάρω;" },
+      { id: "phm-6", text: "Έχει παρενέργειες;" },
+      { id: "phm-7", text: "Τα παίρνω με φαγητό ή χωρίς;" }
+    ]
+  },
+  {
+    id: "shopping",
+    name: "Ψώνια",
+    icon: "🛒",
+    type: "phrases",
+    cards: [
+      { id: "shp-1", text: "Πόσο κάνει αυτό;" },
+      { id: "shp-2", text: "Ψάχνω κάτι συγκεκριμένο. Μπορείτε να με βοηθήσετε;" },
+      { id: "shp-3", text: "Έχετε αυτό σε άλλο μέγεθος;" },
+      { id: "shp-4", text: "Έχετε αυτό σε άλλο χρώμα;" },
+      { id: "shp-5", text: "Μπορώ να το αλλάξω αν δεν κάνει;" },
+      { id: "shp-6", text: "Δέχεστε κάρτα;" },
+      { id: "shp-7", text: "Θέλω απόδειξη, παρακαλώ." }
     ]
   }
 ];
 
-// ─── Προσωπικές κάρτες ────────────────────────────────────────────
-// Αποθηκεύονται ΜΟΝΟ στο localStorage της συσκευής. Δεν στέλνονται πουθενά
-// και δεν συνδέονται με λογαριασμό. Αν ο χρήστης καθαρίσει τα δεδομένα του
+// ─── Tags για τα Αγαπημένα ────────────────────────────────────────
+
+const TAGS = [
+  { id: "personal",    label: "Προσωπικά",   icon: "👤" },
+  { id: "contact",     label: "Επικοινωνία", icon: "📞" },
+  { id: "health",      label: "Υγεία",       icon: "🏥" },
+  { id: "preferences", label: "Προτιμήσεις", icon: "🛒" },
+  { id: "other",       label: "Άλλα",        icon: "⭐" }
+];
+
+// ─── Αποθήκευση (μόνο τοπικά, στη συσκευή) ────────────────────────
+// Τίποτα δεν στέλνεται πουθενά. Αν ο χρήστης καθαρίσει τα δεδομένα του
 // browser ή απεγκαταστήσει την εφαρμογή, χάνονται.
 
 const CUSTOM_CARDS_KEY = "diavlos_v1_custom_cards";
-const CUSTOM_CARD_MAX_LENGTH = 300;
+const FAVORITES_KEY    = "diavlos_v1_favorites";
+const CUSTOM_CARD_MAX_LENGTH  = 300;
+const FAVORITE_LABEL_MAX_LENGTH = 60;
+const FAVORITE_VALUE_MAX_LENGTH = 500;
 
-function readCustomCards() {
+// ─── Βοηθητικά αποθήκευσης ────────────────────────────────────────
+
+function readJSON(key) {
   try {
-    const raw = localStorage.getItem(CUSTOM_CARDS_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    // Κρατάμε μόνο έγκυρες εγγραφές, ώστε ένα χαλασμένο αντικείμενο
-    // να μην σπάει ολόκληρη την οθόνη.
-    return parsed.filter(
-      (c) => c && typeof c.id === "string" && typeof c.text === "string"
-    );
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     return [];
   }
 }
 
-function writeCustomCards(cards) {
+function writeJSON(key, value) {
   try {
-    localStorage.setItem(CUSTOM_CARDS_KEY, JSON.stringify(cards));
+    localStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (e) {
-    // Πλήρης χώρος ή ιδιωτική περιήγηση χωρίς αποθήκευση
     return false;
   }
 }
 
+function makeId(prefix) {
+  return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+}
+
+// ─── Προσωπικές κάρτες (ΚΕΠ/Γενικά → «Οι Κάρτες μου») ────────────
+
 function getCustomCards() {
-  return readCustomCards();
+  return readJSON(CUSTOM_CARDS_KEY).filter(
+    (c) => c && typeof c.id === "string" && typeof c.text === "string"
+  );
 }
 
 // Επιστρέφει { ok: true } ή { ok: false, reason }
@@ -80,13 +140,115 @@ function saveCustomCard(text) {
   if (!clean) return { ok: false, reason: "empty" };
   if (clean.length > CUSTOM_CARD_MAX_LENGTH) return { ok: false, reason: "too-long" };
 
-  const cards = readCustomCards();
-  const id = "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
-  cards.push({ id: id, text: clean });
-  return writeCustomCards(cards) ? { ok: true } : { ok: false, reason: "storage" };
+  const cards = getCustomCards();
+  cards.push({ id: makeId("custom"), text: clean });
+  return writeJSON(CUSTOM_CARDS_KEY, cards) ? { ok: true } : { ok: false, reason: "storage" };
 }
 
 function deleteCustomCard(id) {
-  const cards = readCustomCards().filter((c) => c.id !== id);
-  return writeCustomCards(cards);
+  const cards = getCustomCards().filter((c) => c.id !== id);
+  return writeJSON(CUSTOM_CARDS_KEY, cards);
+}
+
+// ─── Αγαπημένα ────────────────────────────────────────────────────
+// Δομή: { id, label, value, tags: [tagId, ...] }
+//   label — σύντομος τίτλος (π.χ. «ΑΦΜ»)
+//   value — περιεχόμενο (π.χ. «123456789»)
+//   tags  — πίνακας από ids των TAGS (πολλαπλά επιτρεπτά)
+
+function getFavorites() {
+  const raw = readJSON(FAVORITES_KEY);
+  const validTagIds = TAGS.map((t) => t.id);
+
+  return raw.filter(
+    (f) =>
+      f &&
+      typeof f.id === "string" &&
+      typeof f.label === "string" &&
+      typeof f.value === "string"
+  ).map((f) => ({
+    id: f.id,
+    label: f.label,
+    value: f.value,
+    tags: Array.isArray(f.tags)
+      ? f.tags.filter((t) => validTagIds.indexOf(t) !== -1)
+      : []
+  }));
+}
+
+// Επιστρέφει { ok: true, favorite } ή { ok: false, reason }
+function saveFavorite(label, value, tags) {
+  const cleanLabel = (label || "").trim();
+  const cleanValue = (value || "").trim();
+
+  if (!cleanLabel) return { ok: false, reason: "label-empty" };
+  if (!cleanValue) return { ok: false, reason: "value-empty" };
+  if (cleanLabel.length > FAVORITE_LABEL_MAX_LENGTH) return { ok: false, reason: "label-too-long" };
+  if (cleanValue.length > FAVORITE_VALUE_MAX_LENGTH) return { ok: false, reason: "value-too-long" };
+
+  const validTagIds = TAGS.map((t) => t.id);
+  const cleanTags = Array.isArray(tags)
+    ? tags.filter((t) => validTagIds.indexOf(t) !== -1)
+    : [];
+
+  const favorites = getFavorites();
+  const favorite = {
+    id: makeId("fav"),
+    label: cleanLabel,
+    value: cleanValue,
+    tags: cleanTags
+  };
+  favorites.push(favorite);
+  return writeJSON(FAVORITES_KEY, favorites)
+    ? { ok: true, favorite: favorite }
+    : { ok: false, reason: "storage" };
+}
+
+function updateFavorite(id, label, value, tags) {
+  const cleanLabel = (label || "").trim();
+  const cleanValue = (value || "").trim();
+
+  if (!cleanLabel) return { ok: false, reason: "label-empty" };
+  if (!cleanValue) return { ok: false, reason: "value-empty" };
+  if (cleanLabel.length > FAVORITE_LABEL_MAX_LENGTH) return { ok: false, reason: "label-too-long" };
+  if (cleanValue.length > FAVORITE_VALUE_MAX_LENGTH) return { ok: false, reason: "value-too-long" };
+
+  const validTagIds = TAGS.map((t) => t.id);
+  const cleanTags = Array.isArray(tags)
+    ? tags.filter((t) => validTagIds.indexOf(t) !== -1)
+    : [];
+
+  const favorites = getFavorites();
+  const index = favorites.findIndex((f) => f.id === id);
+  if (index === -1) return { ok: false, reason: "not-found" };
+
+  favorites[index] = { id: id, label: cleanLabel, value: cleanValue, tags: cleanTags };
+  return writeJSON(FAVORITES_KEY, favorites)
+    ? { ok: true, favorite: favorites[index] }
+    : { ok: false, reason: "storage" };
+}
+
+function deleteFavorite(id) {
+  const favorites = getFavorites().filter((f) => f.id !== id);
+  return writeJSON(FAVORITES_KEY, favorites);
+}
+
+// ─── Ταξινόμηση Αγαπημένων ────────────────────────────────────────
+// Αλφαβητικά κατά label, με ελληνικό collation (ώστε τα τονισμένα να μην
+// πάνε στο τέλος).
+
+function sortFavoritesAlphabetically(favorites) {
+  return favorites.slice().sort((a, b) =>
+    a.label.localeCompare(b.label, "el", { sensitivity: "base" })
+  );
+}
+
+// Φιλτράρισμα με AND logic: επιστρέφει μόνο όσα έχουν ΟΛΑ τα επιλεγμένα tags.
+// Αν ο πίνακας selectedTags είναι κενός, επιστρέφει όλα.
+
+function filterFavoritesByTags(favorites, selectedTags) {
+  if (!selectedTags || selectedTags.length === 0) return favorites;
+  return favorites.filter((f) =>
+    selectedTags.every((tag) => f.tags.indexOf(tag) !== -1)
+  );
 }
