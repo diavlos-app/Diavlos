@@ -8,20 +8,23 @@
 "use strict";
 
 // ─── Κατηγορίες αρχικής οθόνης ────────────────────────────────────
-// type: "emergency" → ειδική οθόνη (Κλήση + ΝΑΙ/ΟΧΙ)
+// type: "emergency" → ειδική οθόνη (SOS + ΝΑΙ/ΟΧΙ)
 // type: "phrases"   → λίστα φράσεων
+//
+// iconId → αναφέρεται σε <symbol id="..."> μέσα στο index.html.
+// Η κατηγορία "emergency" δεν έχει iconId — εμφανίζεται ως ειδικό
+// κόκκινο πλακίδιο με «SOS» + «ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ» (βλ. app.js).
 
 const CARD_CATEGORIES = [
   {
     id: "emergency",
     name: "Έκτακτη Ανάγκη",
-    icon: "🚨",
     type: "emergency"
   },
   {
     id: "services",
     name: "Υπηρεσίες",
-    icon: "🏛️",
+    iconId: "icon-services",
     type: "phrases",
     cards: [
       { id: "srv-1", text: "Θέλω να υποβάλω αίτηση." },
@@ -37,7 +40,7 @@ const CARD_CATEGORIES = [
   {
     id: "cafe",
     name: "Καφέ/Φαγητό",
-    icon: "☕",
+    iconId: "icon-cafe",
     type: "phrases",
     cards: [
       { id: "caf-1", text: "Τι θα μου προτείνατε;" },
@@ -51,7 +54,7 @@ const CARD_CATEGORIES = [
   {
     id: "pharmacy",
     name: "Φαρμακείο",
-    icon: "💊",
+    iconId: "icon-pharmacy",
     type: "phrases",
     cards: [
       { id: "phm-1", text: "Έχω αυτή τη συνταγή. Μπορείτε να με εξυπηρετήσετε;" },
@@ -66,7 +69,7 @@ const CARD_CATEGORIES = [
   {
     id: "shopping",
     name: "Ψώνια",
-    icon: "🛒",
+    iconId: "icon-shopping",
     type: "phrases",
     cards: [
       { id: "shp-1", text: "Πόσο κάνει αυτό;" },
@@ -81,13 +84,14 @@ const CARD_CATEGORIES = [
 ];
 
 // ─── Tags για τα Αγαπημένα ────────────────────────────────────────
+// iconId → αναφέρεται σε <symbol id="..."> μέσα στο index.html.
 
 const TAGS = [
-  { id: "personal",    label: "Προσωπικά",   icon: "👤" },
-  { id: "contact",     label: "Επικοινωνία", icon: "📞" },
-  { id: "health",      label: "Υγεία",       icon: "🏥" },
-  { id: "preferences", label: "Προτιμήσεις", icon: "🛒" },
-  { id: "other",       label: "Άλλα",        icon: "⭐" }
+  { id: "personal",    label: "Προσωπικά",   iconId: "icon-tag-personal" },
+  { id: "contact",     label: "Επικοινωνία", iconId: "icon-tag-contact" },
+  { id: "health",      label: "Υγεία",       iconId: "icon-tag-health" },
+  { id: "preferences", label: "Προτιμήσεις", iconId: "icon-tag-preferences" },
+  { id: "other",       label: "Άλλα",        iconId: "icon-tag-other" }
 ];
 
 // ─── Αποθήκευση (μόνο τοπικά, στη συσκευή) ────────────────────────
@@ -126,7 +130,7 @@ function makeId(prefix) {
   return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
 }
 
-// ─── Προσωπικές κάρτες (ΚΕΠ/Γενικά → «Οι Κάρτες μου») ────────────
+// ─── Προσωπικές κάρτες (φράσεις που προσθέτει ο χρήστης) ──────────
 
 function getCustomCards() {
   return readJSON(CUSTOM_CARDS_KEY).filter(
