@@ -8,7 +8,7 @@
 //    από το repo (404), αποτυγχάνει όλη η εγκατάσταση. Πρόσθεσε νέα αρχεία
 //    (π.χ. εικονίδια) στη λίστα ΜΟΝΟ αφού υπάρχουν στο repo.
 
-const CACHE_NAME = "diavlos-v3";
+const CACHE_NAME = "diavlos-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
