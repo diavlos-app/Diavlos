@@ -7,7 +7,9 @@
   --accent-contrast: #ffffff;
   --border: #e0e0e5;
   --danger: #b23a3a;
-  --tab-inactive: #b8b8c0;
+  --danger-contrast: #ffffff;
+  --tabbar-height: 64px;
+  --tabbar-total: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 0px));
 }
 
 @media (prefers-color-scheme: dark) {
@@ -20,7 +22,7 @@
     --accent-contrast: #0a0a0a;
     --border: #33363c;
     --danger: #e07a7a;
-    --tab-inactive: #55585f;
+    --danger-contrast: #0a0a0a;
   }
 }
 
@@ -33,8 +35,31 @@ body {
   color: var(--text);
   min-height: 100vh;
   padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* Κρυφό κείμενο μόνο για screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Ορατό περίγραμμα εστίασης για πλοήγηση με πληκτρολόγιο */
+button:focus-visible,
+a:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#screen-title:focus { outline: none; }
 
 header {
   display: flex;
@@ -54,8 +79,17 @@ header {
   font-size: 1.5rem;
   color: var(--accent);
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 10px 14px;
+  min-width: 48px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
 }
+
+/* Το display παραπάνω θα υπερίσχυε του hidden attribute */
+#back-btn[hidden] { display: none; }
 
 #screen-title {
   font-size: 1.3rem;
@@ -67,7 +101,9 @@ main {
   padding: 16px;
   max-width: 640px;
   margin: 0 auto;
-  padding-bottom: 100px;
+  /* Χώρος κάτω από το τελευταίο στοιχείο ώστε να μην το καλύπτουν
+     το tab bar και το κουμπί «+» */
+  padding-bottom: calc(var(--tabbar-total) + 100px);
 }
 
 .category-grid {
@@ -88,6 +124,7 @@ main {
   cursor: pointer;
   font-size: 1.1rem;
   color: var(--text);
+  min-height: 88px;
 }
 
 .category-icon { font-size: 2.5rem; }
@@ -110,6 +147,7 @@ main {
   font-size: 1.4rem;
   line-height: 1.4;
   margin: 0 0 14px 0;
+  overflow-wrap: anywhere;
 }
 
 .phrase-actions {
@@ -117,12 +155,14 @@ main {
   gap: 10px;
 }
 
-.speak-btn, .delete-btn {
+.speak-btn,
+.delete-btn {
   border: none;
   border-radius: 10px;
-  padding: 10px 16px;
+  padding: 12px 18px;
   font-size: 1rem;
   cursor: pointer;
+  min-height: 48px;
 }
 
 .speak-btn {
@@ -135,6 +175,7 @@ main {
   background: transparent;
   color: var(--danger);
   border: 1px solid var(--danger);
+  min-width: 48px;
 }
 
 .empty-state {
@@ -142,12 +183,14 @@ main {
   color: var(--text-muted);
   margin-top: 40px;
   font-size: 1.1rem;
+  line-height: 1.5;
 }
 
+/* Κουμπί «+» — πάνω από το tab bar, ορατό μόνο στις προσωπικές κάρτες */
 #add-custom-btn {
   position: fixed;
-  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-  right: 24px;
+  bottom: calc(var(--tabbar-total) + 20px);
+  right: 20px;
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -156,9 +199,114 @@ main {
   border: none;
   font-size: 1.8rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 20;
 }
 
+#add-custom-btn[hidden] { display: none; }
+
+/* Μήνυμα κατάστασης */
+.toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(var(--tabbar-total) + 96px);
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 14px 18px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 12px;
+  font-size: 1rem;
+  line-height: 1.4;
+  z-index: 40;
+}
+
+.toast[hidden] { display: none; }
+
+/* Παράθυρα διαλόγου */
+dialog {
+  width: min(92vw, 480px);
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+
+dialog h2 { margin: 0 0 12px 0; font-size: 1.2rem; }
+
+dialog label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+dialog textarea {
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  font-size: 1.2rem;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  resize: vertical;
+}
+
+.confirm-text {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.form-error {
+  margin: 8px 0 0 0;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.form-error[hidden] { display: none; }
+
+.dialog-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.dialog-actions button {
+  flex: 1;
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--border);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: var(--danger-contrast);
+  border: none;
+}
+
+/* Κάτω πλοήγηση */
 .tabbar {
   position: fixed;
   bottom: 0;
@@ -168,17 +316,38 @@ main {
   background: var(--surface);
   border-top: 1px solid var(--border);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: var(--tabbar-total);
+  z-index: 15;
 }
 
 .tab {
   flex: 1;
   text-align: center;
-  padding: 10px 4px;
+  padding: 8px 4px;
   font-size: 0.8rem;
-  color: var(--tab-inactive);
+  color: var(--text-muted);
   border: none;
   background: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 48px;
 }
 
 .tab.active { color: var(--accent); font-weight: 700; }
-.tab .tab-icon { display: block; font-size: 1.3rem; margin-bottom: 2px; }
+.tab .tab-icon { display: block; font-size: 1.3rem; }
+
+.tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Σεβασμός στην προτίμηση για μειωμένη κίνηση */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

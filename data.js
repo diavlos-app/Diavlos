@@ -1,8 +1,9 @@
-// Δεδομένα καρτών συζήτησης — Δίαυλος
-// Κάθε κατηγορία έχει: id, όνομα, εικονίδιο (emoji), και λίστα καρτών
-// Κάθε κάρτα έχει: id, κείμενο
+// Δίαυλος — data.js
+// Περιεχόμενο καρτών + αποθήκευση προσωπικών καρτών (μόνο τοπικά, στη συσκευή).
+//
 // ΣΚΟΠΙΜΑ μόνο γενικές, σταθερές φράσεις επικοινωνίας — όχι συγκεκριμένα
-// δικαιολογητικά/κόστη που αλλάζουν συχνά και μπορεί να απαρχαιωθούν.
+// δικαιολογητικά ή κόστη που αλλάζουν συχνά και μπορεί να είναι λάθος.
+// Το περιεχόμενο των καρτών είναι ενδεικτικό και θα επεκταθεί.
 
 const CARD_CATEGORIES = [
   {
@@ -35,28 +36,57 @@ const CARD_CATEGORIES = [
   }
 ];
 
-// Custom κάρτες του χρήστη — αποθηκεύονται ΤΟΠΙΚΑ στη συσκευή (localStorage),
-// ποτέ σε server. Καμία σύνδεση με λογαριασμό ή ταυτότητα.
-const CUSTOM_CARDS_KEY = "diavlos_custom_cards";
+// ─── Προσωπικές κάρτες ────────────────────────────────────────────
+// Αποθηκεύονται ΜΟΝΟ στο localStorage της συσκευής. Δεν στέλνονται πουθενά
+// και δεν συνδέονται με λογαριασμό. Αν ο χρήστης καθαρίσει τα δεδομένα του
+// browser ή απεγκαταστήσει την εφαρμογή, χάνονται.
 
-function getCustomCards() {
+const CUSTOM_CARDS_KEY = "diavlos_v1_custom_cards";
+const CUSTOM_CARD_MAX_LENGTH = 300;
+
+function readCustomCards() {
   try {
     const raw = localStorage.getItem(CUSTOM_CARDS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    // Κρατάμε μόνο έγκυρες εγγραφές, ώστε ένα χαλασμένο αντικείμενο
+    // να μην σπάει ολόκληρη την οθόνη.
+    return parsed.filter(
+      (c) => c && typeof c.id === "string" && typeof c.text === "string"
+    );
   } catch (e) {
     return [];
   }
 }
 
+function writeCustomCards(cards) {
+  try {
+    localStorage.setItem(CUSTOM_CARDS_KEY, JSON.stringify(cards));
+    return true;
+  } catch (e) {
+    // Πλήρης χώρος ή ιδιωτική περιήγηση χωρίς αποθήκευση
+    return false;
+  }
+}
+
+function getCustomCards() {
+  return readCustomCards();
+}
+
+// Επιστρέφει { ok: true } ή { ok: false, reason }
 function saveCustomCard(text) {
-  const cards = getCustomCards();
-  cards.push({ id: "custom-" + Date.now(), text: text });
-  localStorage.setItem(CUSTOM_CARDS_KEY, JSON.stringify(cards));
-  return cards;
+  const clean = (text || "").trim();
+  if (!clean) return { ok: false, reason: "empty" };
+  if (clean.length > CUSTOM_CARD_MAX_LENGTH) return { ok: false, reason: "too-long" };
+
+  const cards = readCustomCards();
+  const id = "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+  cards.push({ id: id, text: clean });
+  return writeCustomCards(cards) ? { ok: true } : { ok: false, reason: "storage" };
 }
 
 function deleteCustomCard(id) {
-  const cards = getCustomCards().filter(c => c.id !== id);
-  localStorage.setItem(CUSTOM_CARDS_KEY, JSON.stringify(cards));
-  return cards;
+  const cards = readCustomCards().filter((c) => c.id !== id);
+  return writeCustomCards(cards);
 }

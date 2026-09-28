@@ -1,123 +1,263 @@
 // Δίαυλος — app.js
-// Λογική εμφάνισης καρτών συζήτησης. Καμία εξωτερική εξάρτηση.
+// Οθόνες: αρχική (κατηγορίες) → λίστα καρτών. Καμία εξωτερική εξάρτηση.
+// Το DOM χτίζεται με createElement/textContent (όχι innerHTML), ώστε κανένα
+// κείμενο χρήστη να μην ερμηνεύεται ποτέ ως HTML.
 
-let currentCategory = null;
+"use strict";
 
-function init() {
-  renderCategoryList();
-  document.getElementById("add-custom-btn").addEventListener("click", showAddCustomForm);
-  document.getElementById("back-btn").addEventListener("click", () => {
-    currentCategory = null;
-    renderCategoryList();
-  });
+const HOME = "home";
+const CUSTOM = "custom";
+
+let currentView = HOME;
+let pendingDeleteId = null;
+let dialogOpener = null;
+let toastTimer = null;
+const els = {};
+
+// ─── Βοηθητικά ────────────────────────────────────────────────────
+
+function h(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
 }
 
-function renderCategoryList() {
-  const container = document.getElementById("content");
-  document.getElementById("back-btn").hidden = true;
-  document.getElementById("screen-title").textContent = "Κάρτες Συζήτησης";
-
-  let html = '<div class="category-grid">';
-  CARD_CATEGORIES.forEach(cat => {
-    html += `
-      <button class="category-card" data-id="${cat.id}">
-        <span class="category-icon">${cat.icon}</span>
-        <span class="category-name">${cat.name}</span>
-      </button>`;
-  });
-  html += `
-      <button class="category-card" data-id="custom">
-        <span class="category-icon">⭐</span>
-        <span class="category-name">Οι Κάρτες μου</span>
-      </button>`;
-  html += "</div>";
-  container.innerHTML = html;
-
-  container.querySelectorAll(".category-card").forEach(btn => {
-    btn.addEventListener("click", () => openCategory(btn.dataset.id));
-  });
+function isKnownView(view) {
+  return view === HOME || view === CUSTOM || CARD_CATEGORIES.some((c) => c.id === view);
 }
 
-function openCategory(id) {
-  currentCategory = id;
-  document.getElementById("back-btn").hidden = false;
+function showToast(message) {
+  els.toast.textContent = message;
+  els.toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { els.toast.hidden = true; }, 5000);
+}
 
-  let cards, title;
-  if (id === "custom") {
+function openDialog(dialog, opener) {
+  dialogOpener = opener || document.activeElement;
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+}
+
+function closeDialog(dialog) {
+  if (typeof dialog.close === "function") dialog.close();
+  else dialog.removeAttribute("open");
+}
+
+function restoreFocusAfterDialog() {
+  if (dialogOpener && document.contains(dialogOpener)) dialogOpener.focus();
+  dialogOpener = null;
+}
+
+// ─── Πλοήγηση ─────────────────────────────────────────────────────
+// Χρησιμοποιούμε το history, ώστε το κουμπί «πίσω» του κινητού να γυρνά
+// στην αρχική αντί να κλείνει την εφαρμογή.
+
+function navigateTo(view) {
+  if (view === currentView) return;
+  history.pushState({ view: view }, "");
+  render(view, true);
+}
+
+function goBack() {
+  if (currentView === HOME) return;
+  history.back();
+}
+
+function render(view, moveFocus) {
+  currentView = view;
+  els.back.hidden = view === HOME;
+  els.fab.hidden = view !== CUSTOM;
+
+  if (view === HOME) renderHome();
+  else renderCardList(view);
+
+  if (moveFocus) els.title.focus();
+}
+
+// ─── Αρχική: κατηγορίες ───────────────────────────────────────────
+
+function renderHome() {
+  els.title.textContent = "Κάρτες Συζήτησης";
+  const grid = h("div", "category-grid");
+
+  CARD_CATEGORIES.forEach((cat) => {
+    grid.appendChild(categoryButton(cat.icon, cat.name, cat.id));
+  });
+  grid.appendChild(categoryButton("⭐", "Οι Κάρτες μου", CUSTOM));
+
+  els.content.replaceChildren(grid);
+}
+
+function categoryButton(icon, name, view) {
+  const btn = h("button", "category-card");
+  btn.type = "button";
+  const iconEl = h("span", "category-icon", icon);
+  iconEl.setAttribute("aria-hidden", "true");
+  btn.append(iconEl, h("span", "category-name", name));
+  btn.addEventListener("click", () => navigateTo(view));
+  return btn;
+}
+
+// ─── Λίστα καρτών ─────────────────────────────────────────────────
+
+function renderCardList(view) {
+  const isCustom = view === CUSTOM;
+  let cards;
+
+  if (isCustom) {
+    els.title.textContent = "Οι Κάρτες μου";
     cards = getCustomCards();
-    title = "Οι Κάρτες μου";
   } else {
-    const cat = CARD_CATEGORIES.find(c => c.id === id);
+    const cat = CARD_CATEGORIES.find((c) => c.id === view);
+    els.title.textContent = cat.name;
     cards = cat.cards;
-    title = cat.name;
   }
-  document.getElementById("screen-title").textContent = title;
-  renderCards(cards, id === "custom");
-}
 
-function renderCards(cards, isCustom) {
-  const container = document.getElementById("content");
-
-  if (cards.length === 0 && isCustom) {
-    container.innerHTML = `
-      <p class="empty-state">Δεν έχεις προσθέσει ακόμα δικές σου κάρτες.</p>`;
+  if (cards.length === 0) {
+    els.content.replaceChildren(
+      h("p", "empty-state", "Δεν έχεις προσθέσει ακόμα δικές σου κάρτες. Πάτα το + για να γράψεις την πρώτη.")
+    );
     return;
   }
 
-  let html = '<div class="card-list">';
-  cards.forEach(card => {
-    html += `
-      <div class="phrase-card">
-        <p class="phrase-text">${escapeHtml(card.text)}</p>
-        <div class="phrase-actions">
-          <button class="speak-btn" data-text="${escapeHtml(card.text)}" aria-label="Διάβασέ το δυνατά">
-            🔊 Ανάγνωση
-          </button>
-          ${isCustom ? `<button class="delete-btn" data-id="${card.id}" aria-label="Διαγραφή">🗑️</button>` : ""}
-        </div>
-      </div>`;
-  });
-  html += "</div>";
-  container.innerHTML = html;
-
-  container.querySelectorAll(".speak-btn").forEach(btn => {
-    btn.addEventListener("click", () => speakText(btn.dataset.text));
-  });
-  container.querySelectorAll(".delete-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      deleteCustomCard(btn.dataset.id);
-      openCategory("custom");
-    });
-  });
+  const list = h("div", "card-list");
+  cards.forEach((card) => list.appendChild(phraseCard(card, isCustom)));
+  els.content.replaceChildren(list);
 }
 
-function speakText(text) {
-  if (!("speechSynthesis" in window)) {
-    alert("Η συσκευή σου δεν υποστηρίζει ανάγνωση κειμένου.");
+function phraseCard(card, isCustom) {
+  const wrap = h("div", "phrase-card");
+  wrap.appendChild(h("p", "phrase-text", card.text));
+
+  const actions = h("div", "phrase-actions");
+
+  const speakBtn = h("button", "speak-btn", "🔊 Ανάγνωση");
+  speakBtn.type = "button";
+  speakBtn.addEventListener("click", () => speak(card.text));
+  actions.appendChild(speakBtn);
+
+  if (isCustom) {
+    const delBtn = h("button", "delete-btn", "🗑️");
+    delBtn.type = "button";
+    delBtn.setAttribute("aria-label", "Διαγραφή κάρτας");
+    delBtn.addEventListener("click", () => askDelete(card, delBtn));
+    actions.appendChild(delBtn);
+  }
+
+  wrap.appendChild(actions);
+  return wrap;
+}
+
+// ─── Ανάγνωση φωνητικά ────────────────────────────────────────────
+
+function speak(text) {
+  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+    showToast("Η συσκευή δεν υποστηρίζει ανάγνωση κειμένου.");
     return;
   }
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "el-GR";
-  window.speechSynthesis.cancel(); // stop any previous speech
+
+  const voices = window.speechSynthesis.getVoices();
+  const greek = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("el"));
+  if (greek) {
+    utterance.voice = greek;
+  } else if (voices.length > 0) {
+    showToast("Δεν βρέθηκε ελληνική φωνή στη συσκευή. Η ανάγνωση μπορεί να ακούγεται λάθος.");
+  }
+
+  utterance.onerror = (e) => {
+    if (e.error && e.error !== "canceled" && e.error !== "interrupted") {
+      showToast("Η ανάγνωση δεν ήταν δυνατή.");
+    }
+  };
+
+  window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 }
 
-function showAddCustomForm() {
-  const text = prompt("Γράψε τη φράση που θέλεις να προσθέσεις:");
-  if (text && text.trim()) {
-    saveCustomCard(text.trim());
-    if (currentCategory === "custom") {
-      openCategory("custom");
-    } else {
-      openCategory("custom");
-    }
-  }
+// ─── Προσθήκη κάρτας ──────────────────────────────────────────────
+
+function openAddDialog() {
+  els.addText.value = "";
+  els.addError.hidden = true;
+  openDialog(els.addDialog, els.fab);
+  els.addText.focus();
 }
 
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
+function onAddSubmit(event) {
+  event.preventDefault();
+  const result = saveCustomCard(els.addText.value);
+
+  if (!result.ok) {
+    const messages = {
+      "empty": "Γράψε πρώτα μια φράση.",
+      "too-long": "Η φράση είναι πολύ μεγάλη. Το μέγιστο είναι " + CUSTOM_CARD_MAX_LENGTH + " χαρακτήρες.",
+      "storage": "Δεν ήταν δυνατή η αποθήκευση στη συσκευή."
+    };
+    els.addError.textContent = messages[result.reason] || messages.storage;
+    els.addError.hidden = false;
+    els.addText.focus();
+    return;
+  }
+
+  closeDialog(els.addDialog);
+  render(CUSTOM, false);
+  showToast("Η κάρτα αποθηκεύτηκε.");
+}
+
+// ─── Διαγραφή κάρτας ──────────────────────────────────────────────
+
+function askDelete(card, opener) {
+  pendingDeleteId = card.id;
+  els.confirmText.textContent = card.text;
+  openDialog(els.confirmDialog, opener);
+}
+
+function onConfirmDelete() {
+  const ok = deleteCustomCard(pendingDeleteId);
+  pendingDeleteId = null;
+  closeDialog(els.confirmDialog);
+  dialogOpener = null; // το κουμπί που πατήθηκε δεν υπάρχει πια
+  render(CUSTOM, true);
+  showToast(ok ? "Η κάρτα διαγράφηκε." : "Δεν ήταν δυνατή η διαγραφή.");
+}
+
+// ─── Εκκίνηση ─────────────────────────────────────────────────────
+
+function init() {
+  els.content = document.getElementById("content");
+  els.title = document.getElementById("screen-title");
+  els.back = document.getElementById("back-btn");
+  els.fab = document.getElementById("add-custom-btn");
+  els.toast = document.getElementById("toast");
+  els.addDialog = document.getElementById("add-dialog");
+  els.addForm = document.getElementById("add-form");
+  els.addText = document.getElementById("add-text");
+  els.addError = document.getElementById("add-error");
+  els.confirmDialog = document.getElementById("confirm-dialog");
+  els.confirmText = document.getElementById("confirm-text");
+
+  els.back.addEventListener("click", goBack);
+  els.fab.addEventListener("click", openAddDialog);
+  els.addForm.addEventListener("submit", onAddSubmit);
+  document.getElementById("add-cancel").addEventListener("click", () => closeDialog(els.addDialog));
+  document.getElementById("confirm-cancel").addEventListener("click", () => closeDialog(els.confirmDialog));
+  document.getElementById("confirm-ok").addEventListener("click", onConfirmDelete);
+  els.addDialog.addEventListener("close", restoreFocusAfterDialog);
+  els.confirmDialog.addEventListener("close", restoreFocusAfterDialog);
+
+  window.addEventListener("popstate", (event) => {
+    const view = event.state && event.state.view;
+    render(isKnownView(view) ? view : HOME, true);
+  });
+
+  // Μετά από ανανέωση σελίδας ξεκινάμε πάντα από την αρχική.
+  history.replaceState({ view: HOME }, "");
+  render(HOME, false);
 }
 
 document.addEventListener("DOMContentLoaded", init);
