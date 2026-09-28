@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Δίαυλος — Εναλλακτικές</title>
+<title>Δίαυλος — SOS & Ασκληπιός</title>
 <style>
   :root { --bg:#f7f7fa; --surface:#fff; --text:#1a1a1a; --muted:#6b6b6b;
-          --border:#e0e0e5; --accent:#2d6a4f; }
+          --border:#e0e0e5; --accent:#2d6a4f; --danger:#c62828; }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#14161a; --surface:#1e2126; --text:#f0f0f0;
-            --muted:#a0a0a8; --border:#33363c; --accent:#52b788; }
+            --muted:#a0a0a8; --border:#33363c; --accent:#52b788; --danger:#ef5350; }
   }
   * { box-sizing: border-box; }
   body { margin:0; padding:20px; font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -18,17 +18,32 @@
   h2 { font-size:1rem; margin:28px 0 12px; color:var(--accent);
        border-bottom:2px solid var(--border); padding-bottom:6px; }
   p.intro { color:var(--muted); margin:0 0 16px; font-size:0.9rem; line-height:1.5; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:10px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; }
   .cell { background:var(--surface); border:1px solid var(--border);
-          border-radius:12px; padding:12px 6px; text-align:center; }
-  .cell .letter { font-size:0.65rem; color:var(--accent); font-weight:800;
+          border-radius:12px; padding:14px 6px; text-align:center; }
+  .cell .letter { font-size:0.7rem; color:var(--accent); font-weight:800;
                   letter-spacing:0.1em; margin-bottom:6px; }
-  .sizes { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:4px; }
+  .sizes { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px; }
   .sizes svg { color:var(--accent); }
   .sizes svg.s48 { width:44px; height:44px; }
   .sizes svg.s24 { width:24px; height:24px; }
   .sizes svg.s16 { width:16px; height:16px; }
-  .cell-name { font-size:0.65rem; color:var(--muted); margin-top:4px; line-height:1.2; }
+  .cell-name { font-size:0.7rem; color:var(--muted); margin-top:4px; line-height:1.2; }
+
+  /* Emergency κουμπιά */
+  .sos-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .sos-btn {
+    border:none; border-radius:14px; cursor:pointer;
+    min-height:100px; display:flex; align-items:center; justify-content:center;
+    font-family:Arial,"Segoe UI",sans-serif; font-weight:900;
+    letter-spacing:0.05em; color:#ffffff;
+  }
+  .sos-a { background:#c62828; font-size:2.2rem; }
+  .sos-b { background:#c62828; font-size:1.4rem; flex-direction:column; gap:2px; }
+  .sos-b small { font-size:0.65rem; font-weight:600; letter-spacing:0.15em; opacity:0.85; }
+  .sos-c { background:#ffffff; color:#c62828; border:3px solid #c62828; font-size:2rem; }
+  .sos-d { background:#c62828; font-size:2rem; border-radius:50%; aspect-ratio:1; min-height:0; padding-bottom:4px; }
+
   .context { background:var(--surface); border:1px solid var(--border);
              border-radius:14px; padding:16px; margin-top:12px; }
   .context-name { font-size:0.75rem; color:var(--muted); margin-bottom:10px; }
@@ -37,232 +52,120 @@
          border-radius:16px; padding:20px 10px; text-align:center;
          display:flex; flex-direction:column; align-items:center; gap:8px; }
   .cat svg { width:44px; height:44px; color:var(--accent); }
+  .cat .sos-mini {
+    background:#c62828; color:#fff; font-weight:900; font-size:1.4rem;
+    width:56px; height:56px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:Arial,sans-serif;
+  }
   .cat span { font-weight:600; font-size:0.95rem; }
 </style>
 </head>
 <body>
 
-<h1>Δίαυλος — Εναλλακτικές</h1>
+<h1>Δίαυλος — SOS &amp; Ασκληπιός</h1>
 <p class="intro">
-  Διάλεξε ποιο ταιριάζει για <strong>Emergency</strong> και <strong>Pharmacy</strong>.
-  Ο χάρτης επιστρέφει στην πρώτη εκδοχή (αυτή που σου άρεσε).
+  <strong>Emergency:</strong> κουμπί με τα γράμματα SOS (4 παραλλαγές).<br>
+  <strong>Pharmacy:</strong> Ράβδος του Ασκληπιού — φίδι σε κολώνα (4 παραλλαγές).
 </p>
 
 <!-- ═══ SPRITE ═══ -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
 
-  <!-- EMERGENCY — 5 εναλλακτικές -->
-  <symbol id="emg-1" viewBox="0 0 24 24">
-    <!-- A. Τρίγωνο με θαυμαστικό -->
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      d="M12 3 2 20h20L12 3z"/>
+  <!-- PHARMACY A: Ράβδος + φίδι, σκέτο -->
+  <symbol id="phm-a" viewBox="0 0 24 24">
     <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      d="M12 10v5M12 18h.01"/>
-  </symbol>
-
-  <symbol id="emg-2" viewBox="0 0 24 24">
-    <!-- B. Σειρήνα — απλή, χωρίς ακτίνες -->
+      d="M12 4v17"/>
     <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      d="M6 16V11a6 6 0 0 1 12 0v5z"/>
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      d="M3 19h18M12 2v2"/>
+      d="M14 6c-2 0-3 1-3 2s1 2 3 2 2 1 2 2-1 2-3 2-3 1-3 2 1 2 3 2"/>
   </symbol>
 
-  <symbol id="emg-3" viewBox="0 0 24 24">
-    <!-- C. Καμπανάκι -->
+  <!-- PHARMACY B: Ράβδος + φίδι μέσα σε κύκλο -->
+  <symbol id="phm-b" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      d="M12 5v14"/>
     <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      d="M6 18V12a6 6 0 0 1 12 0v6M4 18h16"/>
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      d="M10 21h4"/>
+      d="M14 7c-2 0-3 1-3 2s1 2 3 2 2 1 2 2-1 2-3 2-2 1-2 2 1 2 2 2"/>
   </symbol>
 
-  <symbol id="emg-4" viewBox="0 0 24 24">
-    <!-- D. Κύκλος με θαυμαστικό -->
-    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+  <!-- PHARMACY C: Ράβδος σε βάθρο + φίδι -->
+  <symbol id="phm-c" viewBox="0 0 24 24">
     <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      d="M12 7v6M12 16.5h.01"/>
-  </symbol>
-
-  <symbol id="emg-5" viewBox="0 0 24 24">
-    <!-- E. Στροφείο φάρου έκτακτης ανάγκης -->
+      d="M12 4v15"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      d="M8 20h8"/>
     <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      d="M9 21h6l-1-11h-4L9 21z"/>
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      d="M10 10V7h4v3"/>
+      d="M14 6c-2 0-3 1-3 2s1 2 3 2 2 1 2 2-1 2-3 2-3 1-3 2 1 2 3 2"/>
+  </symbol>
+
+  <!-- PHARMACY D: Ράβδος + φίδι + κύκλος στο πάνω μέρος (πιο διακοσμητικό) -->
+  <symbol id="phm-d" viewBox="0 0 24 24">
+    <circle cx="12" cy="4" r="1.5" fill="currentColor"/>
     <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      d="M12 3v2M5 8l2 2M19 8l-2 2M3 14h2M19 14h2"/>
-  </symbol>
-
-  <!-- PHARMACY — 5 εναλλακτικές -->
-  <symbol id="phm-1" viewBox="0 0 24 24">
-    <!-- A. Κάψουλα (pill) διαγώνια -->
-    <rect x="4" y="9" width="16" height="6" rx="3"
-      fill="none" stroke="currentColor" stroke-width="2"
-      transform="rotate(-45 12 12)"/>
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      d="m9 9 6 6"/>
-  </symbol>
-
-  <symbol id="phm-2" viewBox="0 0 24 24">
-    <!-- B. Γουδοχέρι με γουδί -->
+      d="M12 6v15"/>
     <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      d="M4 10h10v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-5z"/>
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      d="M17 3v10"/>
-    <circle cx="17" cy="4" r="2" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="phm-3" viewBox="0 0 24 24">
-    <!-- C. Μπουκάλι φαρμάκου -->
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      d="M9 3h6v3l2 3v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9l2-3V3z"/>
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      d="M7 12h10M12 15v3M10.5 16.5h3"/>
-  </symbol>
-
-  <symbol id="phm-4" viewBox="0 0 24 24">
-    <!-- D. Σταυρός σε κύκλο (διακριτός από το +) -->
-    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
-    <path fill="currentColor" d="M10.5 6h3v4.5H18v3h-4.5V18h-3v-4.5H6v-3h4.5z"/>
-  </symbol>
-
-  <symbol id="phm-5" viewBox="0 0 24 24">
-    <!-- E. Κάψουλα κάθετη, δύο χρώματα (outline) -->
-    <rect x="9" y="3" width="6" height="18" rx="3"
-      fill="none" stroke="currentColor" stroke-width="2"/>
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      d="M9 12h6"/>
-  </symbol>
-
-  <!-- MAP — το πρώτο (αυτό που σου άρεσε) -->
-  <symbol id="map-original" viewBox="0 0 24 24">
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      d="M9 18 3 20V6l6-2 6 2 6-2v14l-6 2-6-2z"/>
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      d="M15 10a2 2 0 1 0-4 0c0 2 2 4 2 4s2-2 2-4z"/>
-  </symbol>
-
-  <!-- Context: πώς φαίνεται το emergency στο grid -->
-  <symbol id="ctx-emg" viewBox="0 0 24 24">
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      d="M12 3 2 20h20L12 3z"/>
-    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      d="M12 10v5M12 18h.01"/>
+      d="M14 8c-2 0-3 1-3 2s1 2 3 2 2 1 2 2-1 2-3 2-3 1-3 2 1 2 3 2"/>
   </symbol>
 
 </svg>
 
-<!-- ═══ EMERGENCY ═══ -->
-<h2>🚨 Emergency — 5 επιλογές</h2>
+<!-- ═══ EMERGENCY — κουμπιά SOS ═══ -->
+<h2>🚨 Emergency — 4 παραλλαγές SOS</h2>
+<div class="sos-grid">
+  <button class="sos-btn sos-a" type="button">SOS</button>
+  <button class="sos-btn sos-b" type="button">SOS<small>ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</small></button>
+  <button class="sos-btn sos-c" type="button">SOS</button>
+  <button class="sos-btn sos-d" type="button">SOS</button>
+</div>
+
+<!-- ═══ PHARMACY — Ασκληπιός ═══ -->
+<h2>💊 Pharmacy — Ράβδος Ασκληπιού, 4 παραλλαγές</h2>
 <div class="grid">
   <div class="cell"><div class="letter">A</div>
     <div class="sizes">
-      <svg class="s48"><use href="#emg-1"/></svg>
-      <svg class="s24"><use href="#emg-1"/></svg>
-      <svg class="s16"><use href="#emg-1"/></svg>
+      <svg class="s48"><use href="#phm-a"/></svg>
+      <svg class="s24"><use href="#phm-a"/></svg>
+      <svg class="s16"><use href="#phm-a"/></svg>
     </div>
-    <div class="cell-name">Τρίγωνο</div></div>
+    <div class="cell-name">Σκέτο</div></div>
 
   <div class="cell"><div class="letter">B</div>
     <div class="sizes">
-      <svg class="s48"><use href="#emg-2"/></svg>
-      <svg class="s24"><use href="#emg-2"/></svg>
-      <svg class="s16"><use href="#emg-2"/></svg>
+      <svg class="s48"><use href="#phm-b"/></svg>
+      <svg class="s24"><use href="#phm-b"/></svg>
+      <svg class="s16"><use href="#phm-b"/></svg>
     </div>
-    <div class="cell-name">Σειρήνα απλή</div></div>
+    <div class="cell-name">Σε κύκλο</div></div>
 
   <div class="cell"><div class="letter">C</div>
     <div class="sizes">
-      <svg class="s48"><use href="#emg-3"/></svg>
-      <svg class="s24"><use href="#emg-3"/></svg>
-      <svg class="s16"><use href="#emg-3"/></svg>
+      <svg class="s48"><use href="#phm-c"/></svg>
+      <svg class="s24"><use href="#phm-c"/></svg>
+      <svg class="s16"><use href="#phm-c"/></svg>
     </div>
-    <div class="cell-name">Καμπανάκι</div></div>
+    <div class="cell-name">Με βάθρο</div></div>
 
   <div class="cell"><div class="letter">D</div>
     <div class="sizes">
-      <svg class="s48"><use href="#emg-4"/></svg>
-      <svg class="s24"><use href="#emg-4"/></svg>
-      <svg class="s16"><use href="#emg-4"/></svg>
+      <svg class="s48"><use href="#phm-d"/></svg>
+      <svg class="s24"><use href="#phm-d"/></svg>
+      <svg class="s16"><use href="#phm-d"/></svg>
     </div>
-    <div class="cell-name">Κύκλος</div></div>
-
-  <div class="cell"><div class="letter">E</div>
-    <div class="sizes">
-      <svg class="s48"><use href="#emg-5"/></svg>
-      <svg class="s24"><use href="#emg-5"/></svg>
-      <svg class="s16"><use href="#emg-5"/></svg>
-    </div>
-    <div class="cell-name">Φάρος</div></div>
-</div>
-
-<!-- ═══ PHARMACY ═══ -->
-<h2>💊 Pharmacy — 5 επιλογές</h2>
-<div class="grid">
-  <div class="cell"><div class="letter">A</div>
-    <div class="sizes">
-      <svg class="s48"><use href="#phm-1"/></svg>
-      <svg class="s24"><use href="#phm-1"/></svg>
-      <svg class="s16"><use href="#phm-1"/></svg>
-    </div>
-    <div class="cell-name">Κάψουλα /</div></div>
-
-  <div class="cell"><div class="letter">B</div>
-    <div class="sizes">
-      <svg class="s48"><use href="#phm-2"/></svg>
-      <svg class="s24"><use href="#phm-2"/></svg>
-      <svg class="s16"><use href="#phm-2"/></svg>
-    </div>
-    <div class="cell-name">Γουδοχέρι</div></div>
-
-  <div class="cell"><div class="letter">C</div>
-    <div class="sizes">
-      <svg class="s48"><use href="#phm-3"/></svg>
-      <svg class="s24"><use href="#phm-3"/></svg>
-      <svg class="s16"><use href="#phm-3"/></svg>
-    </div>
-    <div class="cell-name">Μπουκάλι</div></div>
-
-  <div class="cell"><div class="letter">D</div>
-    <div class="sizes">
-      <svg class="s48"><use href="#phm-4"/></svg>
-      <svg class="s24"><use href="#phm-4"/></svg>
-      <svg class="s16"><use href="#phm-4"/></svg>
-    </div>
-    <div class="cell-name">Σταυρός κύκλο</div></div>
-
-  <div class="cell"><div class="letter">E</div>
-    <div class="sizes">
-      <svg class="s48"><use href="#phm-5"/></svg>
-      <svg class="s24"><use href="#phm-5"/></svg>
-      <svg class="s16"><use href="#phm-5"/></svg>
-    </div>
-    <div class="cell-name">Κάψουλα κάθετη</div></div>
-</div>
-
-<!-- ═══ MAP ═══ -->
-<h2>🗺️ Map — επιστροφή στο αρχικό</h2>
-<div class="grid">
-  <div class="cell"><div class="letter">✓</div>
-    <div class="sizes">
-      <svg class="s48"><use href="#map-original"/></svg>
-      <svg class="s24"><use href="#map-original"/></svg>
-      <svg class="s16"><use href="#map-original"/></svg>
-    </div>
-    <div class="cell-name">Χάρτης + pin</div></div>
+    <div class="cell-name">Με κεφαλή</div></div>
 </div>
 
 <!-- ═══ CONTEXT ═══ -->
 <h2>Πώς φαίνεται στην αρχική</h2>
 <div class="context">
-  <div class="context-name">Παράδειγμα με Emergency = Επιλογή A (τρίγωνο)</div>
+  <div class="context-name">Παράδειγμα: Emergency με SOS κύκλο + Pharmacy A</div>
   <div class="cat-grid">
     <div class="cat">
-      <svg><use href="#ctx-emg"/></svg>
+      <div class="sos-mini">SOS</div>
       <span>Έκτακτη Ανάγκη</span>
     </div>
     <div class="cat">
-      <svg><use href="#phm-2"/></svg>
+      <svg><use href="#phm-a"/></svg>
       <span>Φαρμακείο</span>
     </div>
   </div>
