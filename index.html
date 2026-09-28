@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#2d6a4f" />
-  <meta name="description" content="Δίαυλος: κάρτες συζήτησης για κωφούς και βαρήκοους. Έτοιμες φράσεις με μεγάλα γράμματα και ανάγνωση φωνητικά. Λειτουργεί και χωρίς σύνδεση." />
+  <meta name="description" content="Δίαυλος: εργαλείο επικοινωνίας για κωφούς και βαρήκοους. Έτοιμες φράσεις, αγαπημένα, έκτακτη ανάγκη. Λειτουργεί και χωρίς σύνδεση." />
 
   <!-- iOS / Android PWA -->
   <link rel="apple-touch-icon" href="icon-192.png" />
@@ -20,7 +20,10 @@
 <body>
   <header>
     <button id="back-btn" type="button" hidden aria-label="Πίσω">←</button>
-    <h1 id="screen-title" tabindex="-1">Κάρτες Συζήτησης</h1>
+    <div class="header-titles">
+      <h1 id="screen-title" tabindex="-1">Δίαυλος</h1>
+      <p class="header-subtitle">Προσβάσιμη Επικοινωνία</p>
+    </div>
   </header>
 
   <main id="content">
@@ -29,12 +32,19 @@
     </noscript>
   </main>
 
-  <button id="add-custom-btn" type="button" hidden aria-label="Προσθήκη κάρτας">+</button>
+  <button id="add-custom-btn" type="button" hidden aria-label="Προσθήκη">+</button>
 
-  <!-- Μήνυμα κατάστασης (οπτικό, όχι μόνο ηχητικό) -->
+  <!-- Μήνυμα κατάστασης -->
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <!-- Προσθήκη προσωπικής κάρτας -->
+  <!-- Full-screen display (μεγάλα γράμματα για να δείξεις σε άλλον) -->
+  <div id="fullscreen" class="fullscreen" hidden role="dialog" aria-modal="true" aria-labelledby="fullscreen-text">
+    <p id="fullscreen-label" class="fullscreen-label" hidden></p>
+    <p id="fullscreen-text" class="fullscreen-text"></p>
+    <button id="fullscreen-close" type="button" class="fullscreen-close" aria-label="Κλείσιμο">✕ Κλείσιμο</button>
+  </div>
+
+  <!-- Διάλογος: Νέα προσωπική κάρτα -->
   <dialog id="add-dialog" aria-labelledby="add-dialog-title">
     <form id="add-form" novalidate>
       <h2 id="add-dialog-title">Νέα κάρτα</h2>
@@ -48,9 +58,32 @@
     </form>
   </dialog>
 
-  <!-- Επιβεβαίωση διαγραφής -->
+  <!-- Διάλογος: Νέο / Επεξεργασία Αγαπημένου -->
+  <dialog id="fav-dialog" aria-labelledby="fav-dialog-title">
+    <form id="fav-form" novalidate>
+      <h2 id="fav-dialog-title">Νέο Αγαπημένο</h2>
+
+      <label for="fav-label">Τίτλος</label>
+      <input id="fav-label" type="text" maxlength="60" autocomplete="off" placeholder="π.χ. ΑΦΜ, Ο καφές μου" required />
+
+      <label for="fav-value">Περιεχόμενο</label>
+      <textarea id="fav-value" rows="3" maxlength="500" required placeholder="π.χ. 123456789"></textarea>
+
+      <p class="tag-hint">Tags (πάτα όσα θέλεις):</p>
+      <div id="fav-tags" class="tag-grid" role="group" aria-label="Κατηγορίες αγαπημένου"></div>
+
+      <p id="fav-error" class="form-error" role="alert" hidden></p>
+
+      <div class="dialog-actions">
+        <button type="button" id="fav-cancel" class="btn-secondary">Ακύρωση</button>
+        <button type="submit" class="btn-primary">Αποθήκευση</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Διάλογος: Επιβεβαίωση διαγραφής -->
   <dialog id="confirm-dialog" aria-labelledby="confirm-title">
-    <h2 id="confirm-title">Διαγραφή κάρτας;</h2>
+    <h2 id="confirm-title">Διαγραφή;</h2>
     <p id="confirm-text" class="confirm-text"></p>
     <div class="dialog-actions">
       <button type="button" id="confirm-cancel" class="btn-secondary">Ακύρωση</button>
@@ -58,15 +91,15 @@
     </div>
   </dialog>
 
+  <!-- Κάτω πλοήγηση -->
   <nav class="tabbar" aria-label="Κύρια πλοήγηση">
-    <button type="button" class="tab active" aria-current="page">
+    <button id="tab-cards" type="button" class="tab active" aria-current="page">
       <span class="tab-icon" aria-hidden="true">💬</span>
       Κάρτες
     </button>
-    <button type="button" class="tab" disabled>
+    <button id="tab-favorites" type="button" class="tab">
       <span class="tab-icon" aria-hidden="true">⭐</span>
       Αγαπημένα
-      <span class="visually-hidden">(έρχεται σύντομα)</span>
     </button>
     <button type="button" class="tab" disabled>
       <span class="tab-icon" aria-hidden="true">🗺️</span>

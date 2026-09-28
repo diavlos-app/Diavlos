@@ -1,3 +1,5 @@
+/* Δίαυλος — style.css */
+
 :root {
   --bg: #f7f7fa;
   --surface: #ffffff;
@@ -7,7 +9,13 @@
   --accent-contrast: #ffffff;
   --border: #e0e0e5;
   --danger: #b23a3a;
+  --danger-strong: #c62828;
   --danger-contrast: #ffffff;
+  --success: #2e7d32;
+  --success-contrast: #ffffff;
+  --chip-bg: #eceef1;
+  --chip-active-bg: #2d6a4f;
+  --chip-active-text: #ffffff;
   --tabbar-height: 64px;
   --tabbar-total: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 0px));
 }
@@ -22,7 +30,13 @@
     --accent-contrast: #0a0a0a;
     --border: #33363c;
     --danger: #e07a7a;
+    --danger-strong: #ef5350;
     --danger-contrast: #0a0a0a;
+    --success: #66bb6a;
+    --success-contrast: #0a0a0a;
+    --chip-bg: #2a2d33;
+    --chip-active-bg: #52b788;
+    --chip-active-text: #0a0a0a;
   }
 }
 
@@ -37,7 +51,8 @@ body {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
-/* Κρυφό κείμενο μόνο για screen readers */
+/* ─── Visually hidden (screen reader only) ─────────────────────── */
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -50,9 +65,11 @@ body {
   border: 0;
 }
 
-/* Ορατό περίγραμμα εστίασης για πλοήγηση με πληκτρολόγιο */
+/* ─── Focus ─────────────────────────────────────────────────────── */
+
 button:focus-visible,
 a:focus-visible,
+input:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
   outline: 3px solid var(--accent);
@@ -61,16 +78,26 @@ textarea:focus-visible,
 
 #screen-title:focus { outline: none; }
 
+/* ─── Header ────────────────────────────────────────────────────── */
+
 header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
+  padding: 14px 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: env(safe-area-inset-top, 0px);
   z-index: 10;
+}
+
+.header-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 #back-btn {
@@ -88,23 +115,92 @@ header {
   border-radius: 8px;
 }
 
-/* Το display παραπάνω θα υπερίσχυε του hidden attribute */
 #back-btn[hidden] { display: none; }
 
 #screen-title {
   font-size: 1.3rem;
   font-weight: 700;
   margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+.header-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+/* ─── Main ──────────────────────────────────────────────────────── */
 
 main {
   padding: 16px;
   max-width: 640px;
   margin: 0 auto;
-  /* Χώρος κάτω από το τελευταίο στοιχείο ώστε να μην το καλύπτουν
-     το tab bar και το κουμπί «+» */
   padding-bottom: calc(var(--tabbar-total) + 100px);
 }
+
+/* ─── Αρχική: Έκτακτη Ανάγκη ────────────────────────────────────── */
+
+.emergency-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--danger-strong);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.emergency-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.emergency-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.emergency-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--danger-strong);
+}
+
+.emergency-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn-emergency-call,
+.btn-emergency-field {
+  border: none;
+  border-radius: 12px;
+  padding: 16px 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 60px;
+}
+
+.btn-emergency-call {
+  background: var(--danger-strong);
+  color: var(--danger-contrast);
+}
+
+.btn-emergency-field {
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--border);
+}
+
+/* ─── Αρχική: Κατηγορίες (2x2 grid) ─────────────────────────────── */
 
 .category-grid {
   display: grid;
@@ -116,19 +212,25 @@ main {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 24px 12px;
+  padding: 22px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--text);
-  min-height: 88px;
+  min-height: 110px;
 }
 
-.category-icon { font-size: 2.5rem; }
-.category-name { font-weight: 600; text-align: center; }
+.category-icon { font-size: 2.4rem; line-height: 1; }
+.category-name {
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ─── Λίστες φράσεων ────────────────────────────────────────────── */
 
 .card-list {
   display: flex;
@@ -140,11 +242,11 @@ main {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 18px;
+  padding: 16px;
 }
 
 .phrase-text {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   line-height: 1.4;
   margin: 0 0 14px 0;
   overflow-wrap: anywhere;
@@ -152,17 +254,24 @@ main {
 
 .phrase-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .speak-btn,
+.show-btn,
+.fav-btn,
 .delete-btn {
   border: none;
   border-radius: 10px;
-  padding: 12px 18px;
-  font-size: 1rem;
+  padding: 12px 14px;
+  font-size: 1.1rem;
   cursor: pointer;
   min-height: 48px;
+  min-width: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .speak-btn {
@@ -171,22 +280,35 @@ main {
   flex: 1;
 }
 
+.show-btn {
+  background: var(--chip-bg);
+  color: var(--text);
+  flex: 1;
+}
+
+.fav-btn {
+  background: var(--chip-bg);
+  color: var(--text);
+}
+
 .delete-btn {
   background: transparent;
   color: var(--danger);
   border: 1px solid var(--danger);
-  min-width: 48px;
 }
+
+/* ─── Empty state ───────────────────────────────────────────────── */
 
 .empty-state {
   text-align: center;
   color: var(--text-muted);
-  margin-top: 40px;
-  font-size: 1.1rem;
+  margin-top: 32px;
+  font-size: 1.05rem;
   line-height: 1.5;
 }
 
-/* Κουμπί «+» — πάνω από το tab bar, ορατό μόνο στις προσωπικές κάρτες */
+/* ─── FAB ───────────────────────────────────────────────────────── */
+
 #add-custom-btn {
   position: fixed;
   bottom: calc(var(--tabbar-total) + 20px);
@@ -205,7 +327,8 @@ main {
 
 #add-custom-btn[hidden] { display: none; }
 
-/* Μήνυμα κατάστασης */
+/* ─── Toast ─────────────────────────────────────────────────────── */
+
 .toast {
   position: fixed;
   left: 16px;
@@ -224,7 +347,62 @@ main {
 
 .toast[hidden] { display: none; }
 
-/* Παράθυρα διαλόγου */
+/* ─── Full-screen display ───────────────────────────────────────── */
+
+.fullscreen {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  color: #000000;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  padding-top: calc(24px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.fullscreen[hidden] { display: none; }
+
+.fullscreen-label {
+  margin: 0 0 16px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #555555;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fullscreen-text {
+  margin: 0;
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  line-height: 1.25;
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.fullscreen-close {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: 16px;
+  background: #f0f0f0;
+  color: #000000;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 48px;
+}
+
+/* ─── Διάλογοι ──────────────────────────────────────────────────── */
+
 dialog {
   width: min(92vw, 480px);
   padding: 20px;
@@ -232,29 +410,40 @@ dialog {
   border-radius: 16px;
   background: var(--surface);
   color: var(--text);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 
-dialog h2 { margin: 0 0 12px 0; font-size: 1.2rem; }
+dialog h2 { margin: 0 0 16px 0; font-size: 1.2rem; }
 
 dialog label {
   display: block;
-  margin-bottom: 8px;
+  margin: 12px 0 6px 0;
   font-weight: 600;
+  font-size: 0.95rem;
 }
 
-dialog textarea {
+dialog label:first-of-type { margin-top: 0; }
+
+dialog textarea,
+dialog input[type="text"] {
   width: 100%;
   padding: 12px;
   font: inherit;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   line-height: 1.4;
   color: var(--text);
   background: var(--bg);
   border: 2px solid var(--border);
   border-radius: 10px;
   resize: vertical;
+}
+
+dialog input[type="text"] {
+  resize: none;
+  font-size: 1.2rem;
 }
 
 .confirm-text {
@@ -265,9 +454,10 @@ dialog textarea {
 }
 
 .form-error {
-  margin: 8px 0 0 0;
+  margin: 10px 0 0 0;
   color: var(--danger);
   font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .form-error[hidden] { display: none; }
@@ -275,7 +465,7 @@ dialog textarea {
 .dialog-actions {
   display: flex;
   gap: 10px;
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 .dialog-actions button {
@@ -301,12 +491,277 @@ dialog textarea {
 }
 
 .btn-danger {
-  background: var(--danger);
+  background: var(--danger-strong);
   color: var(--danger-contrast);
   border: none;
 }
 
-/* Κάτω πλοήγηση */
+/* ─── Tags ──────────────────────────────────────────────────────── */
+
+.tag-hint {
+  margin: 16px 0 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.tag-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.tag-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  min-height: 58px;
+  line-height: 1.15;
+}
+
+.tag-btn-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.tag-btn-active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+/* ─── Αγαπημένα: φίλτρα ─────────────────────────────────────────── */
+
+.filter-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 14px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.filter-bar::-webkit-scrollbar { display: none; }
+
+.filter-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.filter-chip-icon { font-size: 1rem; }
+
+.filter-chip-active {
+  background: var(--chip-active-bg);
+  color: var(--chip-active-text);
+  border-color: var(--chip-active-bg);
+}
+
+/* ─── Αγαπημένα: λίστα ──────────────────────────────────────────── */
+
+.favorites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.favorite-row {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.favorite-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+}
+
+.favorite-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.favorite-value {
+  font-size: 1.15rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  width: 100%;
+}
+
+.favorite-actions {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+}
+
+.icon-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 8px 12px;
+  min-width: 48px;
+  min-height: 44px;
+}
+
+.icon-btn + .icon-btn {
+  border-top: 1px solid var(--border);
+}
+
+.icon-btn-danger { color: var(--danger); }
+
+/* ─── Έκτακτη Ανάγκη: Κλήση ─────────────────────────────────────── */
+
+.emergency-note {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.emergency-numbers {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.emergency-number-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  min-height: 80px;
+  color: var(--text);
+}
+
+.emergency-number-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.emergency-number-num {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--danger-strong);
+  min-width: 80px;
+}
+
+.emergency-number-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+
+/* ─── Έκτακτη Ανάγκη: Πεδίο ─────────────────────────────────────── */
+
+.field-header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.field-statement {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.field-statement + .field-statement { margin-top: 6px; }
+
+.yesno-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.yesno-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 130px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.yesno-yes { background: var(--success); }
+.yesno-no  { background: var(--danger-strong); }
+
+.yesno-icon {
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+.yesno-label {
+  font-size: 1.3rem;
+  letter-spacing: 0.05em;
+}
+
+.field-phrases-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ─── Tab bar ───────────────────────────────────────────────────── */
+
 .tabbar {
   position: fixed;
   bottom: 0;
@@ -324,7 +779,7 @@ dialog textarea {
   flex: 1;
   text-align: center;
   padding: 8px 4px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   border: none;
   background: none;
@@ -334,17 +789,19 @@ dialog textarea {
   justify-content: center;
   gap: 2px;
   min-height: 48px;
+  cursor: pointer;
 }
 
 .tab.active { color: var(--accent); font-weight: 700; }
 .tab .tab-icon { display: block; font-size: 1.3rem; }
 
 .tab:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* Σεβασμός στην προτίμηση για μειωμένη κίνηση */
+/* ─── Reduced motion ────────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
