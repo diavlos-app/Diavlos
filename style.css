@@ -51,18 +51,76 @@ body {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
-/* ─── Visually hidden (screen reader only) ─────────────────────── */
+/* ─── Visually hidden ───────────────────────────────────────────── */
 
 .visually-hidden {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ─── SVG Icons (βασικά μεγέθη) ────────────────────────────────── */
+
+svg.icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+svg.category-icon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+svg.tab-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+svg.btn-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+svg.icon-btn-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+svg.filter-chip-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+svg.tag-btn-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+svg.emergency-number-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  color: var(--danger-strong);
+}
+
+svg.yesno-icon {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  color: #ffffff;
 }
 
 /* ─── Focus ─────────────────────────────────────────────────────── */
@@ -103,10 +161,9 @@ header {
 #back-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
   color: var(--accent);
   cursor: pointer;
-  padding: 10px 14px;
+  padding: 10px;
   min-width: 48px;
   min-height: 48px;
   display: inline-flex;
@@ -116,6 +173,11 @@ header {
 }
 
 #back-btn[hidden] { display: none; }
+
+#back-btn svg {
+  width: 26px;
+  height: 26px;
+}
 
 #screen-title {
   font-size: 1.3rem;
@@ -143,33 +205,42 @@ main {
   padding-bottom: calc(var(--tabbar-total) + 100px);
 }
 
-/* ─── Αρχική: Έκτακτη Ανάγκη ────────────────────────────────────── */
+/* ─── Αρχική: Έκτακτη Ανάγκη (SOS πλακίδιο) ────────────────────── */
 
 .emergency-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 6px solid var(--danger-strong);
   border-radius: 16px;
   padding: 18px;
   margin-bottom: 16px;
 }
 
-.emergency-header {
+.emergency-sos {
+  background: var(--danger-strong);
+  color: var(--danger-contrast);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  margin-bottom: 12px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 4px;
 }
 
-.emergency-icon {
-  font-size: 2.2rem;
+.sos-big {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 2.6rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
   line-height: 1;
 }
 
-.emergency-title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--danger-strong);
+.sos-small {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  opacity: 0.9;
 }
 
 .emergency-actions {
@@ -216,14 +287,17 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   font-size: 1.05rem;
   color: var(--text);
-  min-height: 110px;
+  min-height: 130px;
 }
 
-.category-icon { font-size: 2.4rem; line-height: 1; }
+.category-card svg.category-icon {
+  color: var(--accent);
+}
+
 .category-name {
   font-weight: 600;
   text-align: center;
@@ -264,14 +338,21 @@ main {
 .delete-btn {
   border: none;
   border-radius: 10px;
-  padding: 12px 14px;
-  font-size: 1.1rem;
+  padding: 12px;
   cursor: pointer;
   min-height: 48px;
   min-width: 48px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.speak-btn svg,
+.show-btn svg,
+.fav-btn svg,
+.delete-btn svg {
+  width: 22px;
+  height: 22px;
 }
 
 .speak-btn {
@@ -319,10 +400,17 @@ main {
   background: var(--accent);
   color: var(--accent-contrast);
   border: none;
-  font-size: 1.8rem;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#add-custom-btn svg {
+  width: 28px;
+  height: 28px;
 }
 
 #add-custom-btn[hidden] { display: none; }
@@ -514,7 +602,7 @@ dialog input[type="text"] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 10px 4px;
   border: 2px solid var(--border);
   border-radius: 10px;
@@ -524,19 +612,22 @@ dialog input[type="text"] {
   font-weight: 600;
   cursor: pointer;
   text-align: center;
-  min-height: 58px;
+  min-height: 64px;
   line-height: 1.15;
 }
 
-.tag-btn-icon {
-  font-size: 1.3rem;
-  line-height: 1;
+.tag-btn svg.tag-btn-icon {
+  color: var(--accent);
 }
 
 .tag-btn-active {
   background: var(--accent);
   color: var(--accent-contrast);
   border-color: var(--accent);
+}
+
+.tag-btn-active svg.tag-btn-icon {
+  color: var(--accent-contrast);
 }
 
 /* ─── Αγαπημένα: φίλτρα ─────────────────────────────────────────── */
@@ -557,7 +648,7 @@ dialog input[type="text"] {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 8px 12px;
   border: 2px solid var(--border);
   border-radius: 999px;
@@ -570,12 +661,18 @@ dialog input[type="text"] {
   min-height: 40px;
 }
 
-.filter-chip-icon { font-size: 1rem; }
+.filter-chip svg.filter-chip-icon {
+  color: var(--accent);
+}
 
 .filter-chip-active {
   background: var(--chip-active-bg);
   color: var(--chip-active-text);
   border-color: var(--chip-active-bg);
+}
+
+.filter-chip-active svg.filter-chip-icon {
+  color: var(--chip-active-text);
 }
 
 /* ─── Αγαπημένα: λίστα ──────────────────────────────────────────── */
@@ -635,11 +732,13 @@ dialog input[type="text"] {
   border: none;
   background: transparent;
   color: var(--text);
-  font-size: 1.1rem;
   cursor: pointer;
   padding: 8px 12px;
   min-width: 48px;
   min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .icon-btn + .icon-btn {
@@ -676,11 +775,6 @@ dialog input[type="text"] {
   text-align: left;
   min-height: 80px;
   color: var(--text);
-}
-
-.emergency-number-icon {
-  font-size: 2rem;
-  line-height: 1;
 }
 
 .emergency-number-num {
@@ -729,8 +823,8 @@ dialog input[type="text"] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 130px;
+  gap: 8px;
+  min-height: 140px;
   border: none;
   border-radius: 16px;
   cursor: pointer;
@@ -740,11 +834,6 @@ dialog input[type="text"] {
 
 .yesno-yes { background: var(--success); }
 .yesno-no  { background: var(--danger-strong); }
-
-.yesno-icon {
-  font-size: 2.6rem;
-  line-height: 1;
-}
 
 .yesno-label {
   font-size: 1.3rem;
@@ -787,13 +876,13 @@ dialog input[type="text"] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 4px;
   min-height: 48px;
   cursor: pointer;
 }
 
 .tab.active { color: var(--accent); font-weight: 700; }
-.tab .tab-icon { display: block; font-size: 1.3rem; }
+.tab.active svg.tab-icon { color: var(--accent); }
 
 .tab:disabled {
   opacity: 0.4;
