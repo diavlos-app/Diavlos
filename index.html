@@ -6,7 +6,6 @@
   <meta name="theme-color" content="#2d6a4f" />
   <meta name="description" content="Δίαυλος: εργαλείο επικοινωνίας για κωφούς και βαρήκοους. Έτοιμες φράσεις, αγαπημένα, έκτακτη ανάγκη. Λειτουργεί και χωρίς σύνδεση." />
 
-  <!-- iOS / Android PWA -->
   <link rel="apple-touch-icon" href="icon-192.png" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -18,8 +17,156 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <!-- ═══ SVG SPRITE (inline, δουλεύει παντού) ═══ -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+
+    <!-- Κάτω πλοήγηση -->
+    <symbol id="icon-cards" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v10H8l-4 4V5z"/>
+    </symbol>
+
+    <symbol id="icon-favorites" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3z"/>
+    </symbol>
+
+    <symbol id="icon-map" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 18 3 20V6l6-2 6 2 6-2v14l-6 2-6-2z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 10a2 2 0 1 0-4 0c0 2 2 4 2 4s2-2 2-4z"/>
+    </symbol>
+
+    <symbol id="icon-transcribe" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3M9 21h6"/>
+    </symbol>
+
+    <!-- Κατηγορίες -->
+    <symbol id="icon-services" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 8h14M4 8l8-5 8 5M6 8v10M10 8v10M14 8v10M18 8v10"/>
+    </symbol>
+
+    <symbol id="icon-cafe" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 10h10v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 11h2a2 2 0 0 1 0 4h-2M8 3c0 2 1 2 1 4M12 3c0 2 1 2 1 4"/>
+    </symbol>
+
+    <symbol id="icon-pharmacy" viewBox="0 0 24 24">
+      <rect x="4" y="6" width="16" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 10h16"/>
+      <path fill="currentColor" d="M11 12h2v3h3v2h-3v3h-2v-3H8v-2h3z"/>
+    </symbol>
+
+    <symbol id="icon-shopping" viewBox="0 0 24 24">
+      <circle cx="9" cy="19" r="1" fill="currentColor"/>
+      <circle cx="17" cy="19" r="1" fill="currentColor"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 5h2l2.5 9h9.5l2-6H7.5"/>
+    </symbol>
+
+    <!-- Ενέργειες -->
+    <symbol id="icon-speak" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 10h3l4-3v10l-4-3H5z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M16 9a4 4 0 0 1 0 6M18.5 7a7 7 0 0 1 0 10"/>
+    </symbol>
+
+    <symbol id="icon-show" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/>
+      <circle cx="12" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+
+    <symbol id="icon-star" viewBox="0 0 24 24">
+      <path fill="currentColor" d="m12 2.8 2.7 5.6 6.2.9-4.5 4.3 1.1 6.2L12 16.9 6.5 19.8l1.1-6.2L3.1 9.3l6.2-.9z"/>
+    </symbol>
+
+    <symbol id="icon-trash" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 3h6l1 2H8l1-2zm1 4v12m4-12v12m4-12-1 13H8L7 7"/>
+    </symbol>
+
+    <!-- Έκτακτη Ανάγκη — νούμερα -->
+    <symbol id="icon-police" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3 19 6v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m12 8 1.2 2.4 2.8.4-2 2 .5 2.7L12 14.2 9.5 15.5l.5-2.7-2-2 2.8-.4z"/>
+    </symbol>
+
+    <symbol id="icon-ambulance" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 8h11v8H3zM14 10h4l3 3v3h-7z"/>
+      <circle cx="7" cy="18" r="1.5" fill="currentColor"/>
+      <circle cx="17" cy="18" r="1.5" fill="currentColor"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8.5 10v4M6.5 12h4"/>
+    </symbol>
+
+    <symbol id="icon-fire" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3s3 3 3 6a3 3 0 0 1-6 0c0 5-4 5-4 9a7 7 0 0 0 14 0c0-5-3-7-7-15z"/>
+    </symbol>
+
+    <symbol id="icon-eu" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+      <text x="12" y="16" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="currentColor" text-anchor="middle">112</text>
+    </symbol>
+
+    <!-- ΝΑΙ/ΟΧΙ -->
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+    </symbol>
+
+    <symbol id="icon-close" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/>
+    </symbol>
+
+    <!-- Tags -->
+    <symbol id="icon-tag-personal" viewBox="0 0 24 24">
+      <circle cx="12" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 20a7 7 0 0 1 14 0"/>
+    </symbol>
+
+    <symbol id="icon-tag-contact" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 4h3l2 5-2 1.5a14 14 0 0 0 5.5 5.5L15 14l5 2v3a2 2 0 0 1-2 2C10 21 3 14 3 6a2 2 0 0 1 2-2z"/>
+    </symbol>
+
+    <symbol id="icon-tag-health" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 9v4M10 11h4"/>
+    </symbol>
+
+    <symbol id="icon-tag-preferences" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m12 7 1.4 2.9 3.1.5-2.2 2.2.5 3.2L12 14.4 9.2 15.8l.5-3.2-2.2-2.2 3.1-.5z"/>
+    </symbol>
+
+    <symbol id="icon-tag-other" viewBox="0 0 24 24">
+      <circle cx="6" cy="12" r="1.5" fill="currentColor"/>
+      <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+      <circle cx="18" cy="12" r="1.5" fill="currentColor"/>
+    </symbol>
+
+    <!-- UI -->
+    <symbol id="icon-back" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M12 5l-7 7 7 7"/>
+    </symbol>
+
+    <symbol id="icon-plus" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+    </symbol>
+
+    <symbol id="icon-edit" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10-10-4-4L4 16v4zM13 5l4 4"/>
+    </symbol>
+
+    <symbol id="icon-filter" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/>
+    </symbol>
+
+    <symbol id="icon-info" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 11v5M12 8h.01"/>
+    </symbol>
+
+  </svg>
+  <!-- ═══ ΤΕΛΟΣ SPRITE ═══ -->
+
   <header>
-    <button id="back-btn" type="button" hidden aria-label="Πίσω">←</button>
+    <button id="back-btn" type="button" hidden aria-label="Πίσω">
+      <svg class="icon"><use href="#icon-back"/></svg>
+    </button>
     <div class="header-titles">
       <h1 id="screen-title" tabindex="-1">Δίαυλος</h1>
       <p class="header-subtitle">Προσβάσιμη Επικοινωνία</p>
@@ -32,19 +179,18 @@
     </noscript>
   </main>
 
-  <button id="add-custom-btn" type="button" hidden aria-label="Προσθήκη">+</button>
+  <button id="add-custom-btn" type="button" hidden aria-label="Προσθήκη">
+    <svg class="icon"><use href="#icon-plus"/></svg>
+  </button>
 
-  <!-- Μήνυμα κατάστασης -->
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <!-- Full-screen display (μεγάλα γράμματα για να δείξεις σε άλλον) -->
   <div id="fullscreen" class="fullscreen" hidden role="dialog" aria-modal="true" aria-labelledby="fullscreen-text">
     <p id="fullscreen-label" class="fullscreen-label" hidden></p>
     <p id="fullscreen-text" class="fullscreen-text"></p>
-    <button id="fullscreen-close" type="button" class="fullscreen-close" aria-label="Κλείσιμο">✕ Κλείσιμο</button>
+    <button id="fullscreen-close" type="button" class="fullscreen-close">Κλείσιμο</button>
   </div>
 
-  <!-- Διάλογος: Νέα προσωπική κάρτα -->
   <dialog id="add-dialog" aria-labelledby="add-dialog-title">
     <form id="add-form" novalidate>
       <h2 id="add-dialog-title">Νέα κάρτα</h2>
@@ -58,7 +204,6 @@
     </form>
   </dialog>
 
-  <!-- Διάλογος: Νέο / Επεξεργασία Αγαπημένου -->
   <dialog id="fav-dialog" aria-labelledby="fav-dialog-title">
     <form id="fav-form" novalidate>
       <h2 id="fav-dialog-title">Νέο Αγαπημένο</h2>
@@ -81,7 +226,6 @@
     </form>
   </dialog>
 
-  <!-- Διάλογος: Επιβεβαίωση διαγραφής -->
   <dialog id="confirm-dialog" aria-labelledby="confirm-title">
     <h2 id="confirm-title">Διαγραφή;</h2>
     <p id="confirm-text" class="confirm-text"></p>
@@ -91,23 +235,22 @@
     </div>
   </dialog>
 
-  <!-- Κάτω πλοήγηση -->
   <nav class="tabbar" aria-label="Κύρια πλοήγηση">
     <button id="tab-cards" type="button" class="tab active" aria-current="page">
-      <span class="tab-icon" aria-hidden="true">💬</span>
+      <svg class="tab-icon"><use href="#icon-cards"/></svg>
       Κάρτες
     </button>
     <button id="tab-favorites" type="button" class="tab">
-      <span class="tab-icon" aria-hidden="true">⭐</span>
+      <svg class="tab-icon"><use href="#icon-favorites"/></svg>
       Αγαπημένα
     </button>
     <button type="button" class="tab" disabled>
-      <span class="tab-icon" aria-hidden="true">🗺️</span>
+      <svg class="tab-icon"><use href="#icon-map"/></svg>
       Χάρτης
       <span class="visually-hidden">(έρχεται σύντομα)</span>
     </button>
     <button type="button" class="tab" disabled>
-      <span class="tab-icon" aria-hidden="true">🎙️</span>
+      <svg class="tab-icon"><use href="#icon-transcribe"/></svg>
       Μεταγραφή
       <span class="visually-hidden">(έρχεται σύντομα)</span>
     </button>
