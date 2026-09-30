@@ -120,7 +120,7 @@ svg.yesno-icon {
   width: 52px;
   height: 52px;
   flex-shrink: 0;
-  color: #ffffff;
+  color: inherit;
 }
 
 /* ─── Focus ─────────────────────────────────────────────────────── */
@@ -257,7 +257,7 @@ main {
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  min-height: 60px;
+  min-height: 88px;
 }
 
 .btn-emergency-call {
@@ -355,18 +355,29 @@ main {
   height: 22px;
 }
 
+/* Κύριες ενέργειες: εικονίδιο + ορατή λέξη (ίδιος κανόνας με τις κατηγορίες) */
+.speak-btn,
+.show-btn {
+  flex: 1 1 120px;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.btn-label { line-height: 1; }
+
 .speak-btn {
   background: var(--accent);
   color: var(--accent-contrast);
-  flex: 1;
 }
 
 .show-btn {
   background: var(--chip-bg);
   color: var(--text);
-  flex: 1;
 }
 
+/* Δευτερεύουσες ενέργειες: μόνο εικονίδιο, σκόπιμα — ίδιο μοτίβο με τα
+   icon-btn (Επεξεργασία/Διαγραφή) στη λίστα Αγαπημένων παρακάτω. */
 .fav-btn {
   background: var(--chip-bg);
   color: var(--text);
@@ -747,7 +758,7 @@ dialog input[type="text"] {
 
 .icon-btn-danger { color: var(--danger); }
 
-/* ─── Έκτακτη Ανάγκη: Κλήση ─────────────────────────────────────── */
+/* ─── Έκτακτη Ανάγκη: SMS ───────────────────────────────────────── */
 
 .emergency-note {
   margin: 0 0 16px 0;
@@ -773,20 +784,13 @@ dialog input[type="text"] {
   border-radius: 14px;
   cursor: pointer;
   text-align: left;
-  min-height: 80px;
+  min-height: 88px;
   color: var(--text);
 }
 
-.emergency-number-num {
-  font-size: 2rem;
-  font-weight: 800;
-  color: var(--danger-strong);
-  min-width: 80px;
-}
-
 .emergency-number-label {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: var(--text);
   flex: 1;
 }
@@ -828,12 +832,11 @@ dialog input[type="text"] {
   border: none;
   border-radius: 16px;
   cursor: pointer;
-  color: #ffffff;
   font-weight: 800;
 }
 
-.yesno-yes { background: var(--success); }
-.yesno-no  { background: var(--danger-strong); }
+.yesno-yes { background: var(--success); color: var(--success-contrast); }
+.yesno-no  { background: var(--danger-strong); color: var(--danger-contrast); }
 
 .yesno-label {
   font-size: 1.3rem;

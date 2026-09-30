@@ -8,7 +8,6 @@
 
 const VIEWS = {
   HOME: "home",
-  EMERGENCY: "emergency",
   EMERGENCY_CALL: "emergency-call",
   EMERGENCY_FIELD: "emergency-field",
   CUSTOM: "custom",
@@ -20,12 +19,20 @@ const TABS = {
   FAVORITES: "favorites"
 };
 
-const EMERGENCY_NUMBERS = [
-  { number: "100", label: "Αστυνομία",     iconId: "icon-police" },
-  { number: "166", label: "ΕΚΑΒ",          iconId: "icon-ambulance" },
-  { number: "199", label: "Πυροσβεστική",  iconId: "icon-fire" },
-  { number: "112", label: "Ευρωπαϊκός Αριθμός Έκτακτης Ανάγκης", iconId: "icon-eu" }
+// Το 112 είναι ο μόνος αριθμός στην Ελλάδα με επίσημα τεκμηριωμένη υποστήριξη
+// SMS/MMS/email (με γεωεντοπισμό) για άτομα που δεν μπορούν να μιλήσουν σε
+// κλήση. Το 100/166/199 ΔΕΝ έχουν τέτοια επίσημη υποστήριξη SMS, γι' αυτό
+// κάθε επιλογή παρακάτω στέλνει SMS στο 112 με διαφορετικό κείμενο ανάλογα
+// με την υπηρεσία που χρειάζεται ο χρήστης.
+const EMERGENCY_SERVICES = [
+  { id: "police",    label: "Αστυνομία",            iconId: "icon-police" },
+  { id: "ambulance", label: "Ασθενοφόρο (ΕΚΑΒ)",    iconId: "icon-ambulance" },
+  { id: "fire",       label: "Πυροσβεστική",         iconId: "icon-fire" },
+  { id: "general",   label: "Γενική βοήθεια",        iconId: "icon-eu" }
 ];
+
+const EMERGENCY_SMS_NUMBER = "112";
+const EMERGENCY_GEOLOCATION_TIMEOUT_MS = 4000;
 
 const EMERGENCY_FIELD_PHRASES = [
   "Είμαι κωφός/κωφή.",
@@ -79,7 +86,7 @@ function clear(node) {
 
 function isKnownView(view) {
   if (view === VIEWS.HOME || view === VIEWS.CUSTOM || view === VIEWS.FAVORITES) return true;
-  if (view === VIEWS.EMERGENCY || view === VIEWS.EMERGENCY_CALL || view === VIEWS.EMERGENCY_FIELD) return true;
+  if (view === VIEWS.EMERGENCY_CALL || view === VIEWS.EMERGENCY_FIELD) return true;
   return CARD_CATEGORIES.some((c) => c.id === view);
 }
 
@@ -155,7 +162,6 @@ function render(view, moveFocus) {
   updateTabBar();
 
   if (view === VIEWS.HOME) renderHome();
-  else if (view === VIEWS.EMERGENCY) renderEmergency();
   else if (view === VIEWS.EMERGENCY_CALL) renderEmergencyCall();
   else if (view === VIEWS.EMERGENCY_FIELD) renderEmergencyField();
   else if (view === VIEWS.CUSTOM) renderCustom();
@@ -196,7 +202,7 @@ function emergencyCard() {
 
   const actions = h("div", "emergency-actions");
 
-  const callBtn = h("button", "btn-emergency-call", "ΚΛΗΣΗ");
+  const callBtn = h("button", "btn-emergency-call", "SMS");
   callBtn.type = "button";
   callBtn.addEventListener("click", () => navigateTo(VIEWS.EMERGENCY_CALL));
 
@@ -221,29 +227,74 @@ function categoryButton(iconId, name, view) {
 // ─── Οθόνη: Έκτακτη Ανάγκη — Κλήση ────────────────────────────────
 
 function renderEmergencyCall() {
-  els.title.textContent = "Κλήση Έκτακτης Ανάγκης";
+  els.title.textContent = "SMS Έκτακτης Ανάγκης";
 
   const note = h("p", "emergency-note",
-    "Επιλέξτε υπηρεσία. Η κλήση γίνεται απευθείας από το τηλέφωνό σας."
+    "Ποτέ κλήση. Διάλεξε τι χρειάζεσαι· θα ανοίξει έτοιμο SMS προς το 112, " +
+    "με την τοποθεσία σου αν το επιτρέψεις."
   );
 
   const list = h("div", "emergency-numbers");
-  EMERGENCY_NUMBERS.forEach((item) => {
+  EMERGENCY_SERVICES.forEach((item) => {
     const btn = h("button", "emergency-number-btn");
     btn.type = "button";
     btn.append(
       svgIcon(item.iconId, "emergency-number-icon"),
-      h("span", "emergency-number-num", item.number),
       h("span", "emergency-number-label", item.label)
     );
-    btn.addEventListener("click", () => {
-      window.location.href = "tel:" + item.number;
-    });
+    btn.addEventListener("click", () => composeEmergencySms(item.label));
     list.appendChild(btn);
   });
 
   clear(els.content);
   els.content.append(note, list);
+}
+
+// Ο μόνος αριθμός με επίσημα τεκμηριωμένη υποστήριξη SMS με γεωεντοπισμό
+// είναι το 112 — γι' αυτό ΚΑΘΕ επιλογή στέλνει εδώ, με το όνομα της
+// υπηρεσίας μέσα στο κείμενο του μηνύματος. Ποτέ δεν ανοίγει κλήση.
+function buildEmergencySmsBody(serviceLabel, locationLine) {
+  let body = "Είμαι κωφός/κωφή. Χρειάζομαι: " + serviceLabel + ".";
+  if (locationLine) body += " " + locationLine;
+  return body;
+}
+
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent || "");
+}
+
+function openEmergencySms(body) {
+  // Το iOS θέλει "&" πριν το body, το Android/τα υπόλοιπα "?".
+  const sep = isIOSDevice() ? "&" : "?";
+  window.location.href = "sms:" + EMERGENCY_SMS_NUMBER + sep + "body=" + encodeURIComponent(body);
+}
+
+function composeEmergencySms(serviceLabel) {
+  if (!("geolocation" in navigator)) {
+    openEmergencySms(buildEmergencySmsBody(serviceLabel, ""));
+    return;
+  }
+
+  let settled = false;
+  const finish = (locationLine) => {
+    if (settled) return;
+    settled = true;
+    openEmergencySms(buildEmergencySmsBody(serviceLabel, locationLine));
+  };
+
+  // Ποτέ δεν μπλοκάρουμε την αποστολή περιμένοντας την τοποθεσία για πάντα:
+  // αν δεν απαντήσει εγκαίρως, στέλνουμε το SMS χωρίς αυτήν.
+  setTimeout(() => finish(""), EMERGENCY_GEOLOCATION_TIMEOUT_MS);
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      finish("Τοποθεσία: https://maps.google.com/?q=" + lat + "," + lng);
+    },
+    () => finish(""),
+    { timeout: EMERGENCY_GEOLOCATION_TIMEOUT_MS, maximumAge: 60000 }
+  );
 }
 
 // ─── Οθόνη: Έκτακτη Ανάγκη — Πεδίο (ΝΑΙ/ΟΧΙ) ─────────────────────
@@ -365,6 +416,7 @@ function favoritesFilterBar() {
 
   const allBtn = h("button", "filter-chip" + (selectedTags.length === 0 ? " filter-chip-active" : ""), "Όλα");
   allBtn.type = "button";
+  allBtn.setAttribute("aria-pressed", selectedTags.length === 0 ? "true" : "false");
   allBtn.addEventListener("click", () => {
     selectedTags = [];
     renderFavorites();
@@ -427,16 +479,21 @@ function phraseCard(card, isCustom, showFavorite) {
 
   const actions = h("div", "phrase-actions");
 
+  // Οι δύο κύριες ενέργειες (Άκουσμα/Εμφάνιση) παίρνουν ορατή λέξη δίπλα στο
+  // εικονίδιο, όπως στις κατηγορίες της αρχικής — ίδιος κανόνας, ίδια λογική.
+  // Το ⭐/🗑️ παρακάτω μένουν μόνο εικονίδιο σκόπιμα: είναι δευτερεύουσες
+  // ενέργειες, στο ίδιο μοτίβο με τα icon-btn του Επεξεργασία/Διαγραφή στα
+  // Αγαπημένα (favoriteRow), για ομοιόμορφη οπτική γλώσσα σε όλη την εφαρμογή.
   const speakBtn = h("button", "speak-btn");
   speakBtn.type = "button";
+  speakBtn.append(svgIcon("icon-speak", "btn-icon"), h("span", "btn-label", "Ανάγνωση"));
   speakBtn.setAttribute("aria-label", "Ανάγνωση φωνητικά");
-  speakBtn.appendChild(svgIcon("icon-speak", "btn-icon"));
   actions.appendChild(speakBtn);
 
   const showBtn = h("button", "show-btn");
   showBtn.type = "button";
+  showBtn.append(svgIcon("icon-show", "btn-icon"), h("span", "btn-label", "Εμφάνιση"));
   showBtn.setAttribute("aria-label", "Εμφάνιση σε μεγάλα γράμματα");
-  showBtn.appendChild(svgIcon("icon-show", "btn-icon"));
   actions.appendChild(showBtn);
 
   if (showFavorite) {
@@ -468,11 +525,29 @@ function openFullscreen(text, label) {
   els.fullscreenLabel.hidden = !label;
   els.fullscreenText.textContent = text;
   els.fullscreen.hidden = false;
+  setBackgroundInert(true);
+  document.addEventListener("keydown", onFullscreenKeydown);
   els.fullscreenClose.focus();
 }
 
 function closeFullscreen() {
   els.fullscreen.hidden = true;
+  setBackgroundInert(false);
+  document.removeEventListener("keydown", onFullscreenKeydown);
+}
+
+function onFullscreenKeydown(event) {
+  if (event.key === "Escape") closeFullscreen();
+}
+
+// "inert" αφαιρεί από την προσβασιμότητα ό,τι δεν ανήκει στο fullscreen,
+// ώστε το Tab (ή screen reader) να μην περνά σε κρυφό περιεχόμενο από πίσω.
+function setBackgroundInert(on) {
+  [els.header, els.content, els.fab, els.tabbarEl].forEach((el) => {
+    if (!el) return;
+    if (on) el.setAttribute("inert", "");
+    else el.removeAttribute("inert");
+  });
 }
 
 // ─── Ανάγνωση φωνητικά ────────────────────────────────────────────
@@ -667,6 +742,8 @@ function init() {
 
   els.tabCards = document.getElementById("tab-cards");
   els.tabFavorites = document.getElementById("tab-favorites");
+  els.header = document.querySelector("header");
+  els.tabbarEl = document.querySelector(".tabbar");
 
   // Χτίσιμο tag buttons στον διάλογο Αγαπημένου
   TAGS.forEach((tag) => {
