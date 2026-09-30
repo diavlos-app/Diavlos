@@ -3,343 +3,341 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Δίαυλος — Γραμματοσειρές v2</title>
+<title>Δίαυλος — Emergency Header</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700;800&family=Manrope:wght@400;500;700;800&family=Sofia+Sans:wght@400;500;700;800&family=Alegreya+Sans:wght@400;500;700;800&family=Jura:wght@400;500;700&family=Play:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
   :root {
     --bg: #f7f7fa;
     --surface: #ffffff;
+    --surface-2: #eceef1;
     --text: #1a1a1a;
-    --muted: #6b6b6b;
+    --text-muted: #6b6b6b;
     --border: #e0e0e5;
     --accent: #2d6a4f;
-    --dark-bg: #14161a;
-    --dark-surface: #1e2126;
-    --dark-text: #f0f0f0;
-    --dark-muted: #a0a0a8;
+    --danger: #c62828;
+    --danger-contrast: #ffffff;
+
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 20px;
+    --sp-6: 24px;
+
+    --r-sm: 10px;
+    --r-md: 12px;
+    --r-lg: 16px;
+    --r-full: 999px;
+
+    --font: 'Jura', -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --surface: #1e2126;
+      --surface-2: #2a2d33;
+      --text: #f0f0f0;
+      --text-muted: #a0a0a8;
+      --border: #33363c;
+      --accent: #52b788;
+      --danger: #ef5350;
+      --danger-contrast: #0a0a0a;
+    }
   }
 
   * { box-sizing: border-box; }
 
   body {
-    margin: 0; padding: 20px;
-    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg); color: var(--text);
+    margin: 0;
+    padding: var(--sp-4);
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
   }
 
-  h1 { font-size: 1.2rem; margin: 0 0 6px; }
-  p.intro { color: var(--muted); font-size: 0.9rem; margin: 0 0 20px; line-height: 1.5; }
+  h1 { font-size: 1.2rem; margin: 0 0 var(--sp-2); font-weight: 700; }
+  p.intro { color: var(--text-muted); font-size: 0.9rem; margin: 0 0 var(--sp-5); line-height: 1.5; }
 
   h2 {
-    font-size: 0.85rem; margin: 28px 0 12px; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--border); padding-bottom: 6px;
+    font-size: 0.85rem;
+    margin: var(--sp-6) 0 var(--sp-3);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--sp-2);
   }
 
-  .header-mock {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 16px; border-radius: 12px;
-    margin-bottom: 10px; overflow: hidden;
-  }
-  .header-mock.light {
-    background: var(--surface); border: 1px solid var(--border); color: var(--text);
-  }
-  .header-mock.dark {
-    background: var(--dark-surface); border: 1px solid #33363c; color: var(--dark-text);
+  /* ─── Emergency card base ─────────────────────────────────── */
+
+  .emergency-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--danger);
+    border-radius: var(--r-lg);
+    padding: var(--sp-5);
+    margin-bottom: var(--sp-4);
   }
 
-  .hm-icon { flex-shrink: 0; }
-  .hm-icon svg { display: block; border-radius: 22%; }
-
-  .hm-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .hm-title {
-    font-size: 1.4rem; font-weight: 800;
-    line-height: 1.1; letter-spacing: -0.01em;
+  .emergency-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-2);
+    margin-top: var(--sp-4);
   }
-  .hm-sub {
-    font-size: 0.7rem; font-weight: 500;
-    line-height: 1.2; letter-spacing: 0.1em;
+
+  .btn-emergency-sms,
+  .btn-emergency-field {
+    border: none;
+    border-radius: var(--r-md);
+    padding: var(--sp-4) var(--sp-3);
+    font-family: var(--font);
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    min-height: 64px;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-emergency-sms {
+    background: var(--danger);
+    color: var(--danger-contrast);
+  }
+
+  .btn-emergency-field {
+    background: var(--surface);
+    color: var(--text);
+    border: 2px solid var(--border);
+  }
+
+  /* ─── ΛΥΣΗ Α: Marker χωρίς radius, αριστερά ──────────────── */
+
+  .sol-A .emergency-header {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .sol-A .emergency-titles {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 6px 14px;
+    background: var(--danger);
+    border-radius: 2px;
+  }
+
+  .sol-A .emergency-title {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    color: #ffe9a8;
+  }
+
+  .sol-A .emergency-subtitle {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: #ffe9a8;
     text-transform: uppercase;
   }
-  .header-mock.light .hm-sub { color: var(--muted); }
-  .header-mock.dark .hm-sub { color: var(--dark-muted); }
 
-  .font-label {
-    font-size: 0.8rem; color: var(--text); margin: 0 0 6px 4px;
-    font-weight: 700; letter-spacing: 0.02em;
-  }
-  .font-desc {
-    font-size: 0.75rem; color: var(--muted);
-    margin: 0 0 12px 4px; line-height: 1.4;
+  /* ─── ΛΥΣΗ Β: Δύο ξεχωριστά highlights ─────────────────── */
+
+  .sol-B .emergency-header {
+    display: flex;
+    justify-content: flex-start;
   }
 
-  /* ─── ΓΡΑΜΜΑΤΟΣΕΙΡΕΣ ─────────────────────────────────────── */
-  .f-commissioner { font-family: "Commissioner", sans-serif; }
-  .f-manrope      { font-family: "Manrope", sans-serif; }
-  .f-sofia        { font-family: "Sofia Sans", sans-serif; }
-  .f-alegreya     { font-family: "Alegreya Sans", sans-serif; }
-  .f-jura         { font-family: "Jura", sans-serif; }
-  .f-play         { font-family: "Play", sans-serif; }
-
-  /* Διαφορετικά βάρη για κάθε γραμματοσειρά */
-  .f-commissioner .hm-title { font-weight: 800; }
-  .f-commissioner .hm-sub   { font-weight: 500; }
-
-  .f-manrope .hm-title      { font-weight: 800; letter-spacing: -0.02em; }
-  .f-manrope .hm-sub        { font-weight: 500; }
-
-  .f-sofia .hm-title        { font-weight: 800; letter-spacing: -0.01em; }
-  .f-sofia .hm-sub          { font-weight: 400; }
-
-  .f-alegreya .hm-title     { font-weight: 800; letter-spacing: 0; }
-  .f-alegreya .hm-sub       { font-weight: 500; }
-
-  .f-jura .hm-title         { font-weight: 700; letter-spacing: 0.02em; }
-  .f-jura .hm-sub           { font-weight: 400; letter-spacing: 0.15em; }
-
-  .f-play .hm-title         { font-weight: 700; letter-spacing: 0; }
-  .f-play .hm-sub           { font-weight: 400; letter-spacing: 0.12em; }
-
-  /* Σύμβολο showcase */
-  .symbol-showcase {
-    display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap;
-    padding: 16px; background: var(--surface); border-radius: 12px;
-    margin-bottom: 16px; border: 1px solid var(--border);
+  .sol-B .emergency-titles {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
-  .symbol-showcase.dark { background: var(--dark-surface); border-color: #33363c; }
-  .symbol-showcase .item { text-align: center; }
-  .symbol-showcase .item .lbl {
-    font-size: 0.65rem; color: var(--muted); margin-top: 6px;
-  }
-  .symbol-showcase.dark .item .lbl { color: var(--dark-muted); }
 
-  /* Δείγμα ελληνικών χαρακτήρων */
-  .alphabet-sample {
-    padding: 16px; background: var(--surface); border-radius: 12px;
-    margin-bottom: 12px; border: 1px solid var(--border);
+  .sol-B .emergency-title {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    line-height: 1.1;
+    color: #ffe9a8;
+    background: var(--danger);
+    padding: 2px 10px;
+    border-radius: 2px;
   }
-  .alphabet-sample .big {
-    font-size: 1.5rem; line-height: 1.5; font-weight: 400;
-    margin-bottom: 8px; word-break: break-all;
+
+  .sol-B .emergency-subtitle {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: #ffe9a8;
+    text-transform: uppercase;
+    background: var(--danger);
+    padding: 2px 8px;
+    border-radius: 2px;
   }
-  .alphabet-sample .small {
-    font-size: 0.85rem; color: var(--muted); line-height: 1.5;
+
+  /* ─── ΛΥΣΗ Γ: Ασύμμετρο highlight (clip-path) ─────────── */
+
+  .sol-C .emergency-header {
+    display: flex;
+    justify-content: flex-start;
   }
-  .alphabet-sample .num {
-    font-size: 1.2rem; font-weight: 700; letter-spacing: 0.05em;
+
+  .sol-C .emergency-titles {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 6px 16px 6px 12px;
+    background: var(--danger);
+    clip-path: polygon(2% 0%, 100% 4%, 98% 96%, 0% 100%);
+  }
+
+  .sol-C .emergency-title {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    color: #ffe9a8;
+  }
+
+  .sol-C .emergency-subtitle {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: #ffe9a8;
+    text-transform: uppercase;
+    padding-top: 3px;
+  }
+
+  /* ─── Σύγκριση πλήρους κάρτας ─────────────────────────── */
+
+  .compare-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+  }
+
+  .compare-item .label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: var(--sp-2);
+    letter-spacing: 0.05em;
   }
 </style>
 </head>
 <body>
 
-<h1>Δίαυλος — Γραμματοσειρές (v2)</h1>
+<h1>Emergency Header — 3 λύσεις</h1>
 <p class="intro">
-  6 γραμματοσειρές με πλήρη υποστήριξη ελληνικών — όλες δωρεάν, από το Google Fonts.
-  Δες τη διαφορά στο header, σε light & dark mode, σε ελληνικά γράμματα, και σε αριθμούς.
+  Ίδιο κόκκινο marker, τρεις διαφορετικές ερμηνείες. Δες τα σε πλήρη κάρτα με τα κουμπιά
+  SMS / ΝΑΙ-ΟΧΙ από κάτω — έτσι φαίνεται αν μπερδεύεται ο χρήστης.
 </p>
 
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
-  <symbol id="sym-stag" viewBox="0 0 100 100">
-    <rect width="100" height="100" rx="20" fill="#2d6a4f"/>
-    <path d="M 50,20 L 78,78 L 22,78 Z" fill="#ffffff"/>
-    <rect x="54" y="44" width="14" height="3.5" rx="1.7" fill="#2d6a4f"/>
-    <rect x="50" y="54" width="22" height="3.5" rx="1.7" fill="#2d6a4f"/>
-    <rect x="46" y="64" width="30" height="3.5" rx="1.7" fill="#2d6a4f"/>
-  </symbol>
-  <symbol id="sym-dark-stag" viewBox="0 0 100 100">
-    <rect width="100" height="100" rx="20" fill="#52b788"/>
-    <path d="M 50,20 L 78,78 L 22,78 Z" fill="#14161a"/>
-    <rect x="54" y="44" width="14" height="3.5" rx="1.7" fill="#52b788"/>
-    <rect x="50" y="54" width="22" height="3.5" rx="1.7" fill="#52b788"/>
-    <rect x="46" y="64" width="30" height="3.5" rx="1.7" fill="#52b788"/>
-  </symbol>
-</svg>
+<h2>Σύγκριση — Πλήρεις κάρτες</h2>
 
-<!-- ═══ ΣΥΜΒΟΛΟ ═══ -->
-<h2>Σύμβολο σε 4 μεγέθη</h2>
-<div class="symbol-showcase">
-  <div class="item"><svg width="80" height="80"><use href="#sym-stag"/></svg><div class="lbl">80px</div></div>
-  <div class="item"><svg width="48" height="48"><use href="#sym-stag"/></svg><div class="lbl">48px</div></div>
-  <div class="item"><svg width="32" height="32"><use href="#sym-stag"/></svg><div class="lbl">32px</div></div>
-  <div class="item"><svg width="20" height="20"><use href="#sym-stag"/></svg><div class="lbl">20px</div></div>
-</div>
+<div class="compare-grid">
 
-<!-- ═══ 1. COMMISSIONER ═══ -->
-<h2>1. Commissioner — σοβαρή, θεσμική, από Έλληνα σχεδιαστή</h2>
-<p class="font-desc">
-  <strong>Κώστας Μπαρτσόκας</strong> (Θεσσαλονίκη). Humanist sans-serif, 9 βάρη, low-contrast. 
-  Σχεδιασμένη για interfaces. Εξαιρετικά ελληνικά. Variable font — δουλεύει σε κάθε μέγεθος.
-</p>
-
-<div class="header-mock light f-commissioner">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
+  <!-- ΛΥΣΗ Α -->
+  <div class="compare-item sol-A">
+    <div class="label">ΛΥΣΗ Α — Marker χωρίς radius, αριστερά</div>
+    <div class="emergency-card">
+      <div class="emergency-header">
+        <div class="emergency-titles">
+          <span class="emergency-title">SOS</span>
+          <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
+        </div>
+      </div>
+      <div class="emergency-actions">
+        <button class="btn-emergency-sms" type="button">SMS</button>
+        <button class="btn-emergency-field" type="button">ΝΑΙ / ΟΧΙ</button>
+      </div>
+    </div>
   </div>
-</div>
 
-<div class="header-mock dark f-commissioner">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-dark-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
+  <!-- ΛΥΣΗ Β -->
+  <div class="compare-item sol-B">
+    <div class="label">ΛΥΣΗ Β — Δύο ξεχωριστά highlights</div>
+    <div class="emergency-card">
+      <div class="emergency-header">
+        <div class="emergency-titles">
+          <span class="emergency-title">SOS</span>
+          <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
+        </div>
+      </div>
+      <div class="emergency-actions">
+        <button class="btn-emergency-sms" type="button">SMS</button>
+        <button class="btn-emergency-field" type="button">ΝΑΙ / ΟΧΙ</button>
+      </div>
+    </div>
   </div>
-</div>
 
-<div class="alphabet-sample f-commissioner">
-  <div class="big">ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ αβγδεζηθικλμνξοπρστυφχψω ς</div>
-  <div class="num">0123456789 100 166 199 112</div>
-  <div class="small">Το γρήγορο καφέ αλεπού πηδάει πάνω από τον τεμπέλη σκύλο.</div>
-</div>
-
-<!-- ═══ 2. MANROPE ═══ -->
-<h2>2. Manrope — μοντέρνα, γεωμετρική</h2>
-<p class="font-desc">
-  Γεωμετρική sans-serif με καθαρές γραμμές. Πολύ δημοφιλής σε σύγχρονα startups. 
-  Υποστηρίζει ελληνικά (greek-ext).
-</p>
-
-<div class="header-mock light f-manrope">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
+  <!-- ΛΥΣΗ Γ -->
+  <div class="compare-item sol-C">
+    <div class="label">ΛΥΣΗ Γ — Ασύμμετρο highlight (clip-path)</div>
+    <div class="emergency-card">
+      <div class="emergency-header">
+        <div class="emergency-titles">
+          <span class="emergency-title">SOS</span>
+          <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
+        </div>
+      </div>
+      <div class="emergency-actions">
+        <button class="btn-emergency-sms" type="button">SMS</button>
+        <button class="btn-emergency-field" type="button">ΝΑΙ / ΟΧΙ</button>
+      </div>
+    </div>
   </div>
+
 </div>
 
-<div class="header-mock dark f-manrope">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-dark-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
+<h2>Μόνο τα headers — δίπλα-δίπλα</h2>
+
+<div class="compare-grid">
+
+  <div class="compare-item sol-A">
+    <div class="label">Α</div>
+    <div class="emergency-header">
+      <div class="emergency-titles">
+        <span class="emergency-title">SOS</span>
+        <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
+      </div>
+    </div>
   </div>
-</div>
 
-<div class="alphabet-sample f-manrope">
-  <div class="big">ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ αβγδεζηθικλμνξοπρστυφχψω ς</div>
-  <div class="num">0123456789 100 166 199 112</div>
-  <div class="small">Το γρήγορο καφέ αλεπού πηδάει πάνω από τον τεμπέλη σκύλο.</div>
-</div>
-
-<!-- ═══ 3. SOFIA SANS ═══ -->
-<h2>3. Sofia Sans — σχεδιασμένη για ελληνικά από την αρχή</h2>
-<p class="font-desc">
-  Δημιουργήθηκε για τη βουλγαρική προεδρία της ΕΕ (2021) — <strong>άρα έχει δουλευτεί 
-  για θεσμικό πλαίσιο</strong>. Υποστηρίζει πλήρως ελληνικά με εξαιρετικά διακριτικά.
-</p>
-
-<div class="header-mock light f-sofia">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
+  <div class="compare-item sol-B">
+    <div class="label">Β</div>
+    <div class="emergency-header">
+      <div class="emergency-titles">
+        <span class="emergency-title">SOS</span>
+        <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
+      </div>
+    </div>
   </div>
-</div>
 
-<div class="header-mock dark f-sofia">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-dark-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
+  <div class="compare-item sol-C">
+    <div class="label">Γ</div>
+    <div class="emergency-header">
+      <div class="emergency-titles">
+        <span class="emergency-title">SOS</span>
+        <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
+      </div>
+    </div>
   </div>
-</div>
 
-<div class="alphabet-sample f-sofia">
-  <div class="big">ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ αβγδεζηθικλμνξοπρστυφχψω ς</div>
-  <div class="num">0123456789 100 166 199 112</div>
-  <div class="small">Το γρήγορο καφέ αλεπού πηδάει πάνω από τον τεμπέλη σκύλο.</div>
-</div>
-
-<!-- ═══ 4. ALEGREYA SANS ═══ -->
-<h2>4. Alegreya Sans — ζεστή, ανθρώπινη</h2>
-<p class="font-desc">
-  Humanist sans-serif με ζεστασιά. Λιγότερο «τεχνολογική», πιο «ανθρώπινη». 
-  Καλή για μια εφαρμογή που αγγίζει ευαίσθητο κοινό.
-</p>
-
-<div class="header-mock light f-alegreya">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
-  </div>
-</div>
-
-<div class="header-mock dark f-alegreya">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-dark-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
-  </div>
-</div>
-
-<div class="alphabet-sample f-alegreya">
-  <div class="big">ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ αβγδεζηθικλμνξοπρστυφχψω ς</div>
-  <div class="num">0123456789 100 166 199 112</div>
-  <div class="small">Το γρήγορο καφέ αλεπού πηδάει πάνω από τον τεμπέλη σκύλο.</div>
-</div>
-
-<!-- ═══ 5. JURA ═══ -->
-<h2>5. Jura — γεωμετρική, distinctive</h2>
-<p class="font-desc">
-  Γεωμετρική sans-serif με χαρακτήρα. Λιγότερο συνηθισμένη από τις άλλες — 
-  δίνει «ταυτότητα» αντί για «ουδετερότητα». Καλή για branding.
-</p>
-
-<div class="header-mock light f-jura">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
-  </div>
-</div>
-
-<div class="header-mock dark f-jura">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-dark-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
-  </div>
-</div>
-
-<div class="alphabet-sample f-jura">
-  <div class="big">ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ αβγδεζηθικλμνξοπρστυφχψω ς</div>
-  <div class="num">0123456789 100 166 199 112</div>
-  <div class="small">Το γρήγορο καφέ αλεπού πηδάει πάνω από τον τεμπέλη σκύλο.</div>
-</div>
-
-<!-- ═══ 6. PLAY ═══ -->
-<h2>6. Play — τεχνολογική, σύγχρονη</h2>
-<p class="font-desc">
-  Καθαρή sans-serif με τεχνολογική αίσθηση. Πολύ καλή ανάγνωση σε οθόνη. 
-  Σχεδιασμένη από τον Jonas Hecksher.
-</p>
-
-<div class="header-mock light f-play">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
-  </div>
-</div>
-
-<div class="header-mock dark f-play">
-  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-dark-stag"/></svg></div>
-  <div class="hm-titles">
-    <span class="hm-title">Δίαυλος</span>
-    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
-  </div>
-</div>
-
-<div class="alphabet-sample f-play">
-  <div class="big">ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ αβγδεζηθικλμνξοπρστυφχψω ς</div>
-  <div class="num">0123456789 100 166 199 112</div>
-  <div class="small">Το γρήγορο καφέ αλεπού πηδάει πάνω από τον τεμπέλη σκύλο.</div>
 </div>
 
 </body>
