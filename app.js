@@ -195,22 +195,24 @@ function renderHome() {
 function emergencyCard() {
   const wrap = h("div", "emergency-card");
 
-  const sos = h("div", "emergency-sos");
-  sos.appendChild(h("span", "sos-big", "SOS"));
-  sos.appendChild(h("span", "sos-small", "ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ"));
-  wrap.appendChild(sos);
+  const header = h("div", "emergency-header");
+  const titles = h("div", "emergency-titles");
+  titles.appendChild(h("span", "emergency-title", "SOS"));
+  titles.appendChild(h("span", "emergency-subtitle", "ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ"));
+  header.appendChild(titles);
+  wrap.appendChild(header);
 
   const actions = h("div", "emergency-actions");
 
-  const callBtn = h("button", "btn-emergency-call", "SMS");
-  callBtn.type = "button";
-  callBtn.addEventListener("click", () => navigateTo(VIEWS.EMERGENCY_CALL));
+  const smsBtn = h("button", "btn-emergency-sms", "SMS");
+  smsBtn.type = "button";
+  smsBtn.addEventListener("click", () => navigateTo(VIEWS.EMERGENCY_CALL));
 
   const fieldBtn = h("button", "btn-emergency-field", "ΝΑΙ / ΟΧΙ");
   fieldBtn.type = "button";
   fieldBtn.addEventListener("click", () => navigateTo(VIEWS.EMERGENCY_FIELD));
 
-  actions.append(callBtn, fieldBtn);
+  actions.append(smsBtn, fieldBtn);
   wrap.appendChild(actions);
 
   return wrap;
