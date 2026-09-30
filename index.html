@@ -12,14 +12,28 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Δίαυλος" />
 
+  <!-- Jura — typography του design system -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <title>Δίαυλος — Προσβάσιμη Επικοινωνία</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ═══ SVG SPRITE (inline, δουλεύει παντού) ═══ -->
+  <!-- ═══ SVG SPRITE ═══ -->
   <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+
+    <!-- Λογότυπο (σύμβολο) -->
+    <symbol id="logo-diavlos" viewBox="0 0 100 100">
+      <rect class="logo-bg" width="100" height="100" rx="22"/>
+      <path class="logo-fg" d="M 50,20 L 78,78 L 22,78 Z"/>
+      <rect x="54" y="44" width="14" height="3.5" rx="1.7" class="logo-bg"/>
+      <rect x="50" y="54" width="22" height="3.5" rx="1.7" class="logo-bg"/>
+      <rect x="46" y="64" width="30" height="3.5" rx="1.7" class="logo-bg"/>
+    </symbol>
 
     <!-- Κάτω πλοήγηση -->
     <symbol id="icon-cards" viewBox="0 0 24 24">
@@ -41,6 +55,11 @@
     </symbol>
 
     <!-- Κατηγορίες -->
+    <symbol id="icon-emergency" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 16V11a6 6 0 0 1 12 0v5z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 19h18M12 2v2"/>
+    </symbol>
+
     <symbol id="icon-services" viewBox="0 0 24 24">
       <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 8h14M4 8l8-5 8 5M6 8v10M10 8v10M14 8v10M18 8v10"/>
     </symbol>
@@ -81,7 +100,7 @@
       <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 3h6l1 2H8l1-2zm1 4v12m4-12v12m4-12-1 13H8L7 7"/>
     </symbol>
 
-    <!-- Έκτακτη Ανάγκη — νούμερα -->
+    <!-- Emergency numbers -->
     <symbol id="icon-police" viewBox="0 0 24 24">
       <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3 19 6v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3z"/>
       <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m12 8 1.2 2.4 2.8.4-2 2 .5 2.7L12 14.2 9.5 15.5l.5-2.7-2-2 2.8-.4z"/>
@@ -164,12 +183,19 @@
   <!-- ═══ ΤΕΛΟΣ SPRITE ═══ -->
 
   <header>
+    <!-- Λογότυπο: ορατό μόνο σε top-level οθόνες (αρχική, αγαπημένα) -->
+    <div class="header-logo" id="header-logo" aria-hidden="true">
+      <svg viewBox="0 0 100 100"><use href="#logo-diavlos"/></svg>
+    </div>
+
+    <!-- Back button: ορατό μόνο σε υπο-οθόνες -->
     <button id="back-btn" type="button" hidden aria-label="Πίσω">
       <svg class="icon"><use href="#icon-back"/></svg>
     </button>
+
     <div class="header-titles">
       <h1 id="screen-title" tabindex="-1">Δίαυλος</h1>
-      <p class="header-subtitle">Προσβάσιμη Επικοινωνία</p>
+      <p class="header-subtitle" id="header-subtitle">Προσβάσιμη Επικοινωνία</p>
     </div>
   </header>
 
