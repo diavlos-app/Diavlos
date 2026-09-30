@@ -1,10 +1,11 @@
 // Δίαυλος — app.js
-// Οθόνες: αρχική (5 κάρτες) → λίστες φράσεων, Έκτακτη Ανάγκη, Αγαπημένα.
+// Οθόνες: αρχική, λίστες φράσεων, Έκτακτη Ανάγκη, Αγαπημένα, Ιστορικό.
+// Interactive response modal + PDF export.
 // Το DOM χτίζεται με createElement/textContent/SVG (όχι innerHTML).
 
 "use strict";
 
-// ─── Σταθερές views ───────────────────────────────────────────────
+// ─── Σταθερές ─────────────────────────────────────────────────────
 
 const VIEWS = {
   HOME: "home",
@@ -14,21 +15,14 @@ const VIEWS = {
   FAVORITES: "favorites"
 };
 
-const TABS = {
-  CARDS: "cards",
-  FAVORITES: "favorites"
-};
+const TABS = { CARDS: "cards", FAVORITES: "favorites" };
+const FAV_TABS = { FAVORITES: "favorites", HISTORY: "history" };
 
-// Το 112 είναι ο μόνος αριθμός στην Ελλάδα με επίσημα τεκμηριωμένη υποστήριξη
-// SMS/MMS/email (με γεωεντοπισμό) για άτομα που δεν μπορούν να μιλήσουν σε
-// κλήση. Το 100/166/199 ΔΕΝ έχουν τέτοια επίσημη υποστήριξη SMS, γι' αυτό
-// κάθε επιλογή παρακάτω στέλνει SMS στο 112 με διαφορετικό κείμενο ανάλογα
-// με την υπηρεσία που χρειάζεται ο χρήστης.
 const EMERGENCY_SERVICES = [
-  { id: "police",    label: "Αστυνομία",            iconId: "icon-police" },
-  { id: "ambulance", label: "Ασθενοφόρο (ΕΚΑΒ)",    iconId: "icon-ambulance" },
-  { id: "fire",       label: "Πυροσβεστική",         iconId: "icon-fire" },
-  { id: "general",   label: "Γενική βοήθεια",        iconId: "icon-eu" }
+  { id: "police",    label: "Αστυνομία",         iconId: "icon-police" },
+  { id: "ambulance", label: "Ασθενοφόρο (ΕΚΑΒ)", iconId: "icon-ambulance" },
+  { id: "fire",      label: "Πυροσβεστική",      iconId: "icon-fire" },
+  { id: "general",   label: "Γενική βοήθεια",    iconId: "icon-eu" }
 ];
 
 const EMERGENCY_SMS_NUMBER = "112";
@@ -47,14 +41,23 @@ const EMERGENCY_FIELD_PHRASES = [
 
 let currentView = VIEWS.HOME;
 let currentTab = TABS.CARDS;
+let currentFavTab = FAV_TABS.FAVORITES;
+let currentHistoryFilter = "all";  // "all" | "7d" | "30d"
 let selectedTags = [];
 let pendingDelete = null;
 let editingFavoriteId = null;
 let dialogOpener = null;
 let toastTimer = null;
+
+// Response modal state
+let pendingResponseCard = null;
+let pendingResponseCategory = null;
+let currentResponseValue = null;
+let currentResponseType = null;
+
 const els = {};
 
-// ─── Βοηθητικά DOM ────────────────────────────────────────────────
+// ─── DOM helpers ──────────────────────────────────────────────────
 
 function h(tag, className, text) {
   const node = document.createElement(tag);
@@ -63,9 +66,6 @@ function h(tag, className, text) {
   return node;
 }
 
-// Δημιουργεί SVG <svg><use href="#icon-name"/></svg>.
-// Χρησιμοποιεί createElementNS γιατί τα SVG στοιχεία ΔΕΝ είναι HTML.
-// Το xlink:href κρατείται για συμβατότητα με παλιά Safari.
 function svgIcon(name, className) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("class", className || "icon");
@@ -80,9 +80,7 @@ function svgIcon(name, className) {
   return svg;
 }
 
-function clear(node) {
-  node.replaceChildren();
-}
+function clear(node) { node.replaceChildren(); }
 
 function isKnownView(view) {
   if (view === VIEWS.HOME || view === VIEWS.CUSTOM || view === VIEWS.FAVORITES) return true;
@@ -148,9 +146,12 @@ function updateTabBar() {
 function render(view, moveFocus) {
   currentView = view;
 
-  els.back.hidden = (view === VIEWS.HOME || view === VIEWS.FAVORITES);
+  const isTopLevel = (view === VIEWS.HOME || view === VIEWS.FAVORITES);
+  els.headerLogo.hidden = !isTopLevel;
+  els.headerSubtitle.hidden = !isTopLevel;
+  els.back.hidden = isTopLevel;
 
-  const showFab = (view === VIEWS.CUSTOM || view === VIEWS.FAVORITES);
+  const showFab = (view === VIEWS.CUSTOM || (view === VIEWS.FAVORITES && currentFavTab === FAV_TABS.FAVORITES));
   els.fab.hidden = !showFab;
   els.fab.setAttribute(
     "aria-label",
@@ -171,14 +172,13 @@ function render(view, moveFocus) {
   if (moveFocus) els.title.focus();
 }
 
-// ─── Οθόνη: Αρχική ────────────────────────────────────────────────
+// ─── Αρχική ───────────────────────────────────────────────────────
 
 function renderHome() {
   els.title.textContent = "Δίαυλος";
   const frag = document.createDocumentFragment();
 
-  const emergency = CARD_CATEGORIES.find((c) => c.id === "emergency");
-  frag.appendChild(emergencyCard(emergency));
+  frag.appendChild(emergencyCard());
 
   const grid = h("div", "category-grid");
   CARD_CATEGORIES.forEach((cat) => {
@@ -191,15 +191,12 @@ function renderHome() {
   els.content.appendChild(frag);
 }
 
-// Ειδικό κόκκινο πλακίδιο με «SOS» + «ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ» και δύο κουμπιά.
 function emergencyCard() {
   const wrap = h("div", "emergency-card");
 
   const header = h("div", "emergency-header");
-  const titles = h("div", "emergency-titles");
-  titles.appendChild(h("span", "emergency-title", "SOS"));
-  titles.appendChild(h("span", "emergency-subtitle", "ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ"));
-  header.appendChild(titles);
+  header.appendChild(h("span", "emergency-title", "SOS"));
+  header.appendChild(h("span", "emergency-subtitle", "ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ"));
   wrap.appendChild(header);
 
   const actions = h("div", "emergency-actions");
@@ -226,7 +223,7 @@ function categoryButton(iconId, name, view) {
   return btn;
 }
 
-// ─── Οθόνη: Έκτακτη Ανάγκη — Κλήση ────────────────────────────────
+// ─── Emergency SMS ────────────────────────────────────────────────
 
 function renderEmergencyCall() {
   els.title.textContent = "SMS Έκτακτης Ανάγκης";
@@ -252,9 +249,6 @@ function renderEmergencyCall() {
   els.content.append(note, list);
 }
 
-// Ο μόνος αριθμός με επίσημα τεκμηριωμένη υποστήριξη SMS με γεωεντοπισμό
-// είναι το 112 — γι' αυτό ΚΑΘΕ επιλογή στέλνει εδώ, με το όνομα της
-// υπηρεσίας μέσα στο κείμενο του μηνύματος. Ποτέ δεν ανοίγει κλήση.
 function buildEmergencySmsBody(serviceLabel, locationLine) {
   let body = "Είμαι κωφός/κωφή. Χρειάζομαι: " + serviceLabel + ".";
   if (locationLine) body += " " + locationLine;
@@ -266,7 +260,6 @@ function isIOSDevice() {
 }
 
 function openEmergencySms(body) {
-  // Το iOS θέλει "&" πριν το body, το Android/τα υπόλοιπα "?".
   const sep = isIOSDevice() ? "&" : "?";
   window.location.href = "sms:" + EMERGENCY_SMS_NUMBER + sep + "body=" + encodeURIComponent(body);
 }
@@ -284,8 +277,6 @@ function composeEmergencySms(serviceLabel) {
     openEmergencySms(buildEmergencySmsBody(serviceLabel, locationLine));
   };
 
-  // Ποτέ δεν μπλοκάρουμε την αποστολή περιμένοντας την τοποθεσία για πάντα:
-  // αν δεν απαντήσει εγκαίρως, στέλνουμε το SMS χωρίς αυτήν.
   setTimeout(() => finish(""), EMERGENCY_GEOLOCATION_TIMEOUT_MS);
 
   navigator.geolocation.getCurrentPosition(
@@ -299,7 +290,7 @@ function composeEmergencySms(serviceLabel) {
   );
 }
 
-// ─── Οθόνη: Έκτακτη Ανάγκη — Πεδίο (ΝΑΙ/ΟΧΙ) ─────────────────────
+// ─── Emergency field ──────────────────────────────────────────────
 
 function renderEmergencyField() {
   els.title.textContent = "Επικοινωνία στο σημείο";
@@ -339,7 +330,7 @@ function renderEmergencyField() {
   els.content.append(note, header, yesNo, phraseTitle, phraseList);
 }
 
-// ─── Οθόνη: Λίστα φράσεων κατηγορίας ──────────────────────────────
+// ─── Λίστα φράσεων ────────────────────────────────────────────────
 
 function renderPhraseList(view) {
   const cat = CARD_CATEGORIES.find((c) => c.id === view);
@@ -348,14 +339,14 @@ function renderPhraseList(view) {
   els.title.textContent = cat.name;
   const list = h("div", "card-list");
   cat.cards.forEach((card) => {
-    list.appendChild(phraseCard(card, false, true));
+    list.appendChild(phraseCard(card, false, true, cat));
   });
 
   clear(els.content);
   els.content.appendChild(list);
 }
 
-// ─── Οθόνη: «Οι Κάρτες μου» ───────────────────────────────────────
+// ─── «Οι Κάρτες μου» ──────────────────────────────────────────────
 
 function renderCustom() {
   els.title.textContent = "Οι Κάρτες μου";
@@ -371,19 +362,68 @@ function renderCustom() {
   }
 
   const list = h("div", "card-list");
-  cards.forEach((card) => list.appendChild(phraseCard(card, true, true)));
+  cards.forEach((card) => list.appendChild(phraseCard(card, true, true, null)));
 
   clear(els.content);
   els.content.appendChild(list);
 }
 
-// ─── Οθόνη: Αγαπημένα ─────────────────────────────────────────────
+// ─── Αγαπημένα + Ιστορικό ─────────────────────────────────────────
 
 function renderFavorites() {
-  els.title.textContent = "Αγαπημένα";
+  els.title.textContent = currentFavTab === FAV_TABS.HISTORY ? "Ιστορικό" : "Αγαπημένα";
 
-  const favorites = sortFavoritesAlphabetically(getFavorites());
   const frag = document.createDocumentFragment();
+
+  // Segmented toggle: Αγαπημένα / Ιστορικό
+  frag.appendChild(favoritesSegmented());
+
+  if (currentFavTab === FAV_TABS.FAVORITES) {
+    renderFavoritesList(frag);
+  } else {
+    renderHistoryList(frag);
+  }
+
+  clear(els.content);
+  els.content.appendChild(frag);
+}
+
+function favoritesSegmented() {
+  const seg = h("div", "segmented");
+  seg.setAttribute("role", "tablist");
+
+  const favBtn = h("button");
+  favBtn.type = "button";
+  favBtn.append(svgIcon("icon-favorites", null), h("span", null, "Αγαπημένα"));
+  favBtn.classList.toggle("active", currentFavTab === FAV_TABS.FAVORITES);
+  favBtn.setAttribute("role", "tab");
+  favBtn.setAttribute("aria-selected", currentFavTab === FAV_TABS.FAVORITES ? "true" : "false");
+  favBtn.addEventListener("click", () => {
+    if (currentFavTab === FAV_TABS.FAVORITES) return;
+    currentFavTab = FAV_TABS.FAVORITES;
+    renderFavorites();
+  });
+
+  const histBtn = h("button");
+  histBtn.type = "button";
+  histBtn.append(svgIcon("icon-history", null), h("span", null, "Ιστορικό"));
+  histBtn.classList.toggle("active", currentFavTab === FAV_TABS.HISTORY);
+  histBtn.setAttribute("role", "tab");
+  histBtn.setAttribute("aria-selected", currentFavTab === FAV_TABS.HISTORY ? "true" : "false");
+  histBtn.addEventListener("click", () => {
+    if (currentFavTab === FAV_TABS.HISTORY) return;
+    currentFavTab = FAV_TABS.HISTORY;
+    renderFavorites();
+  });
+
+  seg.append(favBtn, histBtn);
+  return seg;
+}
+
+// ─── Αγαπημένα λίστα ──────────────────────────────────────────────
+
+function renderFavoritesList(frag) {
+  const favorites = sortFavoritesAlphabetically(getFavorites());
   frag.appendChild(favoritesFilterBar());
 
   if (favorites.length === 0) {
@@ -391,8 +431,6 @@ function renderFavorites() {
       h("p", "empty-state",
         "Δεν έχεις ακόμα αγαπημένα. Πάτα το + για να προσθέσεις στοιχεία όπως ΑΦΜ, διεύθυνση ή τον καφέ σου.")
     );
-    clear(els.content);
-    els.content.appendChild(frag);
     return;
   }
 
@@ -400,17 +438,12 @@ function renderFavorites() {
 
   if (filtered.length === 0) {
     frag.appendChild(h("p", "empty-state", "Κανένα αποτέλεσμα με τα επιλεγμένα φίλτρα."));
-    clear(els.content);
-    els.content.appendChild(frag);
     return;
   }
 
   const list = h("div", "favorites-list");
   filtered.forEach((fav) => list.appendChild(favoriteRow(fav)));
   frag.appendChild(list);
-
-  clear(els.content);
-  els.content.appendChild(frag);
 }
 
 function favoritesFilterBar() {
@@ -473,30 +506,129 @@ function favoriteRow(fav) {
   return row;
 }
 
+// ─── Ιστορικό λίστα ───────────────────────────────────────────────
+
+function renderHistoryList(frag) {
+  const all = getResponses();
+  const filtered = filterResponsesByDate(all, currentHistoryFilter);
+
+  frag.appendChild(historyToolbar(filtered.length));
+
+  if (all.length === 0) {
+    frag.appendChild(
+      h("p", "empty-state",
+        "Δεν έχεις ακόμα αποθηκευμένες απαντήσεις. Όταν χρησιμοποιήσεις μια κάρτα με «Απάντηση» και πατήσεις «Αποθήκευση», θα εμφανιστεί εδώ.")
+    );
+    return;
+  }
+
+  if (filtered.length === 0) {
+    frag.appendChild(h("p", "empty-state", "Καμία απάντηση σε αυτό το διάστημα."));
+    return;
+  }
+
+  const list = h("div", "history-list");
+  filtered.forEach((resp) => list.appendChild(historyRow(resp)));
+  frag.appendChild(list);
+}
+
+function historyToolbar(visibleCount) {
+  const bar = h("div", "history-toolbar");
+
+  const filters = h("div", "history-date-filters");
+
+  const chips = [
+    { id: "all", label: "Όλες" },
+    { id: "7d", label: "7 ημέρες" },
+    { id: "30d", label: "30 ημέρες" }
+  ];
+
+  chips.forEach((c) => {
+    const chip = h("button", "history-date-chip" + (currentHistoryFilter === c.id ? " active" : ""), c.label);
+    chip.type = "button";
+    chip.addEventListener("click", () => {
+      if (currentHistoryFilter === c.id) return;
+      currentHistoryFilter = c.id;
+      renderFavorites();
+    });
+    filters.appendChild(chip);
+  });
+
+  const exportBtn = h("button", "history-export-btn");
+  exportBtn.type = "button";
+  exportBtn.setAttribute("aria-label", "Εξαγωγή σε PDF");
+  exportBtn.append(svgIcon("icon-download", null), h("span", null, "PDF"));
+  exportBtn.disabled = visibleCount === 0;
+  if (visibleCount === 0) exportBtn.style.opacity = "0.4";
+  exportBtn.addEventListener("click", () => exportHistoryToPdf());
+
+  bar.append(filters, exportBtn);
+  return bar;
+}
+
+function historyRow(resp) {
+  const row = h("div", "history-row");
+
+  const main = h("button", "history-main");
+  main.type = "button";
+  main.addEventListener("click", () => {
+    openResponseFullscreen(resp.phrase, resp.response, resp.responseType, resp.unit);
+  });
+
+  const meta = h("div", "history-meta");
+  if (resp.categoryName) {
+    meta.appendChild(h("span", "history-category", resp.categoryName));
+  }
+  meta.appendChild(h("span", "history-time", formatDateTimeShort(resp.timestamp)));
+  main.appendChild(meta);
+
+  main.appendChild(h("span", "history-phrase", resp.phrase));
+  main.appendChild(h("span", "history-response", formatResponseForDisplay(resp)));
+
+  const actions = h("div", "favorite-actions");
+
+  const delBtn = h("button", "icon-btn icon-btn-danger", "");
+  delBtn.type = "button";
+  delBtn.setAttribute("aria-label", "Διαγραφή απάντησης");
+  delBtn.appendChild(svgIcon("icon-trash", "icon-btn-icon"));
+  delBtn.addEventListener("click", () => askDelete("response", resp.id, resp.phrase, delBtn));
+
+  actions.appendChild(delBtn);
+  row.append(main, actions);
+  return row;
+}
+
 // ─── Κάρτα φράσης ─────────────────────────────────────────────────
 
-function phraseCard(card, isCustom, showFavorite) {
+function phraseCard(card, isCustom, showFavorite, category) {
   const wrap = h("div", "phrase-card");
   wrap.appendChild(h("p", "phrase-text", card.text));
 
   const actions = h("div", "phrase-actions");
 
-  // Οι δύο κύριες ενέργειες (Άκουσμα/Εμφάνιση) παίρνουν ορατή λέξη δίπλα στο
-  // εικονίδιο, όπως στις κατηγορίες της αρχικής — ίδιος κανόνας, ίδια λογική.
-  // Το ⭐/🗑️ παρακάτω μένουν μόνο εικονίδιο σκόπιμα: είναι δευτερεύουσες
-  // ενέργειες, στο ίδιο μοτίβο με τα icon-btn του Επεξεργασία/Διαγραφή στα
-  // Αγαπημένα (favoriteRow), για ομοιόμορφη οπτική γλώσσα σε όλη την εφαρμογή.
   const speakBtn = h("button", "speak-btn");
   speakBtn.type = "button";
   speakBtn.append(svgIcon("icon-speak", "btn-icon"), h("span", "btn-label", "Ανάγνωση"));
   speakBtn.setAttribute("aria-label", "Ανάγνωση φωνητικά");
+  speakBtn.addEventListener("click", () => speak(card.text));
   actions.appendChild(speakBtn);
 
   const showBtn = h("button", "show-btn");
   showBtn.type = "button";
   showBtn.append(svgIcon("icon-show", "btn-icon"), h("span", "btn-label", "Εμφάνιση"));
   showBtn.setAttribute("aria-label", "Εμφάνιση σε μεγάλα γράμματα");
+  showBtn.addEventListener("click", () => openFullscreen(card.text));
   actions.appendChild(showBtn);
+
+  // Κουμπί «Απάντηση» — μόνο αν η κάρτα έχει response
+  if (card.response) {
+    const replyBtn = h("button", "reply-btn");
+    replyBtn.type = "button";
+    replyBtn.append(svgIcon("icon-reply", "btn-icon"), h("span", "btn-label", "Απάντηση"));
+    replyBtn.setAttribute("aria-label", "Άνοιξε για απάντηση από τον συνομιλητή");
+    replyBtn.addEventListener("click", () => openResponseDialog(card, category));
+    actions.appendChild(replyBtn);
+  }
 
   if (showFavorite) {
     const favBtn = h("button", "fav-btn");
@@ -520,7 +652,7 @@ function phraseCard(card, isCustom, showFavorite) {
   return wrap;
 }
 
-// ─── Full-screen display ──────────────────────────────────────────
+// ─── Fullscreen (φράσεις/αγαπημένα) ───────────────────────────────
 
 function openFullscreen(text, label) {
   els.fullscreenLabel.textContent = label || "";
@@ -539,17 +671,365 @@ function closeFullscreen() {
 }
 
 function onFullscreenKeydown(event) {
-  if (event.key === "Escape") closeFullscreen();
+  if (event.key === "Escape") {
+    if (!els.responseFullscreen.hidden) closeResponseFullscreen();
+    else if (!els.fullscreen.hidden) closeFullscreen();
+  }
 }
 
-// "inert" αφαιρεί από την προσβασιμότητα ό,τι δεν ανήκει στο fullscreen,
-// ώστε το Tab (ή screen reader) να μην περνά σε κρυφό περιεχόμενο από πίσω.
 function setBackgroundInert(on) {
   [els.header, els.content, els.fab, els.tabbarEl].forEach((el) => {
     if (!el) return;
     if (on) el.setAttribute("inert", "");
     else el.removeAttribute("inert");
   });
+}
+
+// ─── Response dialog ──────────────────────────────────────────────
+
+function openResponseDialog(card, category) {
+  pendingResponseCard = card;
+  pendingResponseCategory = category;
+  currentResponseValue = null;
+  currentResponseType = card.response;
+
+  // Reset UI
+  els.responsePhrase1.textContent = card.text;
+  els.responsePhrase2.textContent = card.text;
+  els.responseError.hidden = true;
+
+  // Reset inputs
+  els.responseNumberInput.value = "";
+  els.responseTextInput.value = "";
+  els.responseDateInput.value = "";
+  els.responseTimeInput.value = "";
+
+  // Hide all input blocks
+  els.responseInputNumber.hidden = true;
+  els.responseInputText.hidden = true;
+  els.responseInputYesno.hidden = true;
+  els.responseInputDatetime.hidden = true;
+
+  // Set unit for number
+  if (card.response === "number") {
+    els.responseNumberUnit.textContent = card.unit || "";
+  }
+
+  // Show stage 1
+  els.responseStage1.hidden = false;
+  els.responseStage2.hidden = true;
+
+  openDialog(els.responseDialog, els.fab);
+  els.responseReady.focus();
+}
+
+function onResponseReady() {
+  els.responseStage1.hidden = true;
+  els.responseStage2.hidden = false;
+
+  const type = currentResponseType;
+
+  if (type === "number") {
+    els.responseInputNumber.hidden = false;
+    els.responseNumberInput.focus();
+  } else if (type === "text") {
+    els.responseInputText.hidden = false;
+    els.responseTextInput.focus();
+  } else if (type === "yesno") {
+    els.responseInputYesno.hidden = false;
+    els.responseYes.focus();
+  } else if (type === "datetime") {
+    els.responseInputDatetime.hidden = false;
+    els.responseDateInput.focus();
+  }
+}
+
+function onResponseSubmit() {
+  const type = currentResponseType;
+  let value = "";
+
+  if (type === "number") {
+    value = (els.responseNumberInput.value || "").trim();
+    if (!value) {
+      showResponseError("Γράψε την τιμή.");
+      return;
+    }
+  } else if (type === "text") {
+    value = (els.responseTextInput.value || "").trim();
+    if (!value) {
+      showResponseError("Γράψε την απάντηση.");
+      return;
+    }
+  } else if (type === "datetime") {
+    const date = els.responseDateInput.value;
+    const time = els.responseTimeInput.value;
+    if (!date && !time) {
+      showResponseError("Διάλεξε ημερομηνία ή ώρα.");
+      return;
+    }
+    value = [date, time].filter(Boolean).join(" ");
+  }
+
+  closeDialog(els.responseDialog);
+  showResponseResult(value, type);
+}
+
+function onResponseYes() {
+  closeDialog(els.responseDialog);
+  showResponseResult("yes", "yesno");
+}
+
+function onResponseNo() {
+  closeDialog(els.responseDialog);
+  showResponseResult("no", "yesno");
+}
+
+function showResponseError(msg) {
+  els.responseError.textContent = msg;
+  els.responseError.hidden = false;
+}
+
+function showResponseResult(value, type) {
+  currentResponseValue = value;
+
+  const phrase = pendingResponseCard ? pendingResponseCard.text : "";
+  const unit = pendingResponseCard ? (pendingResponseCard.unit || "") : "";
+
+  openResponseFullscreen(phrase, value, type, unit);
+}
+
+// ─── Response fullscreen ──────────────────────────────────────────
+
+function openResponseFullscreen(phrase, value, type, unit) {
+  els.responseFullscreenPhrase.textContent = phrase;
+  els.responseFullscreenText.textContent = formatResponseForFullscreen(value, type);
+
+  if (type === "number" && unit) {
+    els.responseFullscreenUnit.textContent = unit;
+    els.responseFullscreenUnit.hidden = false;
+  } else if (type === "datetime") {
+    els.responseFullscreenUnit.textContent = "";
+    els.responseFullscreenUnit.hidden = true;
+  } else {
+    els.responseFullscreenUnit.textContent = "";
+    els.responseFullscreenUnit.hidden = true;
+  }
+
+  els.responseFullscreen.hidden = false;
+  setBackgroundInert(true);
+  els.responseSave.focus();
+}
+
+function closeResponseFullscreen() {
+  els.responseFullscreen.hidden = true;
+  setBackgroundInert(false);
+}
+
+function onResponseSave() {
+  const phrase = pendingResponseCard ? pendingResponseCard.text : "";
+  const categoryId = pendingResponseCategory ? pendingResponseCategory.id : "";
+  const categoryName = pendingResponseCategory ? pendingResponseCategory.name : "";
+  const unit = pendingResponseCard ? (pendingResponseCard.unit || "") : "";
+
+  const result = saveResponse(
+    phrase,
+    currentResponseValue,
+    currentResponseType,
+    unit,
+    categoryId,
+    categoryName
+  );
+
+  if (!result.ok) {
+    showToast("Δεν ήταν δυνατή η αποθήκευση.");
+    return;
+  }
+
+  // Reset state
+  pendingResponseCard = null;
+  pendingResponseCategory = null;
+  currentResponseValue = null;
+  currentResponseType = null;
+
+  closeResponseFullscreen();
+  showToast("Αποθηκεύτηκε στο Ιστορικό.");
+}
+
+function onResponseDone() {
+  pendingResponseCard = null;
+  pendingResponseCategory = null;
+  currentResponseValue = null;
+  currentResponseType = null;
+  closeResponseFullscreen();
+}
+
+// ─── Format helpers ───────────────────────────────────────────────
+
+function formatResponseForFullscreen(value, type) {
+  if (type === "number") {
+    return formatNumber(value);
+  }
+  if (type === "yesno") {
+    return value === "yes" ? "ΝΑΙ" : "ΟΧΙ";
+  }
+  if (type === "datetime") {
+    return formatDateTimeValue(value);
+  }
+  return value;
+}
+
+function formatResponseForDisplay(resp) {
+  if (resp.responseType === "number") {
+    return formatNumber(resp.response) + (resp.unit ? " " + resp.unit : "");
+  }
+  if (resp.responseType === "yesno") {
+    return resp.response === "yes" ? "ΝΑΙ" : "ΟΧΙ";
+  }
+  if (resp.responseType === "datetime") {
+    return formatDateTimeValue(resp.response);
+  }
+  return resp.response;
+}
+
+function formatNumber(value) {
+  const num = parseFloat(String(value).replace(",", "."));
+  if (isNaN(num)) return value;
+  return num.toFixed(2).replace(".", ",");
+}
+
+function formatDateTimeValue(value) {
+  // value: "2026-10-15 10:30" ή "2026-10-15" ή "10:30"
+  if (!value) return "";
+  const parts = value.split(" ");
+  const date = parts[0] || "";
+  const time = parts[1] || "";
+
+  let dateFormatted = "";
+  if (date && date.indexOf("-") !== -1) {
+    const [y, m, d] = date.split("-");
+    if (y && m && d) dateFormatted = d + "/" + m + "/" + y;
+  }
+
+  return [dateFormatted, time].filter(Boolean).join(", ");
+}
+
+function formatDateTimeShort(timestamp) {
+  const d = new Date(timestamp);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, "0");
+  const mins = String(d.getMinutes()).padStart(2, "0");
+  return day + "/" + month + "/" + year + ", " + hours + ":" + mins;
+}
+
+function formatDateTimeLong(timestamp) {
+  const d = new Date(timestamp);
+  const months = ["Ιανουαρίου", "Φεβρουαρίου", "Μαρτίου", "Απριλίου", "Μαΐου", "Ιουνίου",
+                  "Ιουλίου", "Αυγούστου", "Σεπτεμβρίου", "Οκτωβρίου", "Νοεμβρίου", "Δεκεμβρίου"];
+  const hours = String(d.getHours()).padStart(2, "0");
+  const mins = String(d.getMinutes()).padStart(2, "0");
+  return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear() + ", " + hours + ":" + mins;
+}
+
+// ─── PDF Export ───────────────────────────────────────────────────
+
+function exportHistoryToPdf() {
+  const all = getResponses();
+  const responses = filterResponsesByDate(all, currentHistoryFilter);
+
+  if (responses.length === 0) {
+    showToast("Δεν υπάρχουν απαντήσεις για εξαγωγή.");
+    return;
+  }
+
+  buildPrintArea({
+    title: "Ιστορικό Απαντήσεων",
+    cards: responses.map((r) => ({
+      category: r.categoryName,
+      meta: formatDateTimeLong(r.timestamp),
+      question: r.phrase,
+      answer: formatResponseForDisplay(r)
+    }))
+  });
+
+  window.print();
+  setTimeout(() => { els.printArea.replaceChildren(); }, 500);
+}
+
+function exportFavoritesToPdf() {
+  const favorites = sortFavoritesAlphabetically(getFavorites());
+
+  if (favorites.length === 0) {
+    showToast("Δεν υπάρχουν αγαπημένα για εξαγωγή.");
+    return;
+  }
+
+  buildPrintArea({
+    title: "Αγαπημένα Στοιχεία",
+    cards: favorites.map((f) => ({
+      category: tagLabelsFor(f.tags),
+      meta: "",
+      question: f.label,
+      answer: f.value
+    }))
+  });
+
+  window.print();
+  setTimeout(() => { els.printArea.replaceChildren(); }, 500);
+}
+
+function tagLabelsFor(tagIds) {
+  if (!Array.isArray(tagIds) || tagIds.length === 0) return "";
+  return tagIds
+    .map((id) => {
+      const t = TAGS.find((x) => x.id === id);
+      return t ? t.label : "";
+    })
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function buildPrintArea(opts) {
+  const area = els.printArea;
+  area.replaceChildren();
+
+  // Header
+  const header = h("div", "print-header");
+  const logoRow = h("div", "print-header-logo");
+  const mark = h("span", "print-logo-mark", "Δ");
+  logoRow.appendChild(mark);
+  logoRow.appendChild(h("h1", "print-title", "Δίαυλος"));
+  header.appendChild(logoRow);
+  header.appendChild(h("p", "print-subtitle", opts.title));
+  area.appendChild(header);
+
+  // Cards
+  opts.cards.forEach((c) => {
+    const card = h("div", "print-card");
+
+    const meta = h("div", "print-card-meta");
+    if (c.category) {
+      meta.appendChild(h("span", "print-card-category", c.category));
+    } else {
+      meta.appendChild(h("span", "print-card-category", ""));
+    }
+    meta.appendChild(h("span", "print-card-time", c.meta || ""));
+    card.appendChild(meta);
+
+    const box = h("div", "print-box");
+    box.appendChild(h("p", "print-question", c.question));
+    box.appendChild(h("p", "print-answer", c.answer));
+    card.appendChild(box);
+
+    area.appendChild(card);
+  });
+
+  // Footer
+  const footer = h("div", "print-footer");
+  footer.appendChild(h("p", null, "Δημιουργήθηκε από την εφαρμογή Δίαυλος"));
+  footer.appendChild(h("p", null, "diavlos-app.github.io"));
+  area.appendChild(footer);
 }
 
 // ─── Ανάγνωση φωνητικά ────────────────────────────────────────────
@@ -611,7 +1091,7 @@ function onAddCustomSubmit(event) {
   showToast("Η κάρτα αποθηκεύτηκε.");
 }
 
-// ─── Διάλογος: Νέο / Επεξεργασία Αγαπημένου ──────────────────────
+// ─── Διάλογος: Αγαπημένο ─────────────────────────────────────────
 
 function openFavoriteDialog(favorite) {
   editingFavoriteId = favorite ? favorite.id : null;
@@ -686,7 +1166,7 @@ function quickSaveFavorite(text, opener) {
   els.favLabel.focus();
 }
 
-// ─── Διάλογος: Επιβεβαίωση διαγραφής ─────────────────────────────
+// ─── Διάλογος: Διαγραφή ──────────────────────────────────────────
 
 function askDelete(type, id, text, opener) {
   pendingDelete = { type: type, id: id, text: text };
@@ -700,8 +1180,10 @@ function onConfirmDelete() {
   let ok;
   if (pendingDelete.type === "custom") {
     ok = deleteCustomCard(pendingDelete.id);
-  } else {
+  } else if (pendingDelete.type === "favorite") {
     ok = deleteFavorite(pendingDelete.id);
+  } else {
+    ok = deleteResponse(pendingDelete.id);
   }
 
   const view = pendingDelete.type === "custom" ? VIEWS.CUSTOM : VIEWS.FAVORITES;
@@ -720,12 +1202,62 @@ function init() {
   els.back = document.getElementById("back-btn");
   els.fab = document.getElementById("add-custom-btn");
   els.toast = document.getElementById("toast");
+  els.headerLogo = document.getElementById("header-logo");
+  els.headerSubtitle = document.getElementById("header-subtitle");
+  els.header = document.querySelector("header");
+  els.tabbarEl = document.querySelector(".tabbar");
 
+  els.printArea = document.getElementById("print-area");
+
+  // Fullscreen (φράσεις)
+  els.fullscreen = document.getElementById("fullscreen");
+  els.fullscreenLabel = document.getElementById("fullscreen-label");
+  els.fullscreenText = document.getElementById("fullscreen-text");
+  els.fullscreenClose = document.getElementById("fullscreen-close");
+
+  // Response fullscreen
+  els.responseFullscreen = document.getElementById("response-fullscreen");
+  els.responseFullscreenPhrase = document.getElementById("response-fullscreen-phrase");
+  els.responseFullscreenText = document.getElementById("response-fullscreen-text");
+  els.responseFullscreenUnit = document.getElementById("response-fullscreen-unit");
+  els.responseFullscreenClose = document.getElementById("response-fullscreen-close");
+  els.responseSave = document.getElementById("response-save");
+  els.responseDone = document.getElementById("response-done");
+
+  // Response dialog
+  els.responseDialog = document.getElementById("response-dialog");
+  els.responseStage1 = document.getElementById("response-stage-1");
+  els.responseStage2 = document.getElementById("response-stage-2");
+  els.responsePhrase1 = document.getElementById("response-phrase-1");
+  els.responsePhrase2 = document.getElementById("response-phrase-2");
+  els.responseReady = document.getElementById("response-ready");
+  els.responseCancel1 = document.getElementById("response-cancel-1");
+  els.responseCancel2 = document.getElementById("response-cancel-2");
+  els.responseSubmit = document.getElementById("response-submit");
+  els.responseError = document.getElementById("response-error");
+
+  els.responseInputNumber = document.getElementById("response-input-number");
+  els.responseNumberInput = document.getElementById("response-number-input");
+  els.responseNumberUnit = document.getElementById("response-number-unit");
+
+  els.responseInputText = document.getElementById("response-input-text");
+  els.responseTextInput = document.getElementById("response-text-input");
+
+  els.responseInputYesno = document.getElementById("response-input-yesno");
+  els.responseYes = document.getElementById("response-yes");
+  els.responseNo = document.getElementById("response-no");
+
+  els.responseInputDatetime = document.getElementById("response-input-datetime");
+  els.responseDateInput = document.getElementById("response-date-input");
+  els.responseTimeInput = document.getElementById("response-time-input");
+
+  // Add dialog
   els.addDialog = document.getElementById("add-dialog");
   els.addForm = document.getElementById("add-form");
   els.addText = document.getElementById("add-text");
   els.addError = document.getElementById("add-error");
 
+  // Favorite dialog
   els.favDialog = document.getElementById("fav-dialog");
   els.favForm = document.getElementById("fav-form");
   els.favDialogTitle = document.getElementById("fav-dialog-title");
@@ -734,20 +1266,15 @@ function init() {
   els.favTags = document.getElementById("fav-tags");
   els.favError = document.getElementById("fav-error");
 
+  // Confirm dialog
   els.confirmDialog = document.getElementById("confirm-dialog");
   els.confirmText = document.getElementById("confirm-text");
 
-  els.fullscreen = document.getElementById("fullscreen");
-  els.fullscreenLabel = document.getElementById("fullscreen-label");
-  els.fullscreenText = document.getElementById("fullscreen-text");
-  els.fullscreenClose = document.getElementById("fullscreen-close");
-
+  // Tabs
   els.tabCards = document.getElementById("tab-cards");
   els.tabFavorites = document.getElementById("tab-favorites");
-  els.header = document.querySelector("header");
-  els.tabbarEl = document.querySelector(".tabbar");
 
-  // Χτίσιμο tag buttons στον διάλογο Αγαπημένου
+  // Build tag buttons
   TAGS.forEach((tag) => {
     const btn = h("button", "tag-btn");
     btn.type = "button";
@@ -758,6 +1285,7 @@ function init() {
     els.favTags.appendChild(btn);
   });
 
+  // Basic events
   els.back.addEventListener("click", goBack);
   els.fab.addEventListener("click", () => {
     if (currentView === VIEWS.FAVORITES) openFavoriteDialog(null);
@@ -781,13 +1309,35 @@ function init() {
     .addEventListener("click", onConfirmDelete);
 
   els.fullscreenClose.addEventListener("click", closeFullscreen);
+  els.responseFullscreenClose.addEventListener("click", onResponseDone);
+  els.responseSave.addEventListener("click", onResponseSave);
+  els.responseDone.addEventListener("click", onResponseDone);
 
+  // Response dialog events
+  els.responseReady.addEventListener("click", onResponseReady);
+  els.responseCancel1.addEventListener("click", () => closeDialog(els.responseDialog));
+  els.responseCancel2.addEventListener("click", () => closeDialog(els.responseDialog));
+  els.responseSubmit.addEventListener("click", onResponseSubmit);
+  els.responseYes.addEventListener("click", onResponseYes);
+  els.responseNo.addEventListener("click", onResponseNo);
+
+  // Enter key on number input triggers submit
+  els.responseNumberInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onResponseSubmit();
+    }
+  });
+
+  // Tabs
   els.tabCards.addEventListener("click", () => switchTab(TABS.CARDS));
   els.tabFavorites.addEventListener("click", () => switchTab(TABS.FAVORITES));
 
+  // Dialog focus restore
   els.addDialog.addEventListener("close", restoreFocusAfterDialog);
   els.favDialog.addEventListener("close", restoreFocusAfterDialog);
   els.confirmDialog.addEventListener("close", restoreFocusAfterDialog);
+  els.responseDialog.addEventListener("close", restoreFocusAfterDialog);
 
   window.addEventListener("popstate", (event) => {
     const view = event.state && event.state.view;

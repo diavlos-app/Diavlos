@@ -1,19 +1,13 @@
 // Δίαυλος — data.js
 // Περιεχόμενο καρτών + αποθήκευση προσωπικών δεδομένων (μόνο τοπικά, στη συσκευή).
 //
-// ΣΚΟΠΙΜΑ μόνο γενικές, σταθερές φράσεις επικοινωνίας — όχι συγκεκριμένα
-// δικαιολογητικά ή κόστη που αλλάζουν συχνά και μπορεί να είναι λάθος.
-// Το περιεχόμενο των καρτών είναι ενδεικτικό και θα επεκταθεί.
+// Το πεδίο response ορίζει αν μια κάρτα μπορεί να δεχτεί απάντηση από τον
+// συνομιλητή: "number" | "text" | "yesno" | "datetime". Αν λείπει, η κάρτα
+// λειτουργεί μόνο ως εμφάνιση/ανάγνωση.
 
 "use strict";
 
 // ─── Κατηγορίες αρχικής οθόνης ────────────────────────────────────
-// type: "emergency" → ειδική οθόνη (SOS + ΝΑΙ/ΟΧΙ)
-// type: "phrases"   → λίστα φράσεων
-//
-// iconId → αναφέρεται σε <symbol id="..."> μέσα στο index.html.
-// Η κατηγορία "emergency" δεν έχει iconId — εμφανίζεται ως ειδικό
-// κόκκινο πλακίδιο με «SOS» + «ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ» (βλ. app.js).
 
 const CARD_CATEGORIES = [
   {
@@ -28,13 +22,15 @@ const CARD_CATEGORIES = [
     type: "phrases",
     cards: [
       { id: "srv-1", text: "Θέλω να υποβάλω αίτηση." },
-      { id: "srv-2", text: "Θέλω πιστοποιητικό. Ποια δικαιολογητικά χρειάζομαι;" },
-      { id: "srv-3", text: "Πόσο θα κοστίσει αυτή η διαδικασία;" },
-      { id: "srv-4", text: "Πόσες μέρες θα χρειαστούν;" },
+      { id: "srv-2", text: "Ποια δικαιολογητικά χρειάζομαι;", response: "text" },
+      { id: "srv-3", text: "Πόσο θα κοστίσει;", response: "number", unit: "€" },
+      { id: "srv-4", text: "Πόσες μέρες θα χρειαστούν;", response: "number", unit: "ημέρες" },
       { id: "srv-5", text: "Μπορείτε να μου το γράψετε, παρακαλώ;" },
       { id: "srv-6", text: "Δεν κατάλαβα. Μπορείτε να το εξηγήσετε διαφορετικά;" },
-      { id: "srv-7", text: "Έχω ραντεβού. Πού πρέπει να πάω;" },
-      { id: "srv-8", text: "Ευχαριστώ, κατάλαβα." }
+      { id: "srv-7", text: "Έχω ραντεβού. Πού πρέπει να πάω;", response: "text" },
+      { id: "srv-8", text: "Ποιο είναι το όνομά σας;", response: "text" },
+      { id: "srv-9", text: "Πότε είναι το ραντεβού μου;", response: "datetime" },
+      { id: "srv-10", text: "Ευχαριστώ, κατάλαβα." }
     ]
   },
   {
@@ -43,12 +39,14 @@ const CARD_CATEGORIES = [
     iconId: "icon-cafe",
     type: "phrases",
     cards: [
-      { id: "caf-1", text: "Τι θα μου προτείνατε;" },
+      { id: "caf-1", text: "Τι θα μου προτείνατε;", response: "text" },
       { id: "caf-2", text: "Θα πάρω αυτό, παρακαλώ." },
       { id: "caf-3", text: "Έχετε κάτι χωρίς γλουτένη;" },
       { id: "caf-4", text: "Έχετε κάτι χωρίς λακτόζη;" },
-      { id: "caf-5", text: "Τον λογαριασμό, παρακαλώ." },
-      { id: "caf-6", text: "Μπορώ να πληρώσω με κάρτα;" }
+      { id: "caf-5", text: "Πόσο κάνει αυτό;", response: "number", unit: "€" },
+      { id: "caf-6", text: "Τον λογαριασμό, παρακαλώ.", response: "number", unit: "€" },
+      { id: "caf-7", text: "Είναι ανοιχτά αύριο;", response: "yesno" },
+      { id: "caf-8", text: "Μπορώ να πληρώσω με κάρτα;" }
     ]
   },
   {
@@ -61,9 +59,10 @@ const CARD_CATEGORIES = [
       { id: "phm-2", text: "Χρειάζομαι κάτι για πονοκέφαλο." },
       { id: "phm-3", text: "Χρειάζομαι κάτι για βήχα." },
       { id: "phm-4", text: "Υπάρχει γενόσημο;" },
-      { id: "phm-5", text: "Πόσες φορές την ημέρα να το πάρω;" },
-      { id: "phm-6", text: "Έχει παρενέργειες;" },
-      { id: "phm-7", text: "Τα παίρνω με φαγητό ή χωρίς;" }
+      { id: "phm-5", text: "Πόσο κάνει;", response: "number", unit: "€" },
+      { id: "phm-6", text: "Πόσες φορές την ημέρα να το πάρω;", response: "text" },
+      { id: "phm-7", text: "Έχει παρενέργειες;" },
+      { id: "phm-8", text: "Τα παίρνω με φαγητό ή χωρίς;" }
     ]
   },
   {
@@ -72,19 +71,19 @@ const CARD_CATEGORIES = [
     iconId: "icon-shopping",
     type: "phrases",
     cards: [
-      { id: "shp-1", text: "Πόσο κάνει αυτό;" },
+      { id: "shp-1", text: "Πόσο κάνει αυτό;", response: "number", unit: "€" },
       { id: "shp-2", text: "Ψάχνω κάτι συγκεκριμένο. Μπορείτε να με βοηθήσετε;" },
       { id: "shp-3", text: "Έχετε αυτό σε άλλο μέγεθος;" },
       { id: "shp-4", text: "Έχετε αυτό σε άλλο χρώμα;" },
       { id: "shp-5", text: "Μπορώ να το αλλάξω αν δεν κάνει;" },
       { id: "shp-6", text: "Δέχεστε κάρτα;" },
-      { id: "shp-7", text: "Θέλω απόδειξη, παρακαλώ." }
+      { id: "shp-7", text: "Θέλω απόδειξη, παρακαλώ." },
+      { id: "shp-8", text: "Πότε θα το φέρετε;", response: "datetime" }
     ]
   }
 ];
 
 // ─── Tags για τα Αγαπημένα ────────────────────────────────────────
-// iconId → αναφέρεται σε <symbol id="..."> μέσα στο index.html.
 
 const TAGS = [
   { id: "personal",    label: "Προσωπικά",   iconId: "icon-tag-personal" },
@@ -94,15 +93,16 @@ const TAGS = [
   { id: "other",       label: "Άλλα",        iconId: "icon-tag-other" }
 ];
 
-// ─── Αποθήκευση (μόνο τοπικά, στη συσκευή) ────────────────────────
-// Τίποτα δεν στέλνεται πουθενά. Αν ο χρήστης καθαρίσει τα δεδομένα του
-// browser ή απεγκαταστήσει την εφαρμογή, χάνονται.
+// ─── Keys & Limits ────────────────────────────────────────────────
 
 const CUSTOM_CARDS_KEY = "diavlos_v1_custom_cards";
 const FAVORITES_KEY    = "diavlos_v1_favorites";
-const CUSTOM_CARD_MAX_LENGTH  = 300;
+const RESPONSES_KEY    = "diavlos_v1_responses";
+
+const CUSTOM_CARD_MAX_LENGTH    = 300;
 const FAVORITE_LABEL_MAX_LENGTH = 60;
 const FAVORITE_VALUE_MAX_LENGTH = 500;
+const RESPONSE_TEXT_MAX_LENGTH  = 500;
 
 // ─── Βοηθητικά αποθήκευσης ────────────────────────────────────────
 
@@ -130,7 +130,7 @@ function makeId(prefix) {
   return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
 }
 
-// ─── Προσωπικές κάρτες (φράσεις που προσθέτει ο χρήστης) ──────────
+// ─── Προσωπικές κάρτες ────────────────────────────────────────────
 
 function getCustomCards() {
   return readJSON(CUSTOM_CARDS_KEY).filter(
@@ -138,7 +138,6 @@ function getCustomCards() {
   );
 }
 
-// Επιστρέφει { ok: true } ή { ok: false, reason }
 function saveCustomCard(text) {
   const clean = (text || "").trim();
   if (!clean) return { ok: false, reason: "empty" };
@@ -155,10 +154,6 @@ function deleteCustomCard(id) {
 }
 
 // ─── Αγαπημένα ────────────────────────────────────────────────────
-// Δομή: { id, label, value, tags: [tagId, ...] }
-//   label — σύντομος τίτλος (π.χ. «ΑΦΜ»)
-//   value — περιεχόμενο (π.χ. «123456789»)
-//   tags  — πίνακας από ids των TAGS (πολλαπλά επιτρεπτά)
 
 function getFavorites() {
   const raw = readJSON(FAVORITES_KEY);
@@ -180,7 +175,6 @@ function getFavorites() {
   }));
 }
 
-// Επιστρέφει { ok: true, favorite } ή { ok: false, reason }
 function saveFavorite(label, value, tags) {
   const cleanLabel = (label || "").trim();
   const cleanValue = (value || "").trim();
@@ -196,12 +190,7 @@ function saveFavorite(label, value, tags) {
     : [];
 
   const favorites = getFavorites();
-  const favorite = {
-    id: makeId("fav"),
-    label: cleanLabel,
-    value: cleanValue,
-    tags: cleanTags
-  };
+  const favorite = { id: makeId("fav"), label: cleanLabel, value: cleanValue, tags: cleanTags };
   favorites.push(favorite);
   return writeJSON(FAVORITES_KEY, favorites)
     ? { ok: true, favorite: favorite }
@@ -237,22 +226,75 @@ function deleteFavorite(id) {
   return writeJSON(FAVORITES_KEY, favorites);
 }
 
-// ─── Ταξινόμηση Αγαπημένων ────────────────────────────────────────
-// Αλφαβητικά κατά label, με ελληνικό collation (ώστε τα τονισμένα να μην
-// πάνε στο τέλος).
-
 function sortFavoritesAlphabetically(favorites) {
   return favorites.slice().sort((a, b) =>
     a.label.localeCompare(b.label, "el", { sensitivity: "base" })
   );
 }
 
-// Φιλτράρισμα με AND logic: επιστρέφει μόνο όσα έχουν ΟΛΑ τα επιλεγμένα tags.
-// Αν ο πίνακας selectedTags είναι κενός, επιστρέφει όλα.
-
 function filterFavoritesByTags(favorites, selectedTags) {
   if (!selectedTags || selectedTags.length === 0) return favorites;
   return favorites.filter((f) =>
     selectedTags.every((tag) => f.tags.indexOf(tag) !== -1)
   );
+}
+
+// ─── Ιστορικό Απαντήσεων ──────────────────────────────────────────
+// Δομή: { id, phrase, response, responseType, unit, categoryId, categoryName, timestamp }
+
+function getResponses() {
+  const raw = readJSON(RESPONSES_KEY);
+  return raw
+    .filter(
+      (r) =>
+        r &&
+        typeof r.id === "string" &&
+        typeof r.phrase === "string" &&
+        typeof r.response === "string" &&
+        typeof r.timestamp === "number"
+    )
+    .sort((a, b) => b.timestamp - a.timestamp); // νεότερες πρώτες
+}
+
+function saveResponse(phrase, response, responseType, unit, categoryId, categoryName) {
+  const cleanPhrase = (phrase || "").trim();
+  const cleanResponse = (response || "").trim();
+
+  if (!cleanPhrase) return { ok: false, reason: "phrase-empty" };
+  if (!cleanResponse) return { ok: false, reason: "response-empty" };
+  if (cleanResponse.length > RESPONSE_TEXT_MAX_LENGTH) return { ok: false, reason: "too-long" };
+
+  const responses = readJSON(RESPONSES_KEY);
+  const entry = {
+    id: makeId("resp"),
+    phrase: cleanPhrase,
+    response: cleanResponse,
+    responseType: responseType || "text",
+    unit: unit || "",
+    categoryId: categoryId || "",
+    categoryName: categoryName || "",
+    timestamp: Date.now()
+  };
+  responses.push(entry);
+  return writeJSON(RESPONSES_KEY, responses)
+    ? { ok: true, entry: entry }
+    : { ok: false, reason: "storage" };
+}
+
+function deleteResponse(id) {
+  const responses = readJSON(RESPONSES_KEY).filter((r) => r.id !== id);
+  return writeJSON(RESPONSES_KEY, responses);
+}
+
+function clearResponses() {
+  return writeJSON(RESPONSES_KEY, []);
+}
+
+// Φίλτρο ημερομηνίας: "all" | "7d" | "30d"
+function filterResponsesByDate(responses, filter) {
+  if (!filter || filter === "all") return responses;
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  const cutoff = filter === "7d" ? now - 7 * day : now - 30 * day;
+  return responses.filter((r) => r.timestamp >= cutoff);
 }

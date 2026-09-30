@@ -3,10 +3,7 @@
    Design system: Jura typography, geometric, minimal green
    ═══════════════════════════════════════════════════════════════ */
 
-/* ─── Design Tokens ─────────────────────────────────────────── */
-
 :root {
-  /* Colors — Light */
   --bg: #f7f7fa;
   --surface: #ffffff;
   --surface-2: #eceef1;
@@ -19,8 +16,9 @@
   --danger-contrast: #ffffff;
   --success: #2e7d32;
   --success-contrast: #ffffff;
+  --highlight-bg: #c62828;
+  --highlight-fg: #ffe9a8;
 
-  /* Spacing scale */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
@@ -29,16 +27,13 @@
   --sp-6: 24px;
   --sp-8: 32px;
 
-  /* Radius scale */
   --r-sm: 10px;
   --r-md: 12px;
   --r-lg: 16px;
   --r-full: 999px;
 
-  /* Typography */
   --font: 'Jura', -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  /* Layout */
   --header-height: 68px;
   --tabbar-height: 64px;
   --tabbar-total: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 0px));
@@ -61,8 +56,6 @@
   }
 }
 
-/* ─── Reset ─────────────────────────────────────────────────── */
-
 * { box-sizing: border-box; }
 
 body {
@@ -77,12 +70,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Logo colors (χρησιμοποιούνται από το header logo) ────── */
-
 .logo-bg { fill: var(--accent); }
 .logo-fg { fill: var(--accent-contrast); }
-
-/* ─── Visually hidden ──────────────────────────────────────── */
 
 .visually-hidden {
   position: absolute;
@@ -96,70 +85,15 @@ body {
 
 /* ─── SVG Icon sizes ───────────────────────────────────────── */
 
-svg.icon {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-svg.category-icon {
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-}
-
-svg.tab-icon {
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-}
-
-svg.btn-icon {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-}
-
-svg.icon-btn-icon {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-}
-
-svg.filter-chip-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-svg.tag-btn-icon {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-}
-
-svg.emergency-number-icon {
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-  color: var(--danger);
-}
-
-svg.yesno-icon {
-  width: 52px;
-  height: 52px;
-  flex-shrink: 0;
-  color: inherit;
-}
-
-svg.emergency-icon {
-  width: 32px;
-  height: 32px;
-  color: var(--danger);
-  flex-shrink: 0;
-}
+svg.icon { width: 24px; height: 24px; flex-shrink: 0; display: inline-block; vertical-align: middle; }
+svg.category-icon { width: 48px; height: 48px; flex-shrink: 0; }
+svg.tab-icon { width: 26px; height: 26px; flex-shrink: 0; }
+svg.btn-icon { width: 22px; height: 22px; flex-shrink: 0; }
+svg.icon-btn-icon { width: 22px; height: 22px; flex-shrink: 0; }
+svg.filter-chip-icon { width: 16px; height: 16px; flex-shrink: 0; }
+svg.tag-btn-icon { width: 22px; height: 22px; flex-shrink: 0; }
+svg.emergency-number-icon { width: 36px; height: 36px; flex-shrink: 0; color: var(--danger); }
+svg.yesno-icon { width: 52px; height: 52px; flex-shrink: 0; color: inherit; }
 
 /* ─── Focus ────────────────────────────────────────────────── */
 
@@ -167,6 +101,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
+select:focus-visible,
 [tabindex]:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
@@ -189,7 +124,6 @@ header {
   z-index: 10;
 }
 
-/* Logo — εμφανίζεται μόνο στην αρχική */
 .header-logo {
   width: 40px;
   height: 40px;
@@ -201,13 +135,8 @@ header {
 
 .header-logo[hidden] { display: none; }
 
-.header-logo svg {
-  width: 40px;
-  height: 40px;
-  display: block;
-}
+.header-logo svg { width: 40px; height: 40px; display: block; }
 
-/* Back button — εμφανίζεται μόνο σε υπο-οθόνες */
 #back-btn {
   background: none;
   border: none;
@@ -224,11 +153,7 @@ header {
 }
 
 #back-btn[hidden] { display: none; }
-
-#back-btn svg {
-  width: 26px;
-  height: 26px;
-}
+#back-btn svg { width: 26px; height: 26px; }
 
 .header-titles {
   display: flex;
@@ -243,7 +168,6 @@ header {
   font-weight: 700;
   margin: 0;
   line-height: 1.15;
-  letter-spacing: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -270,7 +194,7 @@ main {
   padding-bottom: calc(var(--tabbar-total) + 100px);
 }
 
-/* ─── Emergency card (αρχική) ──────────────────────────────── */
+/* ─── Emergency card ───────────────────────────────────────── */
 
 .emergency-card {
   background: var(--surface);
@@ -280,41 +204,40 @@ main {
   padding: var(--sp-5);
   margin-bottom: var(--sp-4);
 }
+
 .emergency-header {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   margin-bottom: var(--sp-4);
 }
 
-.emergency-titles {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  padding: 8px 22px;
-  background: var(--danger);
-  border-radius: 10px;
-}
-
+/* Το κόκκινο του SOS μένει σταθερό #c62828 και στα δύο θέματα:
+   σε dark mode το --danger γίνεται #ef5350 και η αντίθεση με το
+   κίτρινο κείμενο πέφτει κάτω από το όριο WCAG AA. */
 .emergency-title {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.8rem;
   font-weight: 900;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   line-height: 1;
-  color: #ffe9a8;
-  padding: 0 2px;
+  color: #c62828;
 }
 
 .emergency-subtitle {
-  font-size: 0.65rem;
+  font-family: var(--font);
+  font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 0.18em;
-  color: #ffe9a8;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  padding: 3px 2px 0;
+  color: #ffe9a8;
+  background: #c62828;
+  padding: 3px 12px;
+  border-radius: 3px;
+  min-width: 110px;
+  text-align: center;
 }
-
 
 .emergency-actions {
   display: grid;
@@ -331,22 +254,14 @@ main {
   font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
-  min-height: 64px;
+  min-height: 88px;
   letter-spacing: 0.02em;
 }
 
-.btn-emergency-sms {
-  background: var(--danger);
-  color: var(--danger-contrast);
-}
+.btn-emergency-sms { background: var(--danger); color: var(--danger-contrast); }
+.btn-emergency-field { background: var(--surface); color: var(--text); border: 2px solid var(--border); }
 
-.btn-emergency-field {
-  background: var(--surface);
-  color: var(--text);
-  border: 2px solid var(--border);
-}
-
-/* ─── Category grid (2x2) ──────────────────────────────────── */
+/* ─── Category grid ────────────────────────────────────────── */
 
 .category-grid {
   display: grid;
@@ -371,15 +286,8 @@ main {
   min-height: 130px;
 }
 
-.category-card svg.category-icon {
-  color: var(--accent);
-}
-
-.category-name {
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.2;
-}
+.category-card svg.category-icon { color: var(--accent); }
+.category-name { font-weight: 600; text-align: center; line-height: 1.2; }
 
 /* ─── Λίστες φράσεων ──────────────────────────────────────── */
 
@@ -413,7 +321,8 @@ main {
 .speak-btn,
 .show-btn,
 .fav-btn,
-.delete-btn {
+.delete-btn,
+.reply-btn {
   border: none;
   border-radius: var(--r-sm);
   padding: var(--sp-3);
@@ -430,13 +339,12 @@ main {
 .speak-btn svg,
 .show-btn svg,
 .fav-btn svg,
-.delete-btn svg {
-  width: 22px;
-  height: 22px;
-}
+.delete-btn svg,
+.reply-btn svg { width: 22px; height: 22px; }
 
 .speak-btn,
-.show-btn {
+.show-btn,
+.reply-btn {
   flex: 1 1 120px;
   gap: var(--sp-2);
   font-size: 0.9rem;
@@ -444,26 +352,11 @@ main {
 
 .btn-label { line-height: 1; }
 
-.speak-btn {
-  background: var(--accent);
-  color: var(--accent-contrast);
-}
-
-.show-btn {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.fav-btn {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.delete-btn {
-  background: transparent;
-  color: var(--danger);
-  border: 1px solid var(--danger);
-}
+.speak-btn { background: var(--accent); color: var(--accent-contrast); }
+.show-btn { background: var(--surface-2); color: var(--text); }
+.fav-btn { background: var(--surface-2); color: var(--text); }
+.delete-btn { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+.reply-btn { background: var(--surface-2); color: var(--text); }
 
 /* ─── Empty state ──────────────────────────────────────────── */
 
@@ -495,11 +388,7 @@ main {
   justify-content: center;
 }
 
-#add-custom-btn svg {
-  width: 28px;
-  height: 28px;
-}
-
+#add-custom-btn svg { width: 28px; height: 28px; }
 #add-custom-btn[hidden] { display: none; }
 
 /* ─── Toast ────────────────────────────────────────────────── */
@@ -523,7 +412,7 @@ main {
 
 .toast[hidden] { display: none; }
 
-/* ─── Fullscreen display ──────────────────────────────────── */
+/* ─── Fullscreen (φράσεις/αγαπημένα) ─────────────────────── */
 
 .fullscreen {
   position: fixed;
@@ -580,7 +469,199 @@ main {
   min-height: 48px;
 }
 
-/* ─── Διάλογοι ─────────────────────────────────────────────── */
+/* ─── Response fullscreen (απάντηση) ─────────────────────── */
+
+#response-fullscreen .fullscreen-text {
+  font-size: clamp(3rem, 14vw, 7rem);
+  letter-spacing: -0.01em;
+}
+
+.response-fullscreen-unit {
+  margin: var(--sp-2) 0 0 0;
+  font-family: var(--font);
+  font-size: 2rem;
+  font-weight: 400;
+  color: #444444;
+}
+
+.response-fullscreen-actions {
+  position: absolute;
+  bottom: calc(var(--sp-6) + env(safe-area-inset-bottom, 0px));
+  left: var(--sp-6);
+  right: var(--sp-6);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.response-fullscreen-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 60px;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ─── Response dialog ─────────────────────────────────────── */
+
+dialog.response-dialog {
+  width: min(94vw, 520px);
+  padding: var(--sp-5);
+}
+
+.response-stage { display: flex; flex-direction: column; }
+.response-stage[hidden] { display: none; }
+
+.response-phrase {
+  margin: 0 0 var(--sp-4) 0;
+  font-family: var(--font);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.response-instruction {
+  margin: 0 0 var(--sp-5) 0;
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.response-input-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.response-input-block[hidden] { display: none; }
+
+.response-input-label {
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.response-number-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-3) var(--sp-4);
+  transition: border-color 150ms;
+}
+
+.response-number-wrap:focus-within {
+  border-color: var(--accent);
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#response-number-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font);
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: right;
+  color: var(--text);
+  width: 100%;
+  min-width: 0;
+}
+
+#response-number-input:focus { outline: none; }
+
+.response-number-unit {
+  font-family: var(--font);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+#response-text-input {
+  width: 100%;
+  padding: var(--sp-3);
+  font-family: var(--font);
+  font-size: 1.15rem;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  resize: vertical;
+}
+
+#response-date-input,
+#response-time-input {
+  width: 100%;
+  padding: var(--sp-3);
+  font-family: var(--font);
+  font-size: 1.15rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  margin-bottom: var(--sp-3);
+}
+
+#response-date-input:last-of-type,
+#response-time-input:last-of-type { margin-bottom: 0; }
+
+.response-yesno-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+
+.response-yesno-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 130px;
+  border: none;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+}
+
+.response-yesno-icon {
+  width: 52px;
+  height: 52px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.response-yesno-yes { background: var(--success); color: var(--success-contrast); }
+.response-yesno-no { background: var(--danger); color: var(--danger-contrast); }
+
+/* ─── Διάλογοι (γενικά) ─────────────────────────────────────── */
 
 dialog {
   width: min(92vw, 480px);
@@ -595,12 +676,7 @@ dialog {
 }
 
 dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
-
-dialog h2 {
-  margin: 0 0 var(--sp-4) 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-}
+dialog h2 { margin: 0 0 var(--sp-4) 0; font-size: 1.2rem; font-weight: 700; }
 
 dialog label {
   display: block;
@@ -626,10 +702,7 @@ dialog input[type="text"] {
   resize: vertical;
 }
 
-dialog input[type="text"] {
-  resize: none;
-  font-size: 1.1rem;
-}
+dialog input[type="text"] { resize: none; font-size: 1.1rem; }
 
 .confirm-text {
   margin: 0 0 var(--sp-2) 0;
@@ -662,25 +735,15 @@ dialog input[type="text"] {
   font-weight: 600;
   border-radius: var(--r-sm);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
 }
 
-.btn-primary {
-  background: var(--accent);
-  color: var(--accent-contrast);
-  border: none;
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--text);
-  border: 2px solid var(--border);
-}
-
-.btn-danger {
-  background: var(--danger);
-  color: var(--danger-contrast);
-  border: none;
-}
+.btn-primary { background: var(--accent); color: var(--accent-contrast); border: none; }
+.btn-secondary { background: transparent; color: var(--text); border: 2px solid var(--border); }
+.btn-danger { background: var(--danger); color: var(--danger-contrast); border: none; }
 
 /* ─── Tags ─────────────────────────────────────────────────── */
 
@@ -716,18 +779,50 @@ dialog input[type="text"] {
   letter-spacing: 0.02em;
 }
 
-.tag-btn svg.tag-btn-icon {
-  color: var(--accent);
+.tag-btn svg.tag-btn-icon { color: var(--accent); }
+.tag-btn-active { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+.tag-btn-active svg.tag-btn-icon { color: var(--accent-contrast); }
+
+/* ─── Αγαπημένα/Ιστορικό: toggle ────────────────────────────── */
+
+.segmented {
+  display: flex;
+  gap: 0;
+  background: var(--surface-2);
+  border-radius: var(--r-full);
+  padding: 4px;
+  margin-bottom: var(--sp-4);
 }
 
-.tag-btn-active {
-  background: var(--accent);
-  color: var(--accent-contrast);
-  border-color: var(--accent);
+.segmented button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: var(--r-full);
+  min-height: 44px;
+  transition: background 150ms, color 150ms;
 }
 
-.tag-btn-active svg.tag-btn-icon {
-  color: var(--accent-contrast);
+.segmented button svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.segmented button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 /* ─── Αγαπημένα: φίλτρα ────────────────────────────────────── */
@@ -763,19 +858,9 @@ dialog input[type="text"] {
   letter-spacing: 0.02em;
 }
 
-.filter-chip svg.filter-chip-icon {
-  color: var(--accent);
-}
-
-.filter-chip-active {
-  background: var(--accent);
-  color: var(--accent-contrast);
-  border-color: var(--accent);
-}
-
-.filter-chip-active svg.filter-chip-icon {
-  color: var(--accent-contrast);
-}
+.filter-chip svg.filter-chip-icon { color: var(--accent); }
+.filter-chip-active { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+.filter-chip-active svg.filter-chip-icon { color: var(--accent-contrast); }
 
 /* ─── Αγαπημένα: λίστα ─────────────────────────────────────── */
 
@@ -845,11 +930,145 @@ dialog input[type="text"] {
   justify-content: center;
 }
 
-.icon-btn + .icon-btn {
-  border-top: 1px solid var(--border);
+.icon-btn + .icon-btn { border-top: 1px solid var(--border); }
+.icon-btn-danger { color: var(--danger); }
+
+/* ─── Ιστορικό ────────────────────────────────────────────── */
+
+.history-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
 }
 
-.icon-btn-danger { color: var(--danger); }
+.history-date-filters {
+  display: flex;
+  gap: var(--sp-2);
+  flex: 1;
+}
+
+.history-date-chip {
+  flex: 0 0 auto;
+  padding: var(--sp-2) var(--sp-3);
+  border: 2px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+.history-date-chip.active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.history-export-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 2px solid var(--accent);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.history-export-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.history-row {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.history-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+  font-family: var(--font);
+}
+
+.history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+  width: 100%;
+}
+
+.history-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border-radius: var(--r-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.history-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.history-phrase {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.3;
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.history-response {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  width: 100%;
+  overflow-wrap: anywhere;
+}
 
 /* ─── Emergency SMS ───────────────────────────────────────── */
 
@@ -934,10 +1153,7 @@ dialog input[type="text"] {
 .yesno-yes { background: var(--success); color: var(--success-contrast); }
 .yesno-no  { background: var(--danger); color: var(--danger-contrast); }
 
-.yesno-label {
-  font-size: 1.3rem;
-  letter-spacing: 0.05em;
-}
+.yesno-label { font-size: 1.3rem; letter-spacing: 0.05em; }
 
 .field-phrases-title {
   font-size: 0.85rem;
@@ -985,10 +1201,130 @@ dialog input[type="text"] {
 
 .tab.active { color: var(--accent); font-weight: 700; }
 .tab.active svg.tab-icon { color: var(--accent); }
+.tab:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.tab:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+/* ─── Print area (PDF export) ─────────────────────────────── */
+
+#print-area { display: none; }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  body * { visibility: hidden; }
+
+  #print-area,
+  #print-area * { visibility: visible; }
+
+  #print-area {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: #ffffff;
+    color: #000000;
+    font-family: 'Jura', Arial, sans-serif;
+  }
+
+  .print-header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #000;
+  }
+
+  .print-header-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .print-logo-mark {
+    width: 40px;
+    height: 40px;
+    background: #2d6a4f;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-family: Arial, sans-serif;
+  }
+
+  .print-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0;
+    color: #000;
+  }
+
+  .print-subtitle {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 4px 0 0;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .print-card {
+    margin-bottom: 18px;
+    page-break-inside: avoid;
+  }
+
+  .print-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 6px;
+  }
+
+  .print-card-category {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #2d6a4f;
+    font-weight: 700;
+  }
+
+  .print-box {
+    border: 2px solid #000;
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .print-question {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: #000;
+  }
+
+  .print-answer {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    text-align: center;
+    color: #000;
+  }
+
+  .print-footer {
+    margin-top: 32px;
+    padding-top: 12px;
+    border-top: 1px solid #ccc;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #666;
+  }
+
+  .print-footer p { margin: 2px 0; }
 }
 
 /* ─── Reduced motion ──────────────────────────────────────── */
