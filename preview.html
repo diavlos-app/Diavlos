@@ -3,58 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Δίαυλος — Σύμβολο v3</title>
+<title>Δίαυλος — Header Preview</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Commissioner:wght@400;600;700&family=Sofia+Sans:wght@400;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
-  :root { --bg:#f7f7fa; --surface:#fff; --text:#1a1a1a; --muted:#6b6b6b;
-          --border:#e0e0e5; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#14161a; --surface:#1e2126; --text:#f0f0f0;
-            --muted:#a0a0a8; --border:#33363c; }
+  :root {
+    --bg: #f7f7fa;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --border: #e0e0e5;
+    --accent: #2d6a4f;
+    --dark-bg: #14161a;
+    --dark-surface: #1e2126;
+    --dark-text: #f0f0f0;
+    --dark-muted: #a0a0a8;
+    --dark-accent: #52b788;
   }
+
   * { box-sizing: border-box; }
-  body { margin:0; padding:20px; font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
-         background:var(--bg); color:var(--text); }
-  h1 { font-size:1.2rem; margin:0 0 6px; }
-  p.intro { color:var(--muted); font-size:0.9rem; margin:0 0 20px; line-height:1.5; }
-  h2 { font-size:0.9rem; margin:28px 0 12px; color:var(--muted);
-       text-transform:uppercase; letter-spacing:0.05em;
-       border-bottom:1px solid var(--border); padding-bottom:6px; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; }
-  .cell { background:var(--surface); border:1px solid var(--border);
-          border-radius:14px; padding:14px; text-align:center; }
-  .cell .letter { font-size:0.7rem; color:var(--muted); font-weight:700;
-                  letter-spacing:0.1em; margin-bottom:8px; }
-  .cell .name { font-size:0.7rem; color:var(--muted); margin-top:8px; line-height:1.2; }
-  .sizes { display:flex; align-items:center; justify-content:center;
-           gap:10px; flex-wrap:wrap; }
-  .sizes svg { display:block; border-radius:22%; }
-  .row { display:flex; align-items:flex-end; gap:14px; justify-content:center;
-         flex-wrap:wrap; }
-  .row-item { text-align:center; }
-  .row-item .lbl { font-size:0.65rem; color:var(--muted); margin-top:6px; }
+
+  body {
+    margin: 0;
+    padding: 20px;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  h1 { font-size: 1.2rem; margin: 0 0 6px; }
+  p.intro { color: var(--text-muted); font-size: 0.9rem; margin: 0 0 20px; line-height: 1.5; }
+  h2 {
+    font-size: 0.85rem; margin: 28px 0 12px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border); padding-bottom: 6px;
+  }
+
+  /* ═══ HEADER MOCKUP ═══ */
+  .header-mock {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .header-mock.light {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .header-mock.dark {
+    background: var(--dark-surface);
+    border: 1px solid #33363c;
+    color: var(--dark-text);
+  }
+
+  .hm-icon { flex-shrink: 0; }
+  .hm-icon svg { display: block; border-radius: 22%; }
+
+  .hm-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .hm-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .hm-sub {
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .header-mock.light .hm-sub { color: var(--text-muted); }
+  .header-mock.dark .hm-sub { color: var(--dark-muted); }
+
+  .font-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin: 0 0 8px 4px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  /* Fonts */
+  .f-manrope    { font-family: "Manrope", sans-serif; }
+  .f-commissioner { font-family: "Commissioner", sans-serif; }
+  .f-sofia      { font-family: "Sofia Sans", sans-serif; }
+  .f-inter      { font-family: "Inter", sans-serif; }
+
+  /* Toggle light/dark */
+  .theme-toggle {
+    display: flex; gap: 8px; margin-bottom: 20px;
+  }
+  .theme-toggle button {
+    padding: 8px 16px; border: 2px solid var(--border);
+    background: var(--surface); color: var(--text);
+    border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer;
+  }
+  .theme-toggle button.active {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Σύμβολο μεγάλο */
+  .symbol-showcase {
+    display: flex; align-items: flex-end; gap: 20px;
+    flex-wrap: wrap; padding: 16px;
+    background: var(--surface); border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  .symbol-showcase.dark { background: var(--dark-surface); }
+  .symbol-showcase .item { text-align: center; }
+  .symbol-showcase .item .lbl {
+    font-size: 0.65rem; color: var(--text-muted); margin-top: 6px;
+  }
 </style>
 </head>
 <body>
 
-<h1>Δίαυλος — Σύμβολο (5 παραλλαγές «κειμένου»)</h1>
+<h1>Δίαυλος — Header με γραμματοσειρές</h1>
 <p class="intro">
-  Πέντε διαφορετικές ερμηνείες του «κενού στο πλάι». Όλα με γεμάτο πλαίσιο,
-  γεμάτο λευκό Δ, και εσωτερικές γραμμές που δημιουργούν «κείμενο».
+  Δες το σύμβολο (Παραλλαγή 2) σε πραγματικό header με κείμενο.
+  Δοκίμασε 4 γραμματοσειρές, σε light και dark mode.
 </p>
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
 
-  <!-- 1. ΑΡΙΣΤΕΡΑ ΣΤΟΙΧΙΣΜΕΝΕΣ -->
-  <symbol id="logo-left" viewBox="0 0 100 100">
-    <rect width="100" height="100" rx="20" fill="#2d6a4f"/>
-    <path d="M 50,20 L 78,78 L 22,78 Z" fill="#ffffff"/>
-    <rect x="32" y="44" width="14" height="3.5" rx="1.7" fill="#2d6a4f"/>
-    <rect x="28" y="54" width="22" height="3.5" rx="1.7" fill="#2d6a4f"/>
-    <rect x="24" y="64" width="30" height="3.5" rx="1.7" fill="#2d6a4f"/>
-  </symbol>
-
-  <!-- 2. ΔΕΞΙΑ ΣΤΟΙΧΙΣΜΕΝΕΣ -->
-  <symbol id="logo-right" viewBox="0 0 100 100">
+  <!-- Σύμβολο 2A: Σκαλοπατητές γραμμές -->
+  <symbol id="sym-stag" viewBox="0 0 100 100">
     <rect width="100" height="100" rx="20" fill="#2d6a4f"/>
     <path d="M 50,20 L 78,78 L 22,78 Z" fill="#ffffff"/>
     <rect x="54" y="44" width="14" height="3.5" rx="1.7" fill="#2d6a4f"/>
@@ -62,129 +147,138 @@
     <rect x="46" y="64" width="30" height="3.5" rx="1.7" fill="#2d6a4f"/>
   </symbol>
 
-  <!-- 3. ΦΘΙΝΟΥΣΕΣ (μικραίνουν προς τα πάνω) -->
-  <symbol id="logo-fade" viewBox="0 0 100 100">
+  <!-- Σύμβολο 2B: Στοιχισμένες δεξιά -->
+  <symbol id="sym-align" viewBox="0 0 100 100">
     <rect width="100" height="100" rx="20" fill="#2d6a4f"/>
     <path d="M 50,20 L 78,78 L 22,78 Z" fill="#ffffff"/>
-    <rect x="30" y="64" width="40" height="3.5" rx="1.7" fill="#2d6a4f"/>
-    <rect x="36" y="54" width="28" height="3.5" rx="1.7" fill="#2d6a4f"/>
-    <rect x="42" y="44" width="16" height="3.5" rx="1.7" fill="#2d6a4f"/>
+    <rect x="48" y="44" width="18" height="3.5" rx="1.7" fill="#2d6a4f"/>
+    <rect x="46" y="54" width="20" height="3.5" rx="1.7" fill="#2d6a4f"/>
+    <rect x="44" y="64" width="22" height="3.5" rx="1.7" fill="#2d6a4f"/>
   </symbol>
 
-  <!-- 4. ΚΕΝΟ ΔΕΞΙΑ (άνοιγμα στη δεξιά πλευρά) -->
-  <symbol id="logo-gap-right" viewBox="0 0 100 100">
-    <rect width="100" height="100" rx="20" fill="#2d6a4f"/>
-    <path d="M 50,20 L 50,32 L 70,72 L 56,72 L 56,78 L 22,78 Z M 50,45 L 60,65 L 50,65 Z" fill="#ffffff" fill-rule="evenodd"/>
-    <rect x="32" y="54" width="14" height="3.5" rx="1.7" fill="#ffffff"/>
-  </symbol>
-
-  <!-- 5. ΚΕΝΟ ΑΡΙΣΤΕΡΑ (άνοιγμα στην αριστερή πλευρά) -->
-  <symbol id="logo-gap-left" viewBox="0 0 100 100">
-    <rect width="100" height="100" rx="20" fill="#2d6a4f"/>
-    <path d="M 50,20 L 78,78 L 44,78 L 44,72 L 56,72 L 50,60 L 50,32 Z M 50,45 L 50,55 L 44,65 L 50,65 Z" fill="#ffffff" fill-rule="evenodd"/>
-    <rect x="54" y="54" width="14" height="3.5" rx="1.7" fill="#ffffff"/>
+  <!-- Σύμβολο με dark version (διαφορετικά χρώματα) -->
+  <symbol id="sym-dark-stag" viewBox="0 0 100 100">
+    <rect width="100" height="100" rx="20" fill="#52b788"/>
+    <path d="M 50,20 L 78,78 L 22,78 Z" fill="#14161a"/>
+    <rect x="54" y="44" width="14" height="3.5" rx="1.7" fill="#52b788"/>
+    <rect x="50" y="54" width="22" height="3.5" rx="1.7" fill="#52b788"/>
+    <rect x="46" y="64" width="30" height="3.5" rx="1.7" fill="#52b788"/>
   </symbol>
 
 </svg>
 
-<h2>Σε 128px</h2>
-<div class="grid">
-  <div class="cell">
-    <div class="letter">1</div>
-    <div class="sizes">
-      <svg width="128" height="128"><use href="#logo-left"/></svg>
-    </div>
-    <div class="name">Αριστερά στοιχισμένες</div>
+<!-- ═══ ΣΥΜΒΟΛΟ ΜΟΝΟ ΤΟΥ ═══ -->
+<h2>Σύμβολο σε 3 μεγέθη</h2>
+<div class="symbol-showcase">
+  <div class="item">
+    <svg width="80" height="80"><use href="#sym-stag"/></svg>
+    <div class="lbl">80px</div>
   </div>
-  <div class="cell">
-    <div class="letter">2</div>
-    <div class="sizes">
-      <svg width="128" height="128"><use href="#logo-right"/></svg>
-    </div>
-    <div class="name">Δεξιά στοιχισμένες</div>
+  <div class="item">
+    <svg width="48" height="48"><use href="#sym-stag"/></svg>
+    <div class="lbl">48px</div>
   </div>
-  <div class="cell">
-    <div class="letter">3</div>
-    <div class="sizes">
-      <svg width="128" height="128"><use href="#logo-fade"/></svg>
-    </div>
-    <div class="name">Φθίνουσες</div>
+  <div class="item">
+    <svg width="32" height="32"><use href="#sym-stag"/></svg>
+    <div class="lbl">32px</div>
   </div>
-  <div class="cell">
-    <div class="letter">4</div>
-    <div class="sizes">
-      <svg width="128" height="128"><use href="#logo-gap-right"/></svg>
-    </div>
-    <div class="name">Κενό δεξιά</div>
-  </div>
-  <div class="cell">
-    <div class="letter">5</div>
-    <div class="sizes">
-      <svg width="128" height="128"><use href="#logo-gap-left"/></svg>
-    </div>
-    <div class="name">Κενό αριστερά</div>
+  <div class="item">
+    <svg width="20" height="20"><use href="#sym-stag"/></svg>
+    <div class="lbl">20px</div>
   </div>
 </div>
 
-<h2>Σε 48px (πραγματικό app icon)</h2>
-<div class="row">
-  <div class="row-item">
-    <svg width="48" height="48"><use href="#logo-left"/></svg>
-    <div class="lbl">1</div>
-  </div>
-  <div class="row-item">
-    <svg width="48" height="48"><use href="#logo-right"/></svg>
-    <div class="lbl">2</div>
-  </div>
-  <div class="row-item">
-    <svg width="48" height="48"><use href="#logo-fade"/></svg>
-    <div class="lbl">3</div>
-  </div>
-  <div class="row-item">
-    <svg width="48" height="48"><use href="#logo-gap-right"/></svg>
-    <div class="lbl">4</div>
-  </div>
-  <div class="row-item">
-    <svg width="48" height="48"><use href="#logo-gap-left"/></svg>
-    <div class="lbl">5</div>
+<!-- ═══ LIGHT MODE ═══ -->
+<h2>Light mode — 4 γραμματοσειρές</h2>
+
+<div class="font-label">Manrope — μοντέρνα, γεωμετρική, distinctive</div>
+<div class="header-mock light f-manrope">
+  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-stag"/></svg></div>
+  <div class="hm-titles">
+    <span class="hm-title">Δίαυλος</span>
+    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
   </div>
 </div>
 
-<h2>Σε 32px</h2>
-<div class="row">
-  <div class="row-item">
-    <svg width="32" height="32"><use href="#logo-left"/></svg>
-  </div>
-  <div class="row-item">
-    <svg width="32" height="32"><use href="#logo-right"/></svg>
-  </div>
-  <div class="row-item">
-    <svg width="32" height="32"><use href="#logo-fade"/></svg>
-  </div>
-  <div class="row-item">
-    <svg width="32" height="32"><use href="#logo-gap-right"/></svg>
-  </div>
-  <div class="row-item">
-    <svg width="32" height="32"><use href="#logo-gap-left"/></svg>
+<div class="font-label">Commissioner — σοβαρή, θεσμική</div>
+<div class="header-mock light f-commissioner">
+  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-stag"/></svg></div>
+  <div class="hm-titles">
+    <span class="hm-title">Δίαυλος</span>
+    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
   </div>
 </div>
 
-<h2>Σε 20px (favicon)</h2>
-<div class="row">
-  <div class="row-item">
-    <svg width="20" height="20"><use href="#logo-left"/></svg>
+<div class="font-label">Sofia Sans — ελληνική σχεδίαση από την αρχή</div>
+<div class="header-mock light f-sofia">
+  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-stag"/></svg></div>
+  <div class="hm-titles">
+    <span class="hm-title">Δίαυλος</span>
+    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
   </div>
-  <div class="row-item">
-    <svg width="20" height="20"><use href="#logo-right"/></svg>
+</div>
+
+<div class="font-label">Inter — καθαρή, ουδέτερη, ευανάγνωστη</div>
+<div class="header-mock light f-inter">
+  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-stag"/></svg></div>
+  <div class="hm-titles">
+    <span class="hm-title">Δίαυλος</span>
+    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
   </div>
-  <div class="row-item">
-    <svg width="20" height="20"><use href="#logo-fade"/></svg>
+</div>
+
+<!-- ═══ DARK MODE ═══ -->
+<h2>Dark mode — 4 γραμματοσειρές</h2>
+
+<div class="font-label">Manrope</div>
+<div class="header-mock dark f-manrope">
+  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-dark-stag"/></svg></div>
+  <div class="hm-titles">
+    <span class="hm-title">Δίαυλος</span>
+    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
   </div>
-  <div class="row-item">
-    <svg width="20" height="20"><use href="#logo-gap-right"/></svg>
+</div>
+
+<div class="font-label">Commissioner</div>
+<div class="header-mock dark f-commissioner">
+  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-dark-stag"/></svg></div>
+  <div class="hm-titles">
+    <span class="hm-title">Δίαυλος</span>
+    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
   </div>
-  <div class="row-item">
-    <svg width="20" height="20"><use href="#logo-gap-left"/></svg>
+</div>
+
+<div class="font-label">Sofia Sans</div>
+<div class="header-mock dark f-sofia">
+  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-dark-stag"/></svg></div>
+  <div class="hm-titles">
+    <span class="hm-title">Δίαυλος</span>
+    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
+  </div>
+</div>
+
+<div class="font-label">Inter</div>
+<div class="header-mock dark f-inter">
+  <div class="hm-icon"><svg width="44" height="44"><use href="#sym-dark-stag"/></svg></div>
+  <div class="hm-titles">
+    <span class="hm-title">Δίαυλος</span>
+    <span class="hm-sub">Προσβάσιμη Επικοινωνία</span>
+  </div>
+</div>
+
+<!-- ═══ ΣΥΓΚΡΙΣΗ ΓΡΑΜΜΩΝ ═══ -->
+<h2>Σύγκριση: Σκαλοπατητές vs Στοιχισμένες</h2>
+
+<div class="font-label">Αριστερά: σκαλοπατητές (πιο δυναμικό)</div>
+<div class="font-label">Δεξιά: στοιχισμένες (πιο καθαρό)</div>
+<div class="symbol-showcase">
+  <div class="item">
+    <svg width="100" height="100"><use href="#sym-stag"/></svg>
+    <div class="lbl">Σκαλοπατητές</div>
+  </div>
+  <div class="item">
+    <svg width="100" height="100"><use href="#sym-align"/></svg>
+    <div class="lbl">Στοιχισμένες</div>
   </div>
 </div>
 
