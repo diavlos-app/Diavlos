@@ -280,36 +280,41 @@ main {
   padding: var(--sp-5);
   margin-bottom: var(--sp-4);
 }
-
 .emergency-header {
   display: flex;
-  align-items: center;
-  gap: var(--sp-3);
+  justify-content: center;
   margin-bottom: var(--sp-4);
 }
 
 .emergency-titles {
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 0;
+  padding: 8px 22px;
+  background: var(--danger);
+  border-radius: 10px;
 }
 
 .emergency-title {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 900;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   line-height: 1;
-  color: var(--danger);
+  color: #ffe9a8;
+  padding: 0 2px;
 }
 
 .emergency-subtitle {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #ffe9a8;
   text-transform: uppercase;
+  padding: 3px 2px 0;
 }
+
 
 .emergency-actions {
   display: grid;
