@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Δίαυλος — Emergency Header</title>
+<title>Δίαυλος — Emergency Header v2</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,25 +13,21 @@
   :root {
     --bg: #f7f7fa;
     --surface: #ffffff;
-    --surface-2: #eceef1;
     --text: #1a1a1a;
     --text-muted: #6b6b6b;
     --border: #e0e0e5;
     --accent: #2d6a4f;
     --danger: #c62828;
-    --danger-contrast: #ffffff;
 
     --sp-1: 4px;
     --sp-2: 8px;
     --sp-3: 12px;
     --sp-4: 16px;
     --sp-5: 20px;
-    --sp-6: 24px;
 
     --r-sm: 10px;
     --r-md: 12px;
     --r-lg: 16px;
-    --r-full: 999px;
 
     --font: 'Jura', -apple-system, "Segoe UI", Roboto, sans-serif;
   }
@@ -40,13 +36,11 @@
     :root {
       --bg: #14161a;
       --surface: #1e2126;
-      --surface-2: #2a2d33;
       --text: #f0f0f0;
       --text-muted: #a0a0a8;
       --border: #33363c;
       --accent: #52b788;
       --danger: #ef5350;
-      --danger-contrast: #0a0a0a;
     }
   }
 
@@ -74,8 +68,6 @@
     padding-bottom: var(--sp-2);
   }
 
-  /* ─── Emergency card base ─────────────────────────────────── */
-
   .emergency-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -102,12 +94,11 @@
     font-weight: 700;
     cursor: pointer;
     min-height: 64px;
-    letter-spacing: 0.02em;
   }
 
   .btn-emergency-sms {
     background: var(--danger);
-    color: var(--danger-contrast);
+    color: #ffffff;
   }
 
   .btn-emergency-field {
@@ -116,113 +107,60 @@
     border: 2px solid var(--border);
   }
 
-  /* ─── ΛΥΣΗ Α: Marker χωρίς radius, αριστερά ──────────────── */
+  /* ═══ ΝΕΑ ΛΥΣΗ — SOS κόκκινα γράμματα, ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ με highlight ═══ */
 
-  .sol-A .emergency-header {
+  .emergency-header-new {
     display: flex;
-    justify-content: flex-start;
-  }
-
-  .sol-A .emergency-titles {
-    display: inline-flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    padding: 6px 14px;
-    background: var(--danger);
-    border-radius: 2px;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: var(--sp-4);
   }
 
-  .sol-A .emergency-title {
+  .emergency-title-new {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 1.4rem;
+    font-size: 1.8rem;
     font-weight: 900;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     line-height: 1;
-    color: #ffe9a8;
+    color: var(--danger);
   }
 
-  .sol-A .emergency-subtitle {
-    font-size: 0.65rem;
+  .emergency-subtitle-new {
+    font-family: var(--font);
+    font-size: 0.7rem;
     font-weight: 800;
-    letter-spacing: 0.18em;
-    color: #ffe9a8;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
+    color: #ffe9a8;
+    background: var(--danger);
+    padding: 3px 12px;
+    border-radius: 3px;
   }
 
-  /* ─── ΛΥΣΗ Β: Δύο ξεχωριστά highlights ─────────────────── */
-
-  .sol-B .emergency-header {
-    display: flex;
-    justify-content: flex-start;
+  /* Παραλλαγή: μεγαλύτερο highlight (πιο φαρδύ) */
+  .emergency-subtitle-wide {
+    padding: 4px 20px;
+    font-size: 0.72rem;
   }
 
-  .sol-B .emergency-titles {
+  /* Παραλλαγή: highlight ίσο με το πλάτος του SOS */
+  .emergency-header-fixed {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: var(--sp-4);
   }
 
-  .sol-B .emergency-title {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 1.4rem;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    line-height: 1.1;
-    color: #ffe9a8;
-    background: var(--danger);
-    padding: 2px 10px;
-    border-radius: 2px;
+  .emergency-header-fixed .emergency-title-new {
+    display: inline-block;
   }
 
-  .sol-B .emergency-subtitle {
-    font-size: 0.65rem;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    color: #ffe9a8;
-    text-transform: uppercase;
-    background: var(--danger);
-    padding: 2px 8px;
-    border-radius: 2px;
+  .emergency-header-fixed .emergency-subtitle-new {
+    min-width: 110px;
+    text-align: center;
   }
-
-  /* ─── ΛΥΣΗ Γ: Ασύμμετρο highlight (clip-path) ─────────── */
-
-  .sol-C .emergency-header {
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .sol-C .emergency-titles {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-    padding: 6px 16px 6px 12px;
-    background: var(--danger);
-    clip-path: polygon(2% 0%, 100% 4%, 98% 96%, 0% 100%);
-  }
-
-  .sol-C .emergency-title {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 1.4rem;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    line-height: 1;
-    color: #ffe9a8;
-  }
-
-  .sol-C .emergency-subtitle {
-    font-size: 0.65rem;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    color: #ffe9a8;
-    text-transform: uppercase;
-    padding-top: 3px;
-  }
-
-  /* ─── Σύγκριση πλήρους κάρτας ─────────────────────────── */
 
   .compare-grid {
     display: flex;
@@ -241,25 +179,24 @@
 </head>
 <body>
 
-<h1>Emergency Header — 3 λύσεις</h1>
+<h1>Emergency Header — Νέα λύση</h1>
 <p class="intro">
-  Ίδιο κόκκινο marker, τρεις διαφορετικές ερμηνείες. Δες τα σε πλήρη κάρτα με τα κουμπιά
-  SMS / ΝΑΙ-ΟΧΙ από κάτω — έτσι φαίνεται αν μπερδεύεται ο χρήστης.
+  <strong>SOS:</strong> κόκκινα γράμματα, κεντραρισμένο, χωρίς highlight.
+  <strong>ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ:</strong> με κόκκινο highlight (κιτρινωπά γράμματα).
+  Δες 3 παραλλαγές του highlight.
 </p>
 
-<h2>Σύγκριση — Πλήρεις κάρτες</h2>
+<h2>Πλήρεις κάρτες</h2>
 
 <div class="compare-grid">
 
-  <!-- ΛΥΣΗ Α -->
-  <div class="compare-item sol-A">
-    <div class="label">ΛΥΣΗ Α — Marker χωρίς radius, αριστερά</div>
+  <!-- ΠΑΡΑΛΛΑΓΗ 1 — Standard -->
+  <div class="compare-item">
+    <div class="label">Παραλλαγή 1 — Standard highlight</div>
     <div class="emergency-card">
-      <div class="emergency-header">
-        <div class="emergency-titles">
-          <span class="emergency-title">SOS</span>
-          <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
-        </div>
+      <div class="emergency-header-new">
+        <span class="emergency-title-new">SOS</span>
+        <span class="emergency-subtitle-new">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
       </div>
       <div class="emergency-actions">
         <button class="btn-emergency-sms" type="button">SMS</button>
@@ -268,15 +205,13 @@
     </div>
   </div>
 
-  <!-- ΛΥΣΗ Β -->
-  <div class="compare-item sol-B">
-    <div class="label">ΛΥΣΗ Β — Δύο ξεχωριστά highlights</div>
+  <!-- ΠΑΡΑΛΛΑΓΗ 2 — Wide highlight -->
+  <div class="compare-item">
+    <div class="label">Παραλλαγή 2 — Πιο φαρδύ highlight</div>
     <div class="emergency-card">
-      <div class="emergency-header">
-        <div class="emergency-titles">
-          <span class="emergency-title">SOS</span>
-          <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
-        </div>
+      <div class="emergency-header-new">
+        <span class="emergency-title-new">SOS</span>
+        <span class="emergency-subtitle-new emergency-subtitle-wide">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
       </div>
       <div class="emergency-actions">
         <button class="btn-emergency-sms" type="button">SMS</button>
@@ -285,15 +220,13 @@
     </div>
   </div>
 
-  <!-- ΛΥΣΗ Γ -->
-  <div class="compare-item sol-C">
-    <div class="label">ΛΥΣΗ Γ — Ασύμμετρο highlight (clip-path)</div>
+  <!-- ΠΑΡΑΛΛΑΓΗ 3 — Fixed width (ίδιο πλάτος με SOS) -->
+  <div class="compare-item">
+    <div class="label">Παραλλαγή 3 — Highlight ίσο με το SOS</div>
     <div class="emergency-card">
-      <div class="emergency-header">
-        <div class="emergency-titles">
-          <span class="emergency-title">SOS</span>
-          <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
-        </div>
+      <div class="emergency-header-fixed">
+        <span class="emergency-title-new">SOS</span>
+        <span class="emergency-subtitle-new">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
       </div>
       <div class="emergency-actions">
         <button class="btn-emergency-sms" type="button">SMS</button>
@@ -308,33 +241,27 @@
 
 <div class="compare-grid">
 
-  <div class="compare-item sol-A">
-    <div class="label">Α</div>
-    <div class="emergency-header">
-      <div class="emergency-titles">
-        <span class="emergency-title">SOS</span>
-        <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
-      </div>
+  <div class="compare-item">
+    <div class="label">1</div>
+    <div class="emergency-header-new">
+      <span class="emergency-title-new">SOS</span>
+      <span class="emergency-subtitle-new">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
     </div>
   </div>
 
-  <div class="compare-item sol-B">
-    <div class="label">Β</div>
-    <div class="emergency-header">
-      <div class="emergency-titles">
-        <span class="emergency-title">SOS</span>
-        <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
-      </div>
+  <div class="compare-item">
+    <div class="label">2</div>
+    <div class="emergency-header-new">
+      <span class="emergency-title-new">SOS</span>
+      <span class="emergency-subtitle-new emergency-subtitle-wide">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
     </div>
   </div>
 
-  <div class="compare-item sol-C">
-    <div class="label">Γ</div>
-    <div class="emergency-header">
-      <div class="emergency-titles">
-        <span class="emergency-title">SOS</span>
-        <span class="emergency-subtitle">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
-      </div>
+  <div class="compare-item">
+    <div class="label">3</div>
+    <div class="emergency-header-fixed">
+      <span class="emergency-title-new">SOS</span>
+      <span class="emergency-subtitle-new">ΕΚΤΑΚΤΗ ΑΝΑΓΚΗ</span>
     </div>
   </div>
 
