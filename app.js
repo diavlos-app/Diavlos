@@ -268,14 +268,10 @@ function renderMap() {
     attributionControl: true
   }).setView([37.9838, 23.7275], 13);
 
-  // Tile layer (OpenFreeMap — light/dark ανάλογα με theme, χωρίς API key)
-const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-const tileUrl = isDark
-  ? "https://tiles.openfreemap.org/styles/dark"
-  : "https://tiles.openfreemap.org/styles/positron";
-
-L.tileLayer(tileUrl, {
+  // Tile layer (OpenStreetMap standard tiles — raster, χωρίς API key)
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  subdomains: "abc",
   maxZoom: 19
 }).addTo(mapInstance);
 
