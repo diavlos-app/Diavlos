@@ -268,17 +268,16 @@ function renderMap() {
     attributionControl: true
   }).setView([37.9838, 23.7275], 13);
 
-  // Tile layer (CartoDB Positron — light/dark ανάλογα με theme)
-  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const tileUrl = isDark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  // Tile layer (OpenFreeMap — light/dark ανάλογα με theme, χωρίς API key)
+const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+const tileUrl = isDark
+  ? "https://tiles.openfreemap.org/styles/dark"
+  : "https://tiles.openfreemap.org/styles/positron";
 
-  L.tileLayer(tileUrl, {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: "abcd",
-    maxZoom: 19
-  }).addTo(mapInstance);
+L.tileLayer(tileUrl, {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19
+}).addTo(mapInstance);
 
   // Κέντρο στη θέση του χρήστη
   if ("geolocation" in navigator) {
