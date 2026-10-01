@@ -248,32 +248,29 @@ function categoryButton(iconId, name, view) {
 function renderMap() {
   els.title.textContent = "Χάρτης";
 
-  // Container για τον χάρτη
   const mapContainer = h("div", "map-container");
   mapContainer.id = "map";
 
   clear(els.content);
   els.content.appendChild(mapContainer);
 
-  // Destroy προηγούμενου instance (αν υπάρχει)
   if (mapInstance) {
     mapInstance.remove();
     mapInstance = null;
     userMarker = null;
   }
 
-  // Δημιουργία χάρτη με fallback κέντρο (Αθήνα)
   mapInstance = L.map("map", {
     zoomControl: true,
     attributionControl: true
   }).setView([37.9838, 23.7275], 13);
 
   // Tile layer (OpenStreetMap standard tiles — raster, χωρίς API key)
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  subdomains: "abc",
-  maxZoom: 19
-}).addTo(mapInstance);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    subdomains: "abc",
+    maxZoom: 19
+  }).addTo(mapInstance);
 
   // Κέντρο στη θέση του χρήστη
   if ("geolocation" in navigator) {
@@ -282,7 +279,6 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         const { latitude, longitude } = pos.coords;
         if (mapInstance) mapInstance.setView([latitude, longitude], 15);
 
-        // Marker χρήστη
         userMarker = L.circleMarker([latitude, longitude], {
           radius: 8,
           fillColor: "#2d6a4f",
@@ -299,6 +295,132 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       { timeout: 5000, maximumAge: 60000 }
     );
   }
+
+  // Προσθήκη markers για τα curated deaf-friendly σημεία
+  addLocationMarkers();
+}
+
+// ─── Markers χάρτη ───────────────────────────────────────────────
+
+function getCategoryColor(category) {
+  const colors = {
+    museum:    "#8e24aa",
+    bank:      "#1976d2",
+    public:    "#2d6a4f",
+    health:    "#d32f2f",
+    food:      "#f57c00",
+    retail:    "#6d4c41",
+    transport: "#0288d1",
+    education: "#00796b",
+    hotel:     "#f9a825"
+  };
+  return colors[category] || "#2d6a4f";
+}
+
+function getCategoryLabel(category) {
+  const labels = {
+    museum:    "Πολιτισμός",
+    bank:      "Τράπεζα",
+    public:    "Δημόσια Υπηρεσία",
+    health:    "Υγεία",
+    food:      "Εστίαση",
+    retail:    "Κατάστημα",
+    transport: "Μεταφορά",
+    education: "Εκπαίδευση",
+    hotel:     "Ξενοδοχείο"
+  };
+  return labels[category] || "Άλλο";
+}
+
+function getAvailabilityLabel(availability) {
+  const labels = {
+    permanent:    "Μόνιμη υποδομή",
+    "on-request": "Κατόπιν ραντεβού",
+    "on-events":  "Περιστασιακά"
+  };
+  return labels[availability] || "";
+}
+
+function getReliabilityLabel(reliability) {
+  const labels = {
+    high:   "Υψηλή αξιοπιστία",
+    medium: "Μέτρια αξιοπιστία",
+    low:    "Χαμηλή αξιοπιστία"
+  };
+  return labels[reliability] || "";
+}
+
+function addLocationMarkers() {
+  if (!mapInstance || typeof MAP_LOCATIONS === "undefined") return;
+
+  MAP_LOCATIONS.forEach((loc) => {
+    if (!loc.coords || !loc.coords.lat || !loc.coords.lng) return;
+
+    const color = getCategoryColor(loc.category);
+
+    const marker = L.circleMarker([loc.coords.lat, loc.coords.lng], {
+      radius: 8,
+      fillColor: color,
+      color: "#ffffff",
+      weight: 2,
+      fillOpacity: 0.9
+    }).addTo(mapInstance);
+
+    marker.bindPopup(buildLocationPopup(loc), {
+      maxWidth: 300,
+      minWidth: 240,
+      closeButton: true,
+      autoPan: true
+    });
+  });
+}
+
+function buildLocationPopup(loc) {
+  const wrap = h("div", "map-popup");
+
+  const header = h("div", "map-popup-header");
+  header.appendChild(h("h3", "map-popup-title", loc.name));
+
+  const meta = h("p", "map-popup-meta");
+  meta.textContent = loc.city + " · " + getCategoryLabel(loc.category);
+  header.appendChild(meta);
+  wrap.appendChild(header);
+
+  if (loc.note) {
+    wrap.appendChild(h("p", "map-popup-note", loc.note));
+  }
+
+  const featuresList = h("ul", "map-popup-features");
+  const featureLabels = {
+    signLanguage:      "ΕΝΓ επί τόπου",
+    signLanguageVideo: "Βίντεο στην ΕΝΓ",
+    tabletDevices:     "Tablets με ΕΝΓ",
+    iris:              "Τηλεδιερμηνεία IRIS",
+    hearingLoop:       "Hearing Loop",
+    liveCaptions:      "Live captions",
+    writtenComm:       "Γραπτή επικοινωνία",
+    lipReading:        "Χειλεανάγνωση",
+    deafStaff:         "Κωφοί εργαζόμενοι"
+  };
+
+  Object.keys(loc.features || {}).forEach((key) => {
+    if (loc.features[key] && featureLabels[key]) {
+      featuresList.appendChild(h("li", null, featureLabels[key]));
+    }
+  });
+
+  if (featuresList.children.length > 0) {
+    wrap.appendChild(featuresList);
+  }
+
+  const footer = h("div", "map-popup-footer");
+  const avail = getAvailabilityLabel(loc.availability);
+  const rel = getReliabilityLabel(loc.reliability);
+  if (avail) footer.appendChild(h("span", "map-popup-badge", avail));
+  if (rel) footer.appendChild(h("span", "map-popup-reliability", rel));
+  wrap.appendChild(footer);
+
+  return wrap;
 }
 
 // ─── Emergency SMS ────────────────────────────────────────────────
