@@ -134,7 +134,6 @@ header {
 }
 
 .header-logo[hidden] { display: none; }
-
 .header-logo svg { width: 40px; height: 40px; display: block; }
 
 #back-btn {
@@ -213,9 +212,6 @@ main {
   margin-bottom: var(--sp-4);
 }
 
-/* Το κόκκινο του SOS μένει σταθερό #c62828 και στα δύο θέματα:
-   σε dark mode το --danger γίνεται #ef5350 και η αντίθεση με το
-   κίτρινο κείμενο πέφτει κάτω από το όριο WCAG AA. */
 .emergency-title {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 1.8rem;
@@ -412,7 +408,7 @@ main {
 
 .toast[hidden] { display: none; }
 
-/* ─── Fullscreen (φράσεις/αγαπημένα) ─────────────────────── */
+/* ─── Fullscreen ──────────────────────────────────────────── */
 
 .fullscreen {
   position: fixed;
@@ -469,7 +465,7 @@ main {
   min-height: 48px;
 }
 
-/* ─── Response fullscreen (απάντηση) ─────────────────────── */
+/* ─── Response fullscreen ─────────────────────────────────── */
 
 #response-fullscreen .fullscreen-text {
   font-size: clamp(3rem, 14vw, 7rem);
@@ -783,7 +779,7 @@ dialog input[type="text"] { resize: none; font-size: 1.1rem; }
 .tag-btn-active { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
 .tag-btn-active svg.tag-btn-icon { color: var(--accent-contrast); }
 
-/* ─── Αγαπημένα/Ιστορικό: toggle ────────────────────────────── */
+/* ─── Segmented toggle ────────────────────────────────────── */
 
 .segmented {
   display: flex;
@@ -813,11 +809,7 @@ dialog input[type="text"] { resize: none; font-size: 1.1rem; }
   transition: background 150ms, color 150ms;
 }
 
-.segmented button svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
+.segmented button svg { width: 20px; height: 20px; flex-shrink: 0; }
 
 .segmented button.active {
   background: var(--surface);
@@ -988,11 +980,7 @@ dialog input[type="text"] { resize: none; font-size: 1.1rem; }
   min-height: 40px;
 }
 
-.history-export-btn svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
+.history-export-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 
 .history-list {
   display: flex;
@@ -1162,6 +1150,34 @@ dialog input[type="text"] { resize: none; font-size: 1.1rem; }
   margin: 0 0 var(--sp-3) 0;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+/* ─── Χάρτης ────────────────────────────────────────────────── */
+
+.map-container {
+  width: 100%;
+  height: calc(100vh - var(--header-height) - var(--tabbar-total) - var(--sp-4) * 2);
+  min-height: 400px;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+/* Leaflet overrides για dark mode */
+.leaflet-container {
+  font-family: var(--font);
+  font-size: 0.9rem;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: var(--r-sm);
+  font-family: var(--font);
+}
+
+.leaflet-popup-content {
+  margin: var(--sp-3) var(--sp-4);
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 /* ─── Tab bar ─────────────────────────────────────────────── */

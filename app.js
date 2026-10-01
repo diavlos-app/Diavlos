@@ -1,7 +1,6 @@
 // Δίαυλος — app.js
-// Οθόνες: αρχική, λίστες φράσεων, Έκτακτη Ανάγκη, Αγαπημένα, Ιστορικό.
-// Interactive response modal + PDF export.
-// Το DOM χτίζεται με createElement/textContent/SVG (όχι innerHTML).
+// Οθόνες: αρχική, λίστες φράσεων, Έκτακτη Ανάγκη, Αγαπημένα, Ιστορικό, Χάρτης.
+// Interactive response modal + PDF export + Leaflet map.
 
 "use strict";
 
@@ -12,10 +11,11 @@ const VIEWS = {
   EMERGENCY_CALL: "emergency-call",
   EMERGENCY_FIELD: "emergency-field",
   CUSTOM: "custom",
-  FAVORITES: "favorites"
+  FAVORITES: "favorites",
+  MAP: "map"
 };
 
-const TABS = { CARDS: "cards", FAVORITES: "favorites" };
+const TABS = { CARDS: "cards", FAVORITES: "favorites", MAP: "map" };
 const FAV_TABS = { FAVORITES: "favorites", HISTORY: "history" };
 
 const EMERGENCY_SERVICES = [
@@ -29,12 +29,12 @@ const EMERGENCY_SMS_NUMBER = "112";
 const EMERGENCY_GEOLOCATION_TIMEOUT_MS = 4000;
 
 const EMERGENCY_FIELD_PHRASES = [
-  "Είμαι κωφός/κωφή.",
-  "Χρειάζομαι βοήθεια.",
-  "Κάποιος τραυματίστηκε.",
-  "Δεν καταλαβαίνω.",
-  "Περιμένετε, παρακαλώ.",
-  "Μπορείτε να μου το γράψετε;"
+  { id: "ef-1", text: "Είμαι κωφός/κωφή." },
+  { id: "ef-2", text: "Χρειάζομαι βοήθεια." },
+  { id: "ef-3", text: "Κάποιος τραυματίστηκε." },
+  { id: "ef-4", text: "Δεν καταλαβαίνω. Μπορείτε να το γράψετε;", response: "text" },
+  { id: "ef-5", text: "Περιμένετε, παρακαλώ." },
+  { id: "ef-6", text: "Μπορείτε να μου το γράψετε;", response: "yesno" }
 ];
 
 // ─── Κατάσταση ────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ const EMERGENCY_FIELD_PHRASES = [
 let currentView = VIEWS.HOME;
 let currentTab = TABS.CARDS;
 let currentFavTab = FAV_TABS.FAVORITES;
-let currentHistoryFilter = "all";  // "all" | "7d" | "30d"
+let currentHistoryFilter = "all";
 let selectedTags = [];
 let pendingDelete = null;
 let editingFavoriteId = null;
@@ -54,6 +54,10 @@ let pendingResponseCard = null;
 let pendingResponseCategory = null;
 let currentResponseValue = null;
 let currentResponseType = null;
+
+// Map state
+let mapInstance = null;
+let userMarker = null;
 
 const els = {};
 
@@ -85,6 +89,7 @@ function clear(node) { node.replaceChildren(); }
 function isKnownView(view) {
   if (view === VIEWS.HOME || view === VIEWS.CUSTOM || view === VIEWS.FAVORITES) return true;
   if (view === VIEWS.EMERGENCY_CALL || view === VIEWS.EMERGENCY_FIELD) return true;
+  if (view === VIEWS.MAP) return true;
   return CARD_CATEGORIES.some((c) => c.id === view);
 }
 
@@ -127,19 +132,32 @@ function goBack() {
 function switchTab(tab) {
   if (tab === currentTab) return;
   currentTab = tab;
-  history.replaceState({ view: tab === TABS.FAVORITES ? VIEWS.FAVORITES : VIEWS.HOME }, "");
-  render(tab === TABS.FAVORITES ? VIEWS.FAVORITES : VIEWS.HOME, true);
+
+  let view = VIEWS.HOME;
+  if (tab === TABS.FAVORITES) view = VIEWS.FAVORITES;
+  else if (tab === TABS.MAP) view = VIEWS.MAP;
+
+  history.replaceState({ view: view }, "");
+  render(view, true);
 }
 
 function updateTabBar() {
   els.tabCards.classList.toggle("active", currentTab === TABS.CARDS);
   els.tabFavorites.classList.toggle("active", currentTab === TABS.FAVORITES);
+  els.tabMap.classList.toggle("active", currentTab === TABS.MAP);
+
   if (currentTab === TABS.CARDS) {
     els.tabCards.setAttribute("aria-current", "page");
     els.tabFavorites.removeAttribute("aria-current");
-  } else {
+    els.tabMap.removeAttribute("aria-current");
+  } else if (currentTab === TABS.FAVORITES) {
     els.tabFavorites.setAttribute("aria-current", "page");
     els.tabCards.removeAttribute("aria-current");
+    els.tabMap.removeAttribute("aria-current");
+  } else {
+    els.tabMap.setAttribute("aria-current", "page");
+    els.tabCards.removeAttribute("aria-current");
+    els.tabFavorites.removeAttribute("aria-current");
   }
 }
 
@@ -159,6 +177,7 @@ function render(view, moveFocus) {
   );
 
   if (view === VIEWS.FAVORITES) currentTab = TABS.FAVORITES;
+  else if (view === VIEWS.MAP) currentTab = TABS.MAP;
   else if (view === VIEWS.HOME || CARD_CATEGORIES.some((c) => c.id === view)) currentTab = TABS.CARDS;
   updateTabBar();
 
@@ -167,6 +186,7 @@ function render(view, moveFocus) {
   else if (view === VIEWS.EMERGENCY_FIELD) renderEmergencyField();
   else if (view === VIEWS.CUSTOM) renderCustom();
   else if (view === VIEWS.FAVORITES) renderFavorites();
+  else if (view === VIEWS.MAP) renderMap();
   else renderPhraseList(view);
 
   if (moveFocus) els.title.focus();
@@ -221,6 +241,69 @@ function categoryButton(iconId, name, view) {
   btn.append(svgIcon(iconId, "category-icon"), h("span", "category-name", name));
   btn.addEventListener("click", () => navigateTo(view));
   return btn;
+}
+
+// ─── Χάρτης ──────────────────────────────────────────────────────
+
+function renderMap() {
+  els.title.textContent = "Χάρτης";
+
+  // Container για τον χάρτη
+  const mapContainer = h("div", "map-container");
+  mapContainer.id = "map";
+
+  clear(els.content);
+  els.content.appendChild(mapContainer);
+
+  // Destroy προηγούμενου instance (αν υπάρχει)
+  if (mapInstance) {
+    mapInstance.remove();
+    mapInstance = null;
+    userMarker = null;
+  }
+
+  // Δημιουργία χάρτη με fallback κέντρο (Αθήνα)
+  mapInstance = L.map("map", {
+    zoomControl: true,
+    attributionControl: true
+  }).setView([37.9838, 23.7275], 13);
+
+  // Tile layer (CartoDB Positron — light/dark ανάλογα με theme)
+  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const tileUrl = isDark
+    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
+  L.tileLayer(tileUrl, {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 19
+  }).addTo(mapInstance);
+
+  // Κέντρο στη θέση του χρήστη
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        if (mapInstance) mapInstance.setView([latitude, longitude], 15);
+
+        // Marker χρήστη
+        userMarker = L.circleMarker([latitude, longitude], {
+          radius: 8,
+          fillColor: "#2d6a4f",
+          color: "#ffffff",
+          weight: 3,
+          fillOpacity: 1
+        }).addTo(mapInstance);
+
+        userMarker.bindPopup("Είσαι εδώ").openPopup();
+      },
+      () => {
+        showToast("Δεν δόθηκε άδεια τοποθεσίας. Δείχνουμε την Αθήνα.");
+      },
+      { timeout: 5000, maximumAge: 60000 }
+    );
+  }
 }
 
 // ─── Emergency SMS ────────────────────────────────────────────────
@@ -322,8 +405,8 @@ function renderEmergencyField() {
 
   const phraseTitle = h("h2", "field-phrases-title", "Γρήγορες φράσεις");
   const phraseList = h("div", "card-list");
-  EMERGENCY_FIELD_PHRASES.forEach((text, i) => {
-    phraseList.appendChild(phraseCard({ id: "ef-" + i, text: text }, false, false));
+  EMERGENCY_FIELD_PHRASES.forEach((card) => {
+    phraseList.appendChild(phraseCard(card, false, false));
   });
 
   clear(els.content);
@@ -374,8 +457,6 @@ function renderFavorites() {
   els.title.textContent = currentFavTab === FAV_TABS.HISTORY ? "Ιστορικό" : "Αγαπημένα";
 
   const frag = document.createDocumentFragment();
-
-  // Segmented toggle: Αγαπημένα / Ιστορικό
   frag.appendChild(favoritesSegmented());
 
   if (currentFavTab === FAV_TABS.FAVORITES) {
@@ -620,7 +701,6 @@ function phraseCard(card, isCustom, showFavorite, category) {
   showBtn.addEventListener("click", () => openFullscreen(card.text));
   actions.appendChild(showBtn);
 
-  // Κουμπί «Απάντηση» — μόνο αν η κάρτα έχει response
   if (card.response) {
     const replyBtn = h("button", "reply-btn");
     replyBtn.type = "button";
@@ -693,29 +773,24 @@ function openResponseDialog(card, category) {
   currentResponseValue = null;
   currentResponseType = card.response;
 
-  // Reset UI
   els.responsePhrase1.textContent = card.text;
   els.responsePhrase2.textContent = card.text;
   els.responseError.hidden = true;
 
-  // Reset inputs
   els.responseNumberInput.value = "";
   els.responseTextInput.value = "";
   els.responseDateInput.value = "";
   els.responseTimeInput.value = "";
 
-  // Hide all input blocks
   els.responseInputNumber.hidden = true;
   els.responseInputText.hidden = true;
   els.responseInputYesno.hidden = true;
   els.responseInputDatetime.hidden = true;
 
-  // Set unit for number
   if (card.response === "number") {
     els.responseNumberUnit.textContent = card.unit || "";
   }
 
-  // Show stage 1
   els.responseStage1.hidden = false;
   els.responseStage2.hidden = true;
 
@@ -807,9 +882,6 @@ function openResponseFullscreen(phrase, value, type, unit) {
   if (type === "number" && unit) {
     els.responseFullscreenUnit.textContent = unit;
     els.responseFullscreenUnit.hidden = false;
-  } else if (type === "datetime") {
-    els.responseFullscreenUnit.textContent = "";
-    els.responseFullscreenUnit.hidden = true;
   } else {
     els.responseFullscreenUnit.textContent = "";
     els.responseFullscreenUnit.hidden = true;
@@ -845,7 +917,6 @@ function onResponseSave() {
     return;
   }
 
-  // Reset state
   pendingResponseCard = null;
   pendingResponseCategory = null;
   currentResponseValue = null;
@@ -898,7 +969,6 @@ function formatNumber(value) {
 }
 
 function formatDateTimeValue(value) {
-  // value: "2026-10-15 10:30" ή "2026-10-15" ή "10:30"
   if (!value) return "";
   const parts = value.split(" ");
   const date = parts[0] || "";
@@ -994,17 +1064,14 @@ function buildPrintArea(opts) {
   const area = els.printArea;
   area.replaceChildren();
 
-  // Header
   const header = h("div", "print-header");
   const logoRow = h("div", "print-header-logo");
-  const mark = h("span", "print-logo-mark", "Δ");
-  logoRow.appendChild(mark);
+  logoRow.appendChild(h("span", "print-logo-mark", "Δ"));
   logoRow.appendChild(h("h1", "print-title", "Δίαυλος"));
   header.appendChild(logoRow);
   header.appendChild(h("p", "print-subtitle", opts.title));
   area.appendChild(header);
 
-  // Cards
   opts.cards.forEach((c) => {
     const card = h("div", "print-card");
 
@@ -1025,7 +1092,6 @@ function buildPrintArea(opts) {
     area.appendChild(card);
   });
 
-  // Footer
   const footer = h("div", "print-footer");
   footer.appendChild(h("p", null, "Δημιουργήθηκε από την εφαρμογή Δίαυλος"));
   footer.appendChild(h("p", null, "diavlos-app.github.io"));
@@ -1209,13 +1275,11 @@ function init() {
 
   els.printArea = document.getElementById("print-area");
 
-  // Fullscreen (φράσεις)
   els.fullscreen = document.getElementById("fullscreen");
   els.fullscreenLabel = document.getElementById("fullscreen-label");
   els.fullscreenText = document.getElementById("fullscreen-text");
   els.fullscreenClose = document.getElementById("fullscreen-close");
 
-  // Response fullscreen
   els.responseFullscreen = document.getElementById("response-fullscreen");
   els.responseFullscreenPhrase = document.getElementById("response-fullscreen-phrase");
   els.responseFullscreenText = document.getElementById("response-fullscreen-text");
@@ -1224,7 +1288,6 @@ function init() {
   els.responseSave = document.getElementById("response-save");
   els.responseDone = document.getElementById("response-done");
 
-  // Response dialog
   els.responseDialog = document.getElementById("response-dialog");
   els.responseStage1 = document.getElementById("response-stage-1");
   els.responseStage2 = document.getElementById("response-stage-2");
@@ -1251,13 +1314,11 @@ function init() {
   els.responseDateInput = document.getElementById("response-date-input");
   els.responseTimeInput = document.getElementById("response-time-input");
 
-  // Add dialog
   els.addDialog = document.getElementById("add-dialog");
   els.addForm = document.getElementById("add-form");
   els.addText = document.getElementById("add-text");
   els.addError = document.getElementById("add-error");
 
-  // Favorite dialog
   els.favDialog = document.getElementById("fav-dialog");
   els.favForm = document.getElementById("fav-form");
   els.favDialogTitle = document.getElementById("fav-dialog-title");
@@ -1266,15 +1327,13 @@ function init() {
   els.favTags = document.getElementById("fav-tags");
   els.favError = document.getElementById("fav-error");
 
-  // Confirm dialog
   els.confirmDialog = document.getElementById("confirm-dialog");
   els.confirmText = document.getElementById("confirm-text");
 
-  // Tabs
   els.tabCards = document.getElementById("tab-cards");
   els.tabFavorites = document.getElementById("tab-favorites");
+  els.tabMap = document.getElementById("tab-map");
 
-  // Build tag buttons
   TAGS.forEach((tag) => {
     const btn = h("button", "tag-btn");
     btn.type = "button";
@@ -1285,7 +1344,6 @@ function init() {
     els.favTags.appendChild(btn);
   });
 
-  // Basic events
   els.back.addEventListener("click", goBack);
   els.fab.addEventListener("click", () => {
     if (currentView === VIEWS.FAVORITES) openFavoriteDialog(null);
@@ -1313,7 +1371,6 @@ function init() {
   els.responseSave.addEventListener("click", onResponseSave);
   els.responseDone.addEventListener("click", onResponseDone);
 
-  // Response dialog events
   els.responseReady.addEventListener("click", onResponseReady);
   els.responseCancel1.addEventListener("click", () => closeDialog(els.responseDialog));
   els.responseCancel2.addEventListener("click", () => closeDialog(els.responseDialog));
@@ -1321,7 +1378,6 @@ function init() {
   els.responseYes.addEventListener("click", onResponseYes);
   els.responseNo.addEventListener("click", onResponseNo);
 
-  // Enter key on number input triggers submit
   els.responseNumberInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -1329,11 +1385,10 @@ function init() {
     }
   });
 
-  // Tabs
   els.tabCards.addEventListener("click", () => switchTab(TABS.CARDS));
   els.tabFavorites.addEventListener("click", () => switchTab(TABS.FAVORITES));
+  els.tabMap.addEventListener("click", () => switchTab(TABS.MAP));
 
-  // Dialog focus restore
   els.addDialog.addEventListener("close", restoreFocusAfterDialog);
   els.favDialog.addEventListener("close", restoreFocusAfterDialog);
   els.confirmDialog.addEventListener("close", restoreFocusAfterDialog);

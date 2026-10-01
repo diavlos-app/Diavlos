@@ -16,6 +16,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="" />
+
   <title>Δίαυλος — Προσβάσιμη Επικοινωνία</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
@@ -207,18 +212,15 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <!-- Fullscreen display (υπάρχον — για φράσεις/αγαπημένα) -->
   <div id="fullscreen" class="fullscreen" hidden role="dialog" aria-modal="true" aria-labelledby="fullscreen-text">
     <p id="fullscreen-label" class="fullscreen-label" hidden></p>
     <p id="fullscreen-text" class="fullscreen-text"></p>
     <button id="fullscreen-close" type="button" class="fullscreen-close">Κλείσιμο</button>
   </div>
 
-  <!-- ═══ RESPONSE DIALOG (Interaction με συνομιλητή) ═══ -->
   <dialog id="response-dialog" class="response-dialog" aria-labelledby="response-dialog-title">
     <h2 id="response-dialog-title" class="visually-hidden">Απάντηση</h2>
 
-    <!-- Stage 1: Δώσε το κινητό -->
     <div id="response-stage-1" class="response-stage">
       <p id="response-phrase-1" class="response-phrase"></p>
       <p class="response-instruction">Δώσε το κινητό στον υπάλληλο για να γράψει την απάντηση.</p>
@@ -228,11 +230,9 @@
       </div>
     </div>
 
-    <!-- Stage 2: Εισαγωγή (περιεχόμενο αλλάζει δυναμικά) -->
     <div id="response-stage-2" class="response-stage" hidden>
       <p id="response-phrase-2" class="response-phrase"></p>
 
-      <!-- Number -->
       <div id="response-input-number" class="response-input-block" hidden>
         <label for="response-number-input" class="response-input-label">Γράψε την τιμή</label>
         <div class="response-number-wrap">
@@ -241,13 +241,11 @@
         </div>
       </div>
 
-      <!-- Text -->
       <div id="response-input-text" class="response-input-block" hidden>
         <label for="response-text-input" class="response-input-label">Γράψε την απάντηση</label>
         <textarea id="response-text-input" rows="3" maxlength="500"></textarea>
       </div>
 
-      <!-- YesNo -->
       <div id="response-input-yesno" class="response-input-block" hidden>
         <div class="response-yesno-grid">
           <button type="button" id="response-yes" class="response-yesno-btn response-yesno-yes">
@@ -261,7 +259,6 @@
         </div>
       </div>
 
-      <!-- Datetime -->
       <div id="response-input-datetime" class="response-input-block" hidden>
         <label for="response-date-input" class="response-input-label">Ημερομηνία</label>
         <input type="date" id="response-date-input" />
@@ -278,7 +275,6 @@
     </div>
   </dialog>
 
-  <!-- Response Fullscreen (απάντηση) -->
   <div id="response-fullscreen" class="fullscreen" hidden role="dialog" aria-modal="true" aria-labelledby="response-fullscreen-text">
     <button id="response-fullscreen-close" type="button" class="fullscreen-close" aria-label="Κλείσιμο">✕</button>
     <p id="response-fullscreen-phrase" class="fullscreen-label"></p>
@@ -292,8 +288,6 @@
       <button type="button" id="response-done" class="btn-secondary">Τέλος</button>
     </div>
   </div>
-
-  <!-- ═══ ΔΙΑΛΟΓΟΙ ═══ -->
 
   <dialog id="add-dialog" aria-labelledby="add-dialog-title">
     <form id="add-form" novalidate>
@@ -348,10 +342,9 @@
       <svg class="tab-icon"><use href="#icon-favorites"/></svg>
       Αγαπημένα
     </button>
-    <button type="button" class="tab" disabled>
+    <button id="tab-map" type="button" class="tab">
       <svg class="tab-icon"><use href="#icon-map"/></svg>
       Χάρτης
-      <span class="visually-hidden">(έρχεται σύντομα)</span>
     </button>
     <button type="button" class="tab" disabled>
       <svg class="tab-icon"><use href="#icon-transcribe"/></svg>
@@ -360,8 +353,12 @@
     </button>
   </nav>
 
-  <!-- Print area (κρυφό, γεμίζει δυναμικά για PDF) -->
   <div id="print-area" aria-hidden="true"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
 
   <script src="data.js"></script>
   <script src="app.js"></script>
