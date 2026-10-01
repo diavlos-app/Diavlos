@@ -14,14 +14,15 @@ const APP_SHELL = [
 // Hosts που δεν περνούν ποτέ από το cache:
 // - Firebase/Google APIs (για μελλοντικό shared χάρτη)
 // - CartoDB tiles (χιλιάδες tiles — θα γέμιζαν τον χώρο)
+
 const CACHE_EXCLUDE = [
   "googleapis.com",
   "gstatic.com",
   "firebaseio.com",
   "basemaps.cartocdn.com",
-  "tiles.openfreemap.org"     // ← ΝΕΟ
+  "tiles.openfreemap.org",
+  "tile.openstreetmap.org"     // ← ΝΕΟ
 ];
-
 function isExcludedHost(hostname) {
   return CACHE_EXCLUDE.some(
     (host) => hostname === host || hostname.endsWith("." + host)
