@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Δίαυλος — Test Transcription</title>
+<style>
+  :root { --bg:#f7f7fa; --surface:#fff; --text:#1a1a1a; --ok:#2d6a4f; --fail:#c62828; --warn:#e67e22; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14161a; --surface:#1e2126; --text:#f0f0f0; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
+         background:var(--bg); color:var(--text); font-size:15px; }
+  h1 { font-size:1.2rem; margin:0 0 6px; }
+  p.intro { color:#888; font-size:0.85rem; margin:0 0 16px; }
+  .test { background:var(--surface); border-radius:12px; padding:14px;
+          margin-bottom:10px; display:flex; align-items:flex-start; gap:12px; }
+  .icon { font-size:1.4rem; flex-shrink:0; width:28px; text-align:center; }
+  .content { flex:1; min-width:0; }
+  .name { font-weight:700; margin-bottom:4px; font-size:0.95rem; }
+  .detail { font-size:0.8rem; color:#888; line-height:1.4; word-break:break-word; }
+  .ok { color:var(--ok); }
+  .fail { color:var(--fail); }
+  .warn { color:var(--warn); }
+  .summary { background:var(--surface); border-radius:12px; padding:16px;
+             margin-top:16px; text-align:center; }
+  .summary h2 { margin:0 0 8px; font-size:1rem; }
+  .summary p { margin:0; color:#888; font-size:0.85rem; }
+  button { display:block; width:100%; margin-top:16px; padding:14px;
+           border:none; border-radius:10px; background:#2d6a4f; color:#fff;
+           font-size:1rem; font-weight:700; cursor:pointer; }
+  .spinner { display:inline-block; width:14px; height:14px;
+             border:2px solid #ccc; border-top-color:#2d6a4f;
+             border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<h1>Test Transcription</h1>
+<p class="intro">Έλεγχος δυνατοτήτων της συσκευής πριν το Vosk integration.</p>
+
+<div id="tests"></div>
+
+<div class="summary" id="summary" hidden>
+  <h2 id="summary-title"></h2>
+  <p id="summary-text"></p>
+</div>
+
+<script>
+const tests = [];
+function addTest(icon, name, status, detail, className) {
+  tests.push({ icon, name, status, detail, className });
+}
+
+async function run() {
+  // 1. Cross-Origin Isolation
+  const coi = window.crossOriginIsolated;
+  addTest(
+    coi ? "✅" : "❌",
+    "Cross-Origin Isolation",
+    coi ? "Ενεργό" : "Ανενεργό",
+    coi
+      ? "Τα COOP/COEP headers δουλεύουν. Το Vosk μπορεί να φορτώσει."
+      : "ΛΕΙΠΟΥΝ τα headers. Πρέπει να ανεβάσεις το _headers αρχείο και να κάνεις redeploy.",
+    coi ? "ok" : "fail"
+  );
+
+  // 2. SharedArrayBuffer
+  const hasSAB = typeof SharedArrayBuffer !== "undefined";
+  addTest(
+    hasSAB ? "✅" : "❌",
+    "SharedArrayBuffer",
+    hasSAB ? "Διαθέσιμο" : "Μη διαθέσιμο",
+    hasSAB
+      ? "Απαραίτητο για το Vosk — λειτουργεί."
+      : "Χρειάζεται COOP/COEP headers για να ενεργοποιηθεί.",
+    hasSAB ? "ok" : "fail"
+  );
+
+  // 3. WebAssembly
+  const hasWasm = typeof WebAssembly !== "undefined";
+  addTest(
+    hasWasm ? "✅" : "❌",
+    "WebAssembly",
+    hasWasm ? "Υποστηρίζεται" : "Δεν υποστηρίζεται",
+    hasWasm
+      ? "Ο browser μπορεί να τρέξει το Vosk (WebAssembly build)."
+      : "Ο browser δεν μπορεί να τρέξει WebAssembly — δεν θα δουλέψει το transcription.",
+    hasWasm ? "ok" : "fail"
+  );
+
+  // 4. MediaDevices
+  const hasMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  addTest(
+    hasMedia ? "✅" : "❌",
+    "MediaDevices API",
+    hasMedia ? "Διαθέσιμο" : "Μη διαθέσιμο",
+    hasMedia
+      ? "Ο browser μπορεί να ζητήσει πρόσβαση στο μικρόφωνο."
+      : "Δεν υπάρχει υποστήριξη μικροφώνου.",
+    hasMedia ? "ok" : "fail"
+  );
+
+  // 5. Microphone permission
+  if (hasMedia) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1, sampleRate: 16000 }
+      });
+      const track = stream.getAudioTracks()[0];
+      const settings = track ? track.getSettings() : {};
+      stream.getTracks().forEach(t => t.stop());
+      addTest(
+        "✅",
+        "Μικρόφωνο",
+        "Δουλεύει",
+        "Sample rate: " + (settings.sampleRate || "?") + " Hz · Channels: " + (settings.channelCount || "?"),
+        "ok"
+      );
+    } catch (e) {
+      addTest(
+        "❌",
+        "Μικρόφωνο",
+        "Δεν δόθηκε άδεια",
+        "Σφάλμα: " + e.name + ". Θα χρειαστεί ο χρήστης να δώσει άδεια.",
+        "fail"
+      );
+    }
+  }
+
+  // 6. AudioContext
+  const hasAudioContext = !!(window.AudioContext || window.webkitAudioContext);
+  addTest(
+    hasAudioContext ? "✅" : "❌",
+    "Web Audio API",
+    hasAudioContext ? "Διαθέσιμο" : "Μη διαθέσιμο",
+    "Απαραίτητο για streaming του ήχου στο Vosk.",
+    hasAudioContext ? "ok" : "fail"
+  );
+
+  // 7. Wake Lock
+  const hasWakeLock = "wakeLock" in navigator;
+  addTest(
+    hasWakeLock ? "✅" : "⚠️",
+    "Wake Lock API",
+    hasWakeLock ? "Διαθέσιμο" : "Μη διαθέσιμο",
+    hasWakeLock
+      ? "Η οθόνη δεν θα κλείνει κατά τη μεταγραφή."
+      : "Η οθόνη μπορεί να κλείσει. Θα χρειαστεί fallback (βίντεο loop).",
+    hasWakeLock ? "ok" : "warn"
+  );
+
+  // 8. WebGPU (για Whisper)
+  const hasWebGPU = "gpu" in navigator;
+  addTest(
+    hasWebGPU ? "✅" : "⚠️",
+    "WebGPU",
+    hasWebGPU ? "Διαθέσιμο" : "Μη διαθέσιμο",
+    hasWebGPU
+      ? "Το Whisper (εναλλακτικό μοντέλο) θα τρέχει γρήγορα."
+      : "Το Whisper θα τρέχει πιο αργά (WASM fallback).",
+    hasWebGPU ? "ok" : "warn"
+  );
+
+  // 9. Network Speed
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (conn) {
+    const speed = conn.downlink ? conn.downlink + " Mbps" : "?";
+    const type = conn.effectiveType || "?";
+    const isFast = !conn.effectiveType || ["4g", "5g"].includes(conn.effectiveType);
+    addTest(
+      isFast ? "✅" : "⚠️",
+      "Ταχύτητα δικτύου",
+      type + " · " + speed,
+      isFast
+        ? "Επαρκής για λήψη 50MB μοντέλου Vosk σε ~1 λεπτό."
+        : "Πιο αργό δίκτυο — η λήψη του μοντέλου μπορεί να πάρει αρκετά λεπτά.",
+      isFast ? "ok" : "warn"
+    );
+  } else {
+    addTest("⚠️", "Ταχύτητα δικτύου", "Άγνωστη", "Ο browser δεν εκθέτει Network Information API.", "warn");
+  }
+
+  // 10. Storage Estimate
+  if (navigator.storage && navigator.storage.estimate) {
+    try {
+      const est = await navigator.storage.estimate();
+      const used = (est.usage / 1024 / 1024).toFixed(1);
+      const quota = (est.quota / 1024 / 1024).toFixed(0);
+      const hasSpace = est.quota > 200 * 1024 * 1024;
+      addTest(
+        hasSpace ? "✅" : "⚠️",
+        "Αποθηκευτικός χώρος",
+        used + " MB / " + quota + " MB",
+        hasSpace
+          ? "Επαρκής χώρος για το μοντέλο (~50-250 MB)."
+          : "Περιορισμένος χώρος — ίσως χρειαστεί καθάρισμα cache.",
+        hasSpace ? "ok" : "warn"
+      );
+    } catch (e) {
+      addTest("⚠️", "Αποθηκευτικός χώρος", "Άγνωστος", "Δεν ήταν δυνατή η εκτίμηση.", "warn");
+    }
+  }
+
+  // 11. Service Worker
+  const hasSW = "serviceWorker" in navigator;
+  addTest(
+    hasSW ? "✅" : "❌",
+    "Service Worker",
+    hasSW ? "Διαθέσιμο" : "Μη διαθέσιμο",
+    "Απαραίτητο για offline caching του μοντέλου.",
+    hasSW ? "ok" : "fail"
+  );
+
+  render();
+}
+
+function render() {
+  const container = document.getElementById("tests");
+  container.replaceChildren();
+
+  tests.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "test";
+
+    const icon = document.createElement("div");
+    icon.className = "icon " + t.className;
+    icon.textContent = t.icon;
+
+    const content = document.createElement("div");
+    content.className = "content";
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = t.name;
+
+    const status = document.createElement("span");
+    status.className = t.className;
+    status.textContent = " · " + t.status;
+
+    const detail = document.createElement("div");
+    detail.className = "detail";
+    detail.textContent = t.detail;
+
+    name.appendChild(status);
+    content.append(name, detail);
+    div.append(icon, content);
+    container.appendChild(div);
+  });
+
+  // Summary
+  const fails = tests.filter(t => t.className === "fail").length;
+  const warns = tests.filter(t => t.className === "warn").length;
+  const summary = document.getElementById("summary");
+  const title = document.getElementById("summary-title");
+  const text = document.getElementById("summary-text");
+  summary.hidden = false;
+
+  if (fails === 0 && warns === 0) {
+    title.textContent = "🎉 Όλα έτοιμα!";
+    title.className = "ok";
+    text.textContent = "Η συσκευή υποστηρίζει πλήρως το transcription.";
+  } else if (fails === 0) {
+    title.textContent = "⚠️ Λειτουργεί με προειδοποιήσεις";
+    title.className = "warn";
+    text.textContent = warns + " προειδοποίηση(εις) — το transcription θα δουλέψει, με μικρές παραχωρήσεις.";
+  } else {
+    title.textContent = "❌ " + fails + " σοβαρό(ά) πρόβλημα(τα)";
+    title.className = "fail";
+    text.textContent = "Το transcription δεν θα λειτουργήσει σωστά. Δες τα κόκκινα στοιχεία παραπάνω.";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", run);
+</script>
+
+</body>
+</html>
