@@ -18,7 +18,8 @@ const CACHE_EXCLUDE = [
   "googleapis.com",
   "gstatic.com",
   "firebaseio.com",
-  "basemaps.cartocdn.com"
+  "basemaps.cartocdn.com",
+  "tiles.openfreemap.org"     // ← ΝΕΟ
 ];
 
 function isExcludedHost(hostname) {
