@@ -1,9 +1,8 @@
 // Δίαυλος — data.js
 // Περιεχόμενο καρτών + αποθήκευση προσωπικών δεδομένων (μόνο τοπικά, στη συσκευή).
 //
-// Το πεδίο response ορίζει αν μια κάρτα μπορεί να δεχτεί απάντηση από τον
-// συνομιλητή: "number" | "text" | "yesno" | "datetime". Αν λείπει, η κάρτα
-// λειτουργεί μόνο ως εμφάνιση/ανάγνωση.
+// response: "number" | "text" | "yesno" | "datetime" — αν λείπει, απλή δήλωση.
+// unit:     μονάδα για response=number (π.χ. "€", "ημέρες", "λεπτά")
 
 "use strict";
 
@@ -21,16 +20,30 @@ const CARD_CATEGORIES = [
     iconId: "icon-services",
     type: "phrases",
     cards: [
-      { id: "srv-1", text: "Θέλω να υποβάλω αίτηση." },
-      { id: "srv-2", text: "Ποια δικαιολογητικά χρειάζομαι;", response: "text" },
-      { id: "srv-3", text: "Πόσο θα κοστίσει;", response: "number", unit: "€" },
-      { id: "srv-4", text: "Πόσες μέρες θα χρειαστούν;", response: "number", unit: "ημέρες" },
-      { id: "srv-5", text: "Μπορείτε να μου το γράψετε, παρακαλώ;" },
-      { id: "srv-6", text: "Δεν κατάλαβα. Μπορείτε να το εξηγήσετε διαφορετικά;" },
-      { id: "srv-7", text: "Έχω ραντεβού. Πού πρέπει να πάω;", response: "text" },
-      { id: "srv-8", text: "Ποιο είναι το όνομά σας;", response: "text" },
-      { id: "srv-9", text: "Πότε είναι το ραντεβού μου;", response: "datetime" },
-      { id: "srv-10", text: "Ευχαριστώ, κατάλαβα." }
+      { id: "srv-1",  text: "Θέλω να υποβάλω αίτηση." },
+      { id: "srv-2",  text: "Θέλω πιστοποιητικό. Ποια δικαιολογητικά χρειάζομαι;", response: "text" },
+      { id: "srv-3",  text: "Πόσο θα κοστίσει αυτή η διαδικασία;", response: "number", unit: "€" },
+      { id: "srv-4",  text: "Πόσες μέρες θα χρειαστούν;", response: "number", unit: "ημέρες" },
+      { id: "srv-5",  text: "Μπορείτε να μου το γράψετε, παρακαλώ;" },
+      { id: "srv-6",  text: "Δεν κατάλαβα. Μπορείτε να το εξηγήσετε διαφορετικά;" },
+      { id: "srv-7",  text: "Έχω ραντεβού. Πού πρέπει να πάω;", response: "text" },
+      { id: "srv-8",  text: "Ευχαριστώ, κατάλαβα." },
+      { id: "srv-9",  text: "Είμαι κωφός/κωφή. Θα επικοινωνήσουμε γραπτώς." },
+      { id: "srv-10", text: "Ποιο είναι το όνομά σας;", response: "text" },
+      { id: "srv-11", text: "Πότε είναι το ραντεβού μου;", response: "datetime" },
+      { id: "srv-12", text: "Πότε μπορώ να έχω απάντηση για την αίτησή μου;", response: "datetime" },
+      { id: "srv-13", text: "Θέλω να κλείσω ένα ραντεβού." },
+      { id: "srv-14", text: "Πότε υπάρχει διαθέσιμο ραντεβού;", response: "datetime" },
+      { id: "srv-15", text: "Χρειάζεται ραντεβού;", response: "yesno" },
+      { id: "srv-16", text: "Μπορείτε να μου γράψετε τι πρέπει να κάνω;" },
+      { id: "srv-17", text: "Θέλω να υποβάλω τα δικαιολογητικά μου." },
+      { id: "srv-18", text: "Είναι πλήρης ο φάκελός μου;", response: "yesno" },
+      { id: "srv-19", text: "Λείπει κάποιο δικαιολογητικό;", response: "yesno" },
+      { id: "srv-20", text: "Χρειάζεται κάτι άλλο από εμένα;", response: "yesno" },
+      { id: "srv-21", text: "Πού μπορώ να καταθέσω την αίτησή μου;", response: "text" },
+      { id: "srv-22", text: "Μπορείτε να μου δώσετε ένα τηλέφωνο επικοινωνίας;", response: "text" },
+      { id: "srv-23", text: "Πώς μπορώ να ενημερωθώ για την πορεία;" },
+      { id: "srv-24", text: "Έχω τελειώσει;", response: "yesno" }
     ]
   },
   {
@@ -39,14 +52,27 @@ const CARD_CATEGORIES = [
     iconId: "icon-cafe",
     type: "phrases",
     cards: [
-      { id: "caf-1", text: "Τι θα μου προτείνατε;", response: "text" },
-      { id: "caf-2", text: "Θα πάρω αυτό, παρακαλώ." },
-      { id: "caf-3", text: "Έχετε κάτι χωρίς γλουτένη;" },
-      { id: "caf-4", text: "Έχετε κάτι χωρίς λακτόζη;" },
-      { id: "caf-5", text: "Πόσο κάνει αυτό;", response: "number", unit: "€" },
-      { id: "caf-6", text: "Τον λογαριασμό, παρακαλώ.", response: "number", unit: "€" },
-      { id: "caf-7", text: "Είναι ανοιχτά αύριο;", response: "yesno" },
-      { id: "caf-8", text: "Μπορώ να πληρώσω με κάρτα;" }
+      { id: "caf-1",  text: "Τι θα μου προτείνατε;", response: "text" },
+      { id: "caf-2",  text: "Θα πάρω αυτό, παρακαλώ." },
+      { id: "caf-3",  text: "Έχετε κάτι χωρίς γλουτένη;" },
+      { id: "caf-4",  text: "Έχετε κάτι χωρίς λακτόζη;" },
+      { id: "caf-5",  text: "Πόσο κάνει αυτό;", response: "number", unit: "€" },
+      { id: "caf-6",  text: "Τον λογαριασμό, παρακαλώ.", response: "number", unit: "€" },
+      { id: "caf-7",  text: "Είναι ανοιχτά αύριο;", response: "yesno" },
+      { id: "caf-8",  text: "Μπορώ να πληρώσω με κάρτα;" },
+      { id: "caf-9",  text: "Ποια επιλογή είναι πιο δημοφιλής;", response: "text" },
+      { id: "caf-10", text: "Τι περιέχει αυτό;", response: "text" },
+      { id: "caf-11", text: "Έχω αλλεργία σε συστατικά. Μπορείτε να με ενημερώσετε;", response: "text" },
+      { id: "caf-12", text: "Θα ήθελα μια vegan επιλογή.", response: "yesno" },
+      { id: "caf-13", text: "Περιέχει το συστατικό που αποφεύγω;", response: "yesno" },
+      { id: "caf-14", text: "Μπορώ να αλλάξω κάποιο συστατικό;", response: "yesno" },
+      { id: "caf-15", text: "Θα ήθελα να παραγγείλω, παρακαλώ." },
+      { id: "caf-16", text: "Θα πάρω την παραγγελία μου για το σπίτι." },
+      { id: "caf-17", text: "Σε πόση ώρα θα είναι έτοιμη;", response: "number", unit: "λεπτά" },
+      { id: "caf-18", text: "Θα ήθελα να κάνω μια κράτηση.", response: "datetime" },
+      { id: "caf-19", text: "Υπάρχει διαθέσιμο τραπέζι;", response: "yesno" },
+      { id: "caf-20", text: "Υπάρχει πρόβλημα με την παραγγελία μου.", response: "text" },
+      { id: "caf-21", text: "Θα ήθελα να διορθωθεί η παραγγελία μου." }
     ]
   },
   {
@@ -55,14 +81,26 @@ const CARD_CATEGORIES = [
     iconId: "icon-pharmacy",
     type: "phrases",
     cards: [
-      { id: "phm-1", text: "Έχω αυτή τη συνταγή. Μπορείτε να με εξυπηρετήσετε;" },
-      { id: "phm-2", text: "Χρειάζομαι κάτι για πονοκέφαλο." },
-      { id: "phm-3", text: "Χρειάζομαι κάτι για βήχα." },
-      { id: "phm-4", text: "Υπάρχει γενόσημο;" },
-      { id: "phm-5", text: "Πόσο κάνει;", response: "number", unit: "€" },
-      { id: "phm-6", text: "Πόσες φορές την ημέρα να το πάρω;", response: "text" },
-      { id: "phm-7", text: "Έχει παρενέργειες;" },
-      { id: "phm-8", text: "Τα παίρνω με φαγητό ή χωρίς;" }
+      { id: "phm-1",  text: "Έχω αυτή τη συνταγή. Μπορείτε να με εξυπηρετήσετε;" },
+      { id: "phm-2",  text: "Χρειάζομαι κάτι για πονοκέφαλο." },
+      { id: "phm-3",  text: "Χρειάζομαι κάτι για βήχα." },
+      { id: "phm-4",  text: "Υπάρχει γενόσημο;", response: "yesno" },
+      { id: "phm-5",  text: "Πόσες φορές την ημέρα να το πάρω;", response: "number", unit: "φορές" },
+      { id: "phm-6",  text: "Τα παίρνω με φαγητό ή χωρίς;", response: "text" },
+      { id: "phm-7",  text: "Είναι διαθέσιμη η συνταγή μου;", response: "yesno" },
+      { id: "phm-8",  text: "Χρειάζομαι βοήθεια για αυτά τα συμπτώματα.", response: "text" },
+      { id: "phm-9",  text: "Πώς πρέπει να το παίρνω;", response: "text" },
+      { id: "phm-10", text: "Πόσες ημέρες να το παίρνω;", response: "number", unit: "ημέρες" },
+      { id: "phm-11", text: "Ποιες παρενέργειες μπορεί να έχει;", response: "text" },
+      { id: "phm-12", text: "Έχω αυτά τα συμπτώματα μετά τη λήψη.", response: "text" },
+      { id: "phm-13", text: "Μπορεί να προκαλέσει αλλεργική αντίδραση;", response: "yesno" },
+      { id: "phm-14", text: "Έχω αλλεργία σε αυτό το φάρμακο." },
+      { id: "phm-15", text: "Παίρνω και άλλα φάρμακα. Αλληλεπιδρούν;", response: "yesno" },
+      { id: "phm-16", text: "Θέλω να σας πω ποια άλλα φάρμακα παίρνω.", response: "text" },
+      { id: "phm-17", text: "Πόσο κοστίζει;", response: "number", unit: "€" },
+      { id: "phm-18", text: "Μπορείτε να μου γράψετε τι να ρωτήσω τον γιατρό;", response: "text" },
+      { id: "phm-19", text: "Τι κάνω αν ξεχάσω μια δόση;", response: "text" },
+      { id: "phm-20", text: "Υπάρχει κάτι πιο οικονομικό;", response: "yesno" }
     ]
   },
   {
@@ -71,14 +109,25 @@ const CARD_CATEGORIES = [
     iconId: "icon-shopping",
     type: "phrases",
     cards: [
-      { id: "shp-1", text: "Πόσο κάνει αυτό;", response: "number", unit: "€" },
-      { id: "shp-2", text: "Ψάχνω κάτι συγκεκριμένο. Μπορείτε να με βοηθήσετε;" },
-      { id: "shp-3", text: "Έχετε αυτό σε άλλο μέγεθος;" },
-      { id: "shp-4", text: "Έχετε αυτό σε άλλο χρώμα;" },
-      { id: "shp-5", text: "Μπορώ να το αλλάξω αν δεν κάνει;" },
-      { id: "shp-6", text: "Δέχεστε κάρτα;" },
-      { id: "shp-7", text: "Θέλω απόδειξη, παρακαλώ." },
-      { id: "shp-8", text: "Πότε θα το φέρετε;", response: "datetime" }
+      { id: "shp-1",  text: "Πόσο κάνει αυτό;", response: "number", unit: "€" },
+      { id: "shp-2",  text: "Ψάχνω κάτι συγκεκριμένο. Μπορείτε να με βοηθήσετε;" },
+      { id: "shp-3",  text: "Έχετε αυτό σε άλλο μέγεθος;" },
+      { id: "shp-4",  text: "Έχετε αυτό σε άλλο χρώμα;" },
+      { id: "shp-5",  text: "Μπορώ να το αλλάξω αν δεν κάνει;" },
+      { id: "shp-6",  text: "Δέχεστε κάρτα;" },
+      { id: "shp-7",  text: "Θέλω απόδειξη, παρακαλώ." },
+      { id: "shp-8",  text: "Πότε θα το φέρετε;", response: "datetime" },
+      { id: "shp-9",  text: "Ποια είναι η τελική τιμή;", response: "number", unit: "€" },
+      { id: "shp-10", text: "Υπάρχει κάποια προσφορά;", response: "yesno" },
+      { id: "shp-11", text: "Θα ήθελα να βρω αυτό το προϊόν.", response: "text" },
+      { id: "shp-12", text: "Μπορείτε να μου δείξετε πού βρίσκεται;", response: "text" },
+      { id: "shp-13", text: "Υπάρχει διαθέσιμο αυτό το προϊόν;", response: "yesno" },
+      { id: "shp-14", text: "Υπάρχει σε άλλο μοντέλο;", response: "text" },
+      { id: "shp-15", text: "Πόσα μπορώ να αγοράσω;", response: "number", unit: "τεμάχια" },
+      { id: "shp-16", text: "Τι εγγύηση έχει;", response: "text" },
+      { id: "shp-17", text: "Καλύπτει η εγγύηση αυτό το πρόβλημα;", response: "yesno" },
+      { id: "shp-18", text: "Μπορώ να το επιστρέψω;", response: "yesno" },
+      { id: "shp-19", text: "Πότε μπορώ να το παραλάβω;", response: "text" }
     ]
   }
 ];
@@ -240,7 +289,6 @@ function filterFavoritesByTags(favorites, selectedTags) {
 }
 
 // ─── Ιστορικό Απαντήσεων ──────────────────────────────────────────
-// Δομή: { id, phrase, response, responseType, unit, categoryId, categoryName, timestamp }
 
 function getResponses() {
   const raw = readJSON(RESPONSES_KEY);
@@ -253,7 +301,7 @@ function getResponses() {
         typeof r.response === "string" &&
         typeof r.timestamp === "number"
     )
-    .sort((a, b) => b.timestamp - a.timestamp); // νεότερες πρώτες
+    .sort((a, b) => b.timestamp - a.timestamp);
 }
 
 function saveResponse(phrase, response, responseType, unit, categoryId, categoryName) {
@@ -290,7 +338,6 @@ function clearResponses() {
   return writeJSON(RESPONSES_KEY, []);
 }
 
-// Φίλτρο ημερομηνίας: "all" | "7d" | "30d"
 function filterResponsesByDate(responses, filter) {
   if (!filter || filter === "all") return responses;
   const now = Date.now();
