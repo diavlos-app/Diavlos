@@ -1,6 +1,6 @@
 // Δίαυλος — app.js
 // Οθόνες: αρχική, λίστες φράσεων, Έκτακτη Ανάγκη, Αγαπημένα, Ιστορικό, Χάρτης.
-// Interactive response modal + PDF export + Leaflet map.
+// Interactive response modal + PDF export + Leaflet + Overpass API.
 
 "use strict";
 
@@ -37,6 +37,44 @@ const EMERGENCY_FIELD_PHRASES = [
   { id: "ef-6", text: "Μπορείτε να μου το γράψετε;", response: "yesno" }
 ];
 
+// Κατηγορίες OSM (για Overpass API)
+const OSM_CATEGORIES = {
+  health: {
+    label: "Υγεία",
+    color: "#d32f2f",
+    filter: '["amenity"~"^(pharmacy|hospital|clinic|doctors|dentist|veterinary)$"]'
+  },
+  services: {
+    label: "Υπηρεσίες",
+    color: "#2d6a4f",
+    filter: '["amenity"~"^(bank|post_office|townhall|police|government|community_centre|courthouse)$"]'
+  },
+  food: {
+    label: "Φαγητό",
+    color: "#f57c00",
+    filter: '["amenity"~"^(cafe|restaurant|fast_food|bar|pub|ice_cream)$"]'
+  },
+  shopping: {
+    label: "Ψώνια",
+    color: "#6d4c41",
+    filter: '["shop"~"^(supermarket|convenience|bakery|butcher|greengrocer|clothes|electronics|shoes|florist|hairdresser)$"]'
+  },
+  culture: {
+    label: "Πολιτισμός",
+    color: "#8e24aa",
+    filter: '["tourism"~"^(museum|attraction|gallery)$"]'
+  },
+  transport: {
+    label: "Μεταφορές",
+    color: "#0288d1",
+    filter: '["public_transport"~"^(station|platform)$"]'
+  }
+};
+
+const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
+const OVERPASS_RADIUS_M = 1500;
+const OVERPASS_TIMEOUT_MS = 15000;
+
 // ─── Κατάσταση ────────────────────────────────────────────────────
 
 let currentView = VIEWS.HOME;
@@ -58,6 +96,13 @@ let currentResponseType = null;
 // Map state
 let mapInstance = null;
 let userMarker = null;
+let curatedLayerGroup = null;
+let osmLayerGroup = null;
+let allOsmPois = [];
+let currentMapFilter = "all";
+let showOnlyDeafFriendly = false;
+let userLocation = null;
+let osmFetchInProgress = false;
 
 const els = {};
 
@@ -248,35 +293,62 @@ function categoryButton(iconId, name, view) {
 function renderMap() {
   els.title.textContent = "Χάρτης";
 
+  if (typeof L === "undefined") {
+    clear(els.content);
+    els.content.appendChild(
+      h("p", "empty-state",
+        "Ο χάρτης χρειάζεται σύνδεση στο internet την πρώτη φορά που ανοίγει. Δοκίμασε ξανά όταν συνδεθείς.")
+    );
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  frag.appendChild(renderMapFilters());
+
   const mapContainer = h("div", "map-container");
   mapContainer.id = "map";
+  frag.appendChild(mapContainer);
 
   clear(els.content);
-  els.content.appendChild(mapContainer);
+  els.content.appendChild(frag);
 
+  // Destroy προηγούμενου instance
   if (mapInstance) {
     mapInstance.remove();
     mapInstance = null;
     userMarker = null;
+    curatedLayerGroup = null;
+    osmLayerGroup = null;
   }
 
+  // Δημιουργία χάρτη
   mapInstance = L.map("map", {
-    zoomControl: true,
+    zoomControl: false,
     attributionControl: true
   }).setView([37.9838, 23.7275], 13);
 
-  // Tile layer (OpenStreetMap standard tiles — raster, χωρίς API key)
+  L.control.zoom({ position: "bottomright" }).addTo(mapInstance);
+
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     subdomains: "abc",
     maxZoom: 19
   }).addTo(mapInstance);
 
+  // Layer groups
+  curatedLayerGroup = L.layerGroup().addTo(mapInstance);
+  osmLayerGroup = L.layerGroup().addTo(mapInstance);
+
+  // Curated markers
+  renderCuratedMarkers();
+
   // Κέντρο στη θέση του χρήστη
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
+        userLocation = { lat: latitude, lng: longitude };
+
         if (mapInstance) mapInstance.setView([latitude, longitude], 15);
 
         userMarker = L.circleMarker([latitude, longitude], {
@@ -288,19 +360,87 @@ function renderMap() {
         }).addTo(mapInstance);
 
         userMarker.bindPopup("Είσαι εδώ").openPopup();
+
+        fetchOverpassPois();
       },
       () => {
         showToast("Δεν δόθηκε άδεια τοποθεσίας. Δείχνουμε την Αθήνα.");
+        userLocation = { lat: 37.9838, lng: 23.7275 };
       },
       { timeout: 5000, maximumAge: 60000 }
     );
   }
-
-  // Προσθήκη markers για τα curated deaf-friendly σημεία
-  addLocationMarkers();
 }
 
-// ─── Markers χάρτη ───────────────────────────────────────────────
+// ─── Map filters ─────────────────────────────────────────────────
+
+function renderMapFilters() {
+  const wrap = h("div", "map-filters-wrap");
+
+  // Category chips
+  const chipsBar = h("div", "map-filter-bar");
+
+  const allChip = h("button", "map-filter-chip" + (currentMapFilter === "all" ? " map-filter-chip-active" : ""), "Όλα");
+  allChip.type = "button";
+  allChip.dataset.filterId = "all";
+  allChip.addEventListener("click", () => handleFilterChange("all"));
+  chipsBar.appendChild(allChip);
+
+  Object.keys(OSM_CATEGORIES).forEach((key) => {
+    const cat = OSM_CATEGORIES[key];
+    const chip = h("button", "map-filter-chip" + (currentMapFilter === key ? " map-filter-chip-active" : ""), cat.label);
+    chip.type = "button";
+    chip.dataset.filterId = key;
+    chip.addEventListener("click", () => handleFilterChange(key));
+    chipsBar.appendChild(chip);
+  });
+
+  wrap.appendChild(chipsBar);
+
+  // Deaf-friendly toggle
+  const toggleBar = h("div", "map-toggle-bar");
+  const toggleBtn = h("button", "map-toggle" + (showOnlyDeafFriendly ? " map-toggle-active" : ""));
+  toggleBtn.type = "button";
+  toggleBtn.setAttribute("aria-pressed", showOnlyDeafFriendly ? "true" : "false");
+  toggleBtn.append(svgIcon("icon-star", "map-toggle-icon"), h("span", null, "Deaf-friendly"));
+  toggleBtn.addEventListener("click", () => {
+    showOnlyDeafFriendly = !showOnlyDeafFriendly;
+    toggleBtn.classList.toggle("map-toggle-active", showOnlyDeafFriendly);
+    toggleBtn.setAttribute("aria-pressed", showOnlyDeafFriendly ? "true" : "false");
+    updateMapDisplay();
+  });
+  toggleBar.appendChild(toggleBtn);
+  wrap.appendChild(toggleBar);
+
+  return wrap;
+}
+
+function handleFilterChange(catKey) {
+  currentMapFilter = catKey;
+
+  const chips = els.content.querySelectorAll(".map-filter-chip");
+  chips.forEach((chip) => {
+    chip.classList.toggle("map-filter-chip-active", chip.dataset.filterId === catKey);
+  });
+
+  updateMapDisplay();
+}
+
+function updateMapDisplay() {
+  renderCuratedMarkers();
+
+  if (showOnlyDeafFriendly) {
+    if (osmLayerGroup) osmLayerGroup.clearLayers();
+  } else {
+    if (allOsmPois.length === 0) {
+      fetchOverpassPois();
+    } else {
+      renderOsmMarkers();
+    }
+  }
+}
+
+// ─── Curated markers ─────────────────────────────────────────────
 
 function getCategoryColor(category) {
   const colors = {
@@ -350,21 +490,25 @@ function getReliabilityLabel(reliability) {
   return labels[reliability] || "";
 }
 
-function addLocationMarkers() {
-  if (!mapInstance || typeof MAP_LOCATIONS === "undefined") return;
+function renderCuratedMarkers() {
+  if (!curatedLayerGroup || typeof MAP_LOCATIONS === "undefined") return;
+
+  curatedLayerGroup.clearLayers();
 
   MAP_LOCATIONS.forEach((loc) => {
     if (!loc.coords || !loc.coords.lat || !loc.coords.lng) return;
 
+    // Φίλτρο κατηγορίας: οι κατηγορίες curated δεν ταιριάζουν 1:1 με OSM
+    // Οπότε δεν φιλτράρουμε τα curated — φαίνονται πάντα όταν δεν είναι deaf-only
     const color = getCategoryColor(loc.category);
 
     const marker = L.circleMarker([loc.coords.lat, loc.coords.lng], {
       radius: 8,
       fillColor: color,
       color: "#ffffff",
-      weight: 2,
-      fillOpacity: 0.9
-    }).addTo(mapInstance);
+      weight: 2.5,
+      fillOpacity: 1
+    });
 
     marker.bindPopup(buildLocationPopup(loc), {
       maxWidth: 300,
@@ -372,6 +516,8 @@ function addLocationMarkers() {
       closeButton: true,
       autoPan: true
     });
+
+    curatedLayerGroup.addLayer(marker);
   });
 }
 
@@ -421,6 +567,218 @@ function buildLocationPopup(loc) {
   wrap.appendChild(footer);
 
   return wrap;
+}
+
+// ─── Overpass API ───────────────────────────────────────────────
+
+function buildOverpassQuery(lat, lng) {
+  const r = OVERPASS_RADIUS_M;
+  let body = "";
+
+  Object.keys(OSM_CATEGORIES).forEach((key) => {
+    const filter = OSM_CATEGORIES[key].filter;
+    body += `node${filter}(around:${r},${lat},${lng});`;
+    body += `way${filter}(around:${r},${lat},${lng});`;
+  });
+
+  return `[out:json][timeout:15];(${body});out center 300;`;
+}
+
+function fetchOverpassPois() {
+  if (osmFetchInProgress) return;
+  if (showOnlyDeafFriendly) return;
+  if (!userLocation) return;
+
+  osmFetchInProgress = true;
+  showToast("Φόρτωση σημείων γύρω σου...");
+
+  const query = buildOverpassQuery(userLocation.lat, userLocation.lng);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
+
+  fetch(OVERPASS_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "data=" + encodeURIComponent(query),
+    signal: controller.signal
+  })
+    .then((res) => {
+      clearTimeout(timeoutId);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then((data) => {
+      allOsmPois = parseOverpassElements(data.elements || []);
+      renderOsmMarkers();
+    })
+    .catch((err) => {
+      clearTimeout(timeoutId);
+      console.warn("Overpass error:", err);
+      showToast("Δεν φορτώθηκαν τα σημεία. Δοκίμασε ξανά.");
+    })
+    .finally(() => {
+      osmFetchInProgress = false;
+    });
+}
+
+function parseOverpassElements(elements) {
+  return elements.map((item) => {
+    const tags = item.tags || {};
+    const lat = item.lat || (item.center ? item.center.lat : null);
+    const lon = item.lon || (item.center ? item.center.lon : null);
+
+    if (!lat || !lon) return null;
+
+    // Κατηγοριοποίηση
+    let category = null;
+    const amenity = tags.amenity || "";
+    const shop = tags.shop || "";
+    const tourism = tags.tourism || "";
+    const pt = tags.public_transport || "";
+
+    if (/^(pharmacy|hospital|clinic|doctors|dentist|veterinary)$/.test(amenity)) category = "health";
+    else if (/^(bank|post_office|townhall|police|government|community_centre|courthouse)$/.test(amenity)) category = "services";
+    else if (/^(cafe|restaurant|fast_food|bar|pub|ice_cream)$/.test(amenity)) category = "food";
+    else if (shop) category = "shopping";
+    else if (/^(museum|attraction|gallery)$/.test(tourism)) category = "culture";
+    else if (/^(station|platform)$/.test(pt)) category = "transport";
+
+    if (!category) return null;
+
+    return {
+      id: item.id,
+      lat: lat,
+      lon: lon,
+      category: category,
+      tags: tags
+    };
+  }).filter(Boolean);
+}
+
+function renderOsmMarkers() {
+  if (!osmLayerGroup) return;
+
+  osmLayerGroup.clearLayers();
+
+  if (showOnlyDeafFriendly) return;
+
+  const filtered = currentMapFilter === "all"
+    ? allOsmPois
+    : allOsmPois.filter((poi) => poi.category === currentMapFilter);
+
+  filtered.forEach((poi) => {
+    const cat = OSM_CATEGORIES[poi.category];
+    if (!cat) return;
+
+    const marker = L.circleMarker([poi.lat, poi.lon], {
+      radius: 5,
+      fillColor: cat.color,
+      color: "#ffffff",
+      weight: 1.5,
+      fillOpacity: 0.7
+    });
+
+    marker.bindPopup(buildOsmPopup(poi), {
+      maxWidth: 280,
+      minWidth: 200,
+      closeButton: true,
+      autoPan: true
+    });
+
+    osmLayerGroup.addLayer(marker);
+  });
+}
+
+function buildOsmPopup(poi) {
+  const wrap = h("div", "map-popup map-popup-osm");
+  const tags = poi.tags || {};
+
+  const header = h("div", "map-popup-header");
+  header.appendChild(h("h3", "map-popup-title", tags.name || getPoiCategoryLabel(poi)));
+
+  const cat = OSM_CATEGORIES[poi.category];
+  if (cat) {
+    const meta = h("p", "map-popup-meta");
+    meta.textContent = cat.label;
+    header.appendChild(meta);
+  }
+  wrap.appendChild(header);
+
+  // Διεύθυνση
+  const address = buildOsmAddress(tags);
+  if (address) {
+    wrap.appendChild(h("p", "map-popup-address", address));
+  }
+
+  // Ώρες
+  if (tags.opening_hours) {
+    wrap.appendChild(h("p", "map-popup-hours", "🕐 " + tags.opening_hours));
+  }
+
+  // Τηλέφωνο
+  const phone = tags.phone || tags["contact:phone"];
+  if (phone) {
+    const link = h("a", "map-popup-phone", "📞 " + phone);
+    link.href = "tel:" + phone.replace(/\s/g, "");
+    wrap.appendChild(link);
+  }
+
+  // Website
+  const site = tags.website || tags["contact:website"];
+  if (site) {
+    const link = h("a", "map-popup-website", "🔗 Ιστοσελίδα");
+    link.href = site.startsWith("http") ? site : "https://" + site;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    wrap.appendChild(link);
+  }
+
+  // Disclaimer
+  wrap.appendChild(h("p", "map-popup-osm-note",
+    "Δεν έχει επιβεβαιωθεί deaf-friendly. Δεδομένα από OpenStreetMap."));
+
+  return wrap;
+}
+
+function buildOsmAddress(tags) {
+  const parts = [];
+  if (tags["addr:street"]) {
+    let line = tags["addr:street"];
+    if (tags["addr:housenumber"]) line += " " + tags["addr:housenumber"];
+    parts.push(line);
+  }
+  if (tags["addr:postcode"]) parts.push(tags["addr:postcode"]);
+  if (tags["addr:city"]) parts.push(tags["addr:city"]);
+  return parts.join(", ");
+}
+
+function getPoiCategoryLabel(poi) {
+  const tags = poi.tags || {};
+  const amenity = tags.amenity || "";
+  const shop = tags.shop || "";
+  const tourism = tags.tourism || "";
+
+  const labels = {
+    pharmacy: "Φαρμακείο", hospital: "Νοσοκομείο", clinic: "Κλινική",
+    doctors: "Ιατρείο", dentist: "Οδοντίατρος", veterinary: "Κτηνίατρος",
+    bank: "Τράπεζα", post_office: "Ταχυδρομείο", townhall: "Δημαρχείο",
+    police: "Αστυνομία", government: "Δημόσια Υπηρεσία",
+    community_centre: "Κέντρο Κοινότητας", courthouse: "Δικαστήριο",
+    cafe: "Καφετέρια", restaurant: "Εστιατόριο", fast_food: "Fast Food",
+    bar: "Μπαρ", pub: "Παμπ", ice_cream: "Παγωτά",
+    supermarket: "Σούπερ Μάρκετ", convenience: "Μίνι Μάρκετ",
+    bakery: "Φούρνος", butcher: "Κρεοπωλείο", greengrocer: "Μανάβικο",
+    clothes: "Ρούχα", electronics: "Ηλεκτρονικά", shoes: "Παπούτσια",
+    florist: "Ανθοπωλείο", hairdresser: "Κομμωτήριο",
+    museum: "Μουσείο", attraction: "Αξιοθέατο", gallery: "Γκαλερί"
+  };
+
+  if (amenity && labels[amenity]) return labels[amenity];
+  if (shop && labels[shop]) return labels[shop];
+  if (tourism && labels[tourism]) return labels[tourism];
+  if (tags.public_transport === "station") return "Σταθμός";
+  if (tags.public_transport === "platform") return "Στάση";
+  return "Σημείο Ενδιαφέροντος";
 }
 
 // ─── Emergency SMS ────────────────────────────────────────────────
@@ -529,7 +887,6 @@ function renderEmergencyField() {
   clear(els.content);
   els.content.append(note, header, yesNo, phraseTitle, phraseList);
 }
-
 // ─── Λίστα φράσεων ────────────────────────────────────────────────
 
 function renderPhraseList(view) {
@@ -770,7 +1127,7 @@ function historyRow(resp) {
   const main = h("button", "history-main");
   main.type = "button";
   main.addEventListener("click", () => {
-    openResponseFullscreen(resp.phrase, resp.response, resp.responseType, resp.unit);
+    openResponseFullscreen(resp.phrase, resp.response, resp.responseType, resp.unit, true);
   });
 
   const meta = h("div", "history-meta");
@@ -992,7 +1349,7 @@ function showResponseResult(value, type) {
 
 // ─── Response fullscreen ──────────────────────────────────────────
 
-function openResponseFullscreen(phrase, value, type, unit) {
+function openResponseFullscreen(phrase, value, type, unit, fromHistory) {
   els.responseFullscreenPhrase.textContent = phrase;
   els.responseFullscreenText.textContent = formatResponseForFullscreen(value, type);
 
@@ -1004,14 +1361,20 @@ function openResponseFullscreen(phrase, value, type, unit) {
     els.responseFullscreenUnit.hidden = true;
   }
 
+  // Από το Ιστορικό είναι απλή προβολή: κρύβουμε το "Αποθήκευση"
+  els.responseSave.hidden = !!fromHistory;
+
   els.responseFullscreen.hidden = false;
   setBackgroundInert(true);
+  document.addEventListener("keydown", onFullscreenKeydown);
   els.responseSave.focus();
 }
 
 function closeResponseFullscreen() {
   els.responseFullscreen.hidden = true;
+  els.responseSave.hidden = false;
   setBackgroundInert(false);
+  document.removeEventListener("keydown", onFullscreenKeydown);
 }
 
 function onResponseSave() {
@@ -1520,4 +1883,4 @@ function init() {
   render(VIEWS.HOME, false);
 }
 
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", init); 
