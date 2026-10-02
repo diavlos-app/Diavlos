@@ -42,32 +42,32 @@ const OSM_CATEGORIES = {
   health: {
     label: "Υγεία",
     color: "#d32f2f",
-    filter: '["amenity"~"^(pharmacy|hospital|clinic|doctors|dentist|veterinary)$"]'
+    filter: '[amenity~"^(pharmacy|hospital|clinic|doctors|dentist|veterinary)$"]'
   },
   services: {
     label: "Υπηρεσίες",
     color: "#2d6a4f",
-    filter: '["amenity"~"^(bank|post_office|townhall|police|government|community_centre|courthouse)$"]'
+    filter: '[amenity~"^(bank|post_office|townhall|police|government|community_centre|courthouse)$"]'
   },
   food: {
     label: "Φαγητό",
     color: "#f57c00",
-    filter: '["amenity"~"^(cafe|restaurant|fast_food|bar|pub|ice_cream)$"]'
+    filter: '[amenity~"^(cafe|restaurant|fast_food|bar|pub|ice_cream)$"]'
   },
   shopping: {
     label: "Ψώνια",
     color: "#6d4c41",
-    filter: '["shop"~"^(supermarket|convenience|bakery|butcher|greengrocer|clothes|electronics|shoes|florist|hairdresser)$"]'
+    filter: '[shop~"^(supermarket|convenience|bakery|butcher|greengrocer|clothes|electronics|shoes|florist|hairdresser)$"]'
   },
   culture: {
     label: "Πολιτισμός",
     color: "#8e24aa",
-    filter: '["tourism"~"^(museum|attraction|gallery)$"]'
+    filter: '[tourism~"^(museum|attraction|gallery)$"]'
   },
   transport: {
     label: "Μεταφορές",
     color: "#0288d1",
-    filter: '["public_transport"~"^(station|platform)$"]'
+    filter: '[public_transport~"^(station|platform)$"]'
   }
 };
 
