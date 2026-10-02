@@ -595,29 +595,41 @@ function fetchOverpassPois() {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
 
-  fetch(OVERPASS_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: "data=" + encodeURIComponent(query),
-    signal: controller.signal
+  console.log("[Overpass] Query:", query);
+
+fetch(OVERPASS_ENDPOINT, {
+  method: "POST",
+  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  body: "data=" + encodeURIComponent(query),
+  signal: controller.signal
+})
+  .then(async (res) => {
+    clearTimeout(timeoutId);
+    console.log("[Overpass] HTTP", res.status);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const text = await res.text();
+    console.log("[Overpass] Response length:", text.length);
+    if (text.trim().startsWith("<")) {
+      console.error("[Overpass] HTML response (first 300):", text.slice(0, 300));
+      throw new Error("Overpass returned HTML instead of JSON");
+    }
+    return JSON.parse(text);
   })
-    .then((res) => {
-      clearTimeout(timeoutId);
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.json();
-    })
-    .then((data) => {
-      allOsmPois = parseOverpassElements(data.elements || []);
-      renderOsmMarkers();
-    })
-    .catch((err) => {
-      clearTimeout(timeoutId);
-      console.warn("Overpass error:", err);
-      showToast("Δεν φορτώθηκαν τα σημεία. Δοκίμασε ξανά.");
-    })
-    .finally(() => {
-      osmFetchInProgress = false;
-    });
+  .then((data) => {
+    const elements = data.elements || [];
+    console.log("[Overpass] Elements from server:", elements.length);
+    allOsmPois = parseOverpassElements(elements);
+    console.log("[Overpass] Parsed POIs:", allOsmPois.length);
+    renderOsmMarkers();
+  })
+  .catch((err) => {
+    clearTimeout(timeoutId);
+    console.error("Overpass error:", err);
+    showToast("Δεν φορτώθηκαν τα σημεία. Δοκίμασε ξανά.");
+  })
+  .finally(() => {
+    osmFetchInProgress = false;
+  });
 }
 
 function parseOverpassElements(elements) {
