@@ -73,7 +73,7 @@ const OSM_CATEGORIES = {
 
 const OVERPASS_ENDPOINT = "https://overpass.kumi.systems/api/interpreter";
 const OVERPASS_RADIUS_M = 1500;
-const OVERPASS_TIMEOUT_MS = 15000;
+const OVERPASS_TIMEOUT_MS = 25000;
 
 // ─── Κατάσταση ────────────────────────────────────────────────────
 
