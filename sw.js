@@ -1,7 +1,7 @@
 // Δίαυλος — Service Worker
 // Cache-first για το app shell, ώστε η εφαρμογή να δουλεύει offline.
 
-const CACHE_NAME = "diavlos-v20";
+const CACHE_NAME = "diavlos-v21";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -10,6 +10,12 @@ const APP_SHELL = [
   "./data.js",
   "./manifest.json"
 ];
+
+// Προαιρετικά: δεν αποτυγχάνει η εγκατάσταση αν λείπουν
+const OPTIONAL_SHELL = ["./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
+
+// Αποθηκεύονται στην πρώτη επίσκεψη ώστε ο χάρτης (Leaflet) να δουλεύει offline
+const RUNTIME_CACHE_HOSTS = ["unpkg.com"];
 
 const CACHE_EXCLUDE = [
   "googleapis.com",
@@ -29,7 +35,11 @@ function isExcludedHost(hostname) {
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(APP_SHELL).then(() =>
+        Promise.all(OPTIONAL_SHELL.map((u) => cache.add(u).catch(() => {})))
+      )
+    )
   );
   self.skipWaiting();
 });
@@ -55,10 +65,17 @@ self.addEventListener("fetch", (event) => {
   if (isExcludedHost(url.hostname)) return;
 
   event.respondWith(
-    caches.match(request).then((cached) => {
+    // ignoreSearch: το index.html ζητά data.js?v=NN / app.js?v=NN
+    caches.match(request, { ignoreSearch: true }).then((cached) => {
       if (cached) return cached;
 
-      return fetch(request).catch(() => {
+      return fetch(request).then((response) => {
+        if (response && response.ok && RUNTIME_CACHE_HOSTS.includes(url.hostname)) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(request, copy));
+        }
+        return response;
+      }).catch(() => {
         if (request.mode === "navigate") {
           return caches.match("./index.html");
         }

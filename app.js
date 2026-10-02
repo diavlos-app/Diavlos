@@ -209,7 +209,7 @@ function updateTabBar() {
 function render(view, moveFocus) {
   currentView = view;
 
-  const isTopLevel = (view === VIEWS.HOME || view === VIEWS.FAVORITES);
+  const isTopLevel = (view === VIEWS.HOME || view === VIEWS.FAVORITES || view === VIEWS.MAP);
   els.headerLogo.hidden = !isTopLevel;
   els.headerSubtitle.hidden = !isTopLevel;
   els.back.hidden = isTopLevel;
@@ -329,9 +329,8 @@ function renderMap() {
 
   L.control.zoom({ position: "bottomright" }).addTo(mapInstance);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    subdomains: "abc",
     maxZoom: 19
   }).addTo(mapInstance);
 
@@ -366,6 +365,7 @@ function renderMap() {
       () => {
         showToast("Δεν δόθηκε άδεια τοποθεσίας. Δείχνουμε την Αθήνα.");
         userLocation = { lat: 37.9838, lng: 23.7275 };
+        fetchOverpassPois();
       },
       { timeout: 5000, maximumAge: 60000 }
     );
@@ -895,7 +895,7 @@ function renderPhraseList(view) {
 
   els.title.textContent = cat.name;
   const list = h("div", "card-list");
-  cat.cards.forEach((card) => {
+  (cat.cards || []).forEach((card) => {
     list.appendChild(phraseCard(card, false, true, cat));
   });
 
@@ -1268,7 +1268,7 @@ function openResponseDialog(card, category) {
   els.responseStage1.hidden = false;
   els.responseStage2.hidden = true;
 
-  openDialog(els.responseDialog, els.fab);
+  openDialog(els.responseDialog);
   els.responseReady.focus();
 }
 
@@ -1301,6 +1301,10 @@ function onResponseSubmit() {
     value = (els.responseNumberInput.value || "").trim();
     if (!value) {
       showResponseError("Γράψε την τιμή.");
+      return;
+    }
+    if (!/^\d[\d.,\s]*$/.test(value)) {
+      showResponseError("Γράψε έναν αριθμό, π.χ. 12 ή 12,50.");
       return;
     }
   } else if (type === "text") {
@@ -1443,9 +1447,11 @@ function formatResponseForDisplay(resp) {
 }
 
 function formatNumber(value) {
-  const num = parseFloat(String(value).replace(",", "."));
-  if (isNaN(num)) return value;
-  return num.toFixed(2).replace(".", ",");
+  // Εμφάνιση όπως τη έγραψε ο συνομιλητής — καμία στρογγυλοποίηση ή
+  // αναδιάταξη, ώστε το «1.500» να μην διαβαστεί ποτέ ως «1,50».
+  const s = String(value).trim();
+  if (/^\d+\.\d{1,2}$/.test(s)) return s.replace(".", ",");
+  return s;
 }
 
 function formatDateTimeValue(value) {
@@ -1574,7 +1580,7 @@ function buildPrintArea(opts) {
 
   const footer = h("div", "print-footer");
   footer.appendChild(h("p", null, "Δημιουργήθηκε από την εφαρμογή Δίαυλος"));
-  footer.appendChild(h("p", null, "diavlos-app.github.io"));
+  footer.appendChild(h("p", null, location.host));
   area.appendChild(footer);
 }
 
@@ -1694,7 +1700,8 @@ function onFavSubmit(event) {
   const wasEditing = editingFavoriteId !== null;
   closeDialog(els.favDialog);
   editingFavoriteId = null;
-  render(VIEWS.FAVORITES, false);
+  // Αν αποθηκεύτηκε από λίστα φράσεων, μένουμε εκεί (δεν μεταφέρουμε τον χρήστη)
+  if (currentView === VIEWS.FAVORITES) render(VIEWS.FAVORITES, false);
   showToast(wasEditing ? "Ενημερώθηκε." : "Αποθηκεύτηκε στα Αγαπημένα.");
 }
 
@@ -1875,6 +1882,8 @@ function init() {
   els.responseDialog.addEventListener("close", restoreFocusAfterDialog);
 
   window.addEventListener("popstate", (event) => {
+    if (!els.fullscreen.hidden) closeFullscreen();
+    if (!els.responseFullscreen.hidden) closeResponseFullscreen();
     const view = event.state && event.state.view;
     render(isKnownView(view) ? view : VIEWS.HOME, true);
   });
