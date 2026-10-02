@@ -571,19 +571,18 @@ function buildLocationPopup(loc) {
 
 // ─── Overpass API ───────────────────────────────────────────────
 
+
 function buildOverpassQuery(lat, lng) {
   const r = OVERPASS_RADIUS_M;
   let body = "";
 
   Object.keys(OSM_CATEGORIES).forEach((key) => {
     const filter = OSM_CATEGORIES[key].filter;
-    body += `node${filter}(around:${r},${lat},${lng});`;
-    body += `way${filter}(around:${r},${lat},${lng});`;
+    body += `nwr${filter}(around:${r},${lat},${lng});`;
   });
 
   return `[out:json][timeout:15];(${body});out center 300;`;
 }
-
 function fetchOverpassPois() {
   if (osmFetchInProgress) return;
   if (showOnlyDeafFriendly) return;
