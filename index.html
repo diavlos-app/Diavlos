@@ -346,10 +346,9 @@
       <svg class="tab-icon"><use href="#icon-map"/></svg>
       Χάρτης
     </button>
-    <button type="button" class="tab" disabled>
+    <button id="tab-transcribe" type="button" class="tab">
       <svg class="tab-icon"><use href="#icon-transcribe"/></svg>
       Μεταγραφή
-      <span class="visually-hidden">(έρχεται σύντομα)</span>
     </button>
   </nav>
 
@@ -362,6 +361,7 @@
 
   <script src="data.js"></script>
   <script src="app.js"></script>
+  <script src="transcribe.js"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {

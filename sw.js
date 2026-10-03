@@ -1,12 +1,13 @@
 // Δίαυλος — Service Worker
 // Cache-first για το app shell, ώστε η εφαρμογή να δουλεύει offline.
 
-const CACHE_NAME = "diavlos-v24";
+const CACHE_NAME = "diavlos-v25";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
+  "./transcribe.js",
   "./data.js",
   "./manifest.json"
 ];

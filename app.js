@@ -12,10 +12,11 @@ const VIEWS = {
   EMERGENCY_FIELD: "emergency-field",
   CUSTOM: "custom",
   FAVORITES: "favorites",
-  MAP: "map"
+  MAP: "map",
+  TRANSCRIBE: "transcribe"
 };
 
-const TABS = { CARDS: "cards", FAVORITES: "favorites", MAP: "map" };
+const TABS = { CARDS: "cards", FAVORITES: "favorites", MAP: "map", TRANSCRIBE: "transcribe" };
 const FAV_TABS = { FAVORITES: "favorites", HISTORY: "history" };
 
 const EMERGENCY_SERVICES = [
@@ -134,7 +135,7 @@ function clear(node) { node.replaceChildren(); }
 function isKnownView(view) {
   if (view === VIEWS.HOME || view === VIEWS.CUSTOM || view === VIEWS.FAVORITES) return true;
   if (view === VIEWS.EMERGENCY_CALL || view === VIEWS.EMERGENCY_FIELD) return true;
-  if (view === VIEWS.MAP) return true;
+  if (view === VIEWS.MAP || view === VIEWS.TRANSCRIBE) return true;
   return CARD_CATEGORIES.some((c) => c.id === view);
 }
 
@@ -181,35 +182,35 @@ function switchTab(tab) {
   let view = VIEWS.HOME;
   if (tab === TABS.FAVORITES) view = VIEWS.FAVORITES;
   else if (tab === TABS.MAP) view = VIEWS.MAP;
+  else if (tab === TABS.TRANSCRIBE) view = VIEWS.TRANSCRIBE;
 
   history.replaceState({ view: view }, "");
   render(view, true);
 }
 
 function updateTabBar() {
-  els.tabCards.classList.toggle("active", currentTab === TABS.CARDS);
-  els.tabFavorites.classList.toggle("active", currentTab === TABS.FAVORITES);
-  els.tabMap.classList.toggle("active", currentTab === TABS.MAP);
-
-  if (currentTab === TABS.CARDS) {
-    els.tabCards.setAttribute("aria-current", "page");
-    els.tabFavorites.removeAttribute("aria-current");
-    els.tabMap.removeAttribute("aria-current");
-  } else if (currentTab === TABS.FAVORITES) {
-    els.tabFavorites.setAttribute("aria-current", "page");
-    els.tabCards.removeAttribute("aria-current");
-    els.tabMap.removeAttribute("aria-current");
-  } else {
-    els.tabMap.setAttribute("aria-current", "page");
-    els.tabCards.removeAttribute("aria-current");
-    els.tabFavorites.removeAttribute("aria-current");
-  }
+  const tabs = [
+    [TABS.CARDS, els.tabCards],
+    [TABS.FAVORITES, els.tabFavorites],
+    [TABS.MAP, els.tabMap],
+    [TABS.TRANSCRIBE, els.tabTranscribe]
+  ];
+  tabs.forEach(([id, el]) => {
+    if (!el) return;
+    const active = currentTab === id;
+    el.classList.toggle("active", active);
+    if (active) el.setAttribute("aria-current", "page");
+    else el.removeAttribute("aria-current");
+  });
 }
 
 function render(view, moveFocus) {
   currentView = view;
 
-  const isTopLevel = (view === VIEWS.HOME || view === VIEWS.FAVORITES || view === VIEWS.MAP);
+  // Φεύγοντας από τη Μεταγραφή, κλείνει το μικρόφωνο
+  if (view !== VIEWS.TRANSCRIBE && typeof stopTranscription === "function") stopTranscription();
+
+  const isTopLevel = (view === VIEWS.HOME || view === VIEWS.FAVORITES || view === VIEWS.MAP || view === VIEWS.TRANSCRIBE);
   els.headerLogo.hidden = !isTopLevel;
   els.headerSubtitle.hidden = !isTopLevel;
   els.back.hidden = isTopLevel;
@@ -223,6 +224,7 @@ function render(view, moveFocus) {
 
   if (view === VIEWS.FAVORITES) currentTab = TABS.FAVORITES;
   else if (view === VIEWS.MAP) currentTab = TABS.MAP;
+  else if (view === VIEWS.TRANSCRIBE) currentTab = TABS.TRANSCRIBE;
   else if (view === VIEWS.HOME || CARD_CATEGORIES.some((c) => c.id === view)) currentTab = TABS.CARDS;
   updateTabBar();
 
@@ -232,6 +234,7 @@ function render(view, moveFocus) {
   else if (view === VIEWS.CUSTOM) renderCustom();
   else if (view === VIEWS.FAVORITES) renderFavorites();
   else if (view === VIEWS.MAP) renderMap();
+  else if (view === VIEWS.TRANSCRIBE) renderTranscribe();
   else renderPhraseList(view);
 
   if (moveFocus) els.title.focus();
@@ -1831,6 +1834,7 @@ function init() {
   els.tabCards = document.getElementById("tab-cards");
   els.tabFavorites = document.getElementById("tab-favorites");
   els.tabMap = document.getElementById("tab-map");
+  els.tabTranscribe = document.getElementById("tab-transcribe");
 
   TAGS.forEach((tag) => {
     const btn = h("button", "tag-btn");
@@ -1886,6 +1890,7 @@ function init() {
   els.tabCards.addEventListener("click", () => switchTab(TABS.CARDS));
   els.tabFavorites.addEventListener("click", () => switchTab(TABS.FAVORITES));
   els.tabMap.addEventListener("click", () => switchTab(TABS.MAP));
+  els.tabTranscribe.addEventListener("click", () => switchTab(TABS.TRANSCRIBE));
 
   els.addDialog.addEventListener("close", restoreFocusAfterDialog);
   els.favDialog.addEventListener("close", restoreFocusAfterDialog);
