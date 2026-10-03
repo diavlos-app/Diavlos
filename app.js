@@ -269,7 +269,7 @@ function renderMap() {
   mapContainer.id = "map";
 
   clear(els.content);
-  els.content.append(intro, mapContainer);
+  els.content.append(intro, mapContainer, renderRemoteServices());
 
   // Destroy προηγούμενου instance
   if (mapInstance) {
@@ -322,6 +322,34 @@ function renderMap() {
   }
 }
 
+// ─── Υπηρεσίες από απόσταση ──────────────────────────────────────
+
+function renderRemoteServices() {
+  const section = h("section", "remote-section");
+  section.appendChild(h("h2", "remote-title", "Υπηρεσίες από απόσταση"));
+  section.appendChild(h("p", "remote-intro",
+    "Δεν χρειάζεται να πας κάπου: μιλάς στη νοηματική από το κινητό σου. Έλεγξε ωράρια και διαθεσιμότητα στο site κάθε υπηρεσίας."));
+
+  const list = typeof REMOTE_SERVICES !== "undefined" ? REMOTE_SERVICES : [];
+  list.forEach((svc) => {
+    const card = h("article", "remote-card");
+    card.appendChild(h("h3", "remote-card-title", svc.name));
+    card.appendChild(h("p", "remote-card-text", svc.what));
+    if (svc.how) card.appendChild(h("p", "remote-card-how", svc.how));
+    if (svc.hours) card.appendChild(h("p", "remote-card-hours", svc.hours));
+    if (svc.url) {
+      const link = h("a", "remote-link", "Άνοιγμα");
+      link.href = svc.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      card.appendChild(link);
+    }
+    section.appendChild(card);
+  });
+
+  return section;
+}
+
 // ─── Curated markers ─────────────────────────────────────────────
 
 function getCategoryColor(category) {
@@ -372,12 +400,24 @@ function getReliabilityLabel(reliability) {
   return labels[reliability] || "";
 }
 
+// Όλα τα σημεία: data.js + locations-extra.js, με διορθωμένες συντεταγμένες από locations-coords.js
+function getAllLocations() {
+  const base = typeof MAP_LOCATIONS !== "undefined" ? MAP_LOCATIONS : [];
+  const extra = typeof EXTRA_LOCATIONS !== "undefined" ? EXTRA_LOCATIONS : [];
+  const fixes = typeof COORD_OVERRIDES !== "undefined" ? COORD_OVERRIDES : {};
+  return base.concat(extra).map((loc) => {
+    const fix = fixes[loc.id];
+    if (!fix) return loc;
+    return Object.assign({}, loc, { coords: { lat: fix[0], lng: fix[1] } });
+  });
+}
+
 function renderCuratedMarkers() {
-  if (!curatedLayerGroup || typeof MAP_LOCATIONS === "undefined") return;
+  if (!curatedLayerGroup) return;
 
   curatedLayerGroup.clearLayers();
 
-  MAP_LOCATIONS.forEach((loc) => {
+  getAllLocations().forEach((loc) => {
     if (!loc.coords || !loc.coords.lat || !loc.coords.lng) return;
 
     const color = getCategoryColor(loc.category);
@@ -411,6 +451,10 @@ function buildLocationPopup(loc) {
   meta.textContent = loc.city + " · " + getCategoryLabel(loc.category);
   header.appendChild(meta);
   wrap.appendChild(header);
+
+  if (loc.address) {
+    wrap.appendChild(h("p", "map-popup-address", loc.address));
+  }
 
   if (loc.note) {
     wrap.appendChild(h("p", "map-popup-note", loc.note));

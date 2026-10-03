@@ -1488,6 +1488,33 @@ dialog input[type="text"] { resize: none; font-size: 1.1rem; }
 
   .print-footer p { margin: 2px 0; }
 }
+/* ─── Διεύθυνση σε popup + Υπηρεσίες από απόσταση ───────────── */
+.map-popup-address { margin: var(--sp-1) 0 0 0; font-size: 0.85rem; color: var(--text-muted); }
+.remote-section { margin-top: var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-3); }
+.remote-title { margin: 0; font-size: 1.25rem; }
+.remote-intro { margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.4; }
+.remote-card {
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.remote-card-title { margin: 0; font-size: 1.05rem; }
+.remote-card-text, .remote-card-how, .remote-card-hours { margin: 0; font-size: 0.95rem; line-height: 1.4; }
+.remote-card-hours { color: var(--text-muted); font-size: 0.85rem; }
+.remote-link {
+  align-self: flex-start;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+  text-decoration: none;
+}
+
 /* ─── Reduced motion ──────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
