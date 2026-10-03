@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GeoJSON → Compact</title>
+<style>
+  body { font-family: system-ui; padding: 16px; line-height: 1.5; }
+  textarea { width: 100%; min-height: 200px; font-family: monospace; font-size: 11px; padding: 8px; }
+  button { padding: 14px 24px; font-size: 16px; margin: 12px 0; border-radius: 10px; border: 0; background: #2d6a4f; color: white; font-weight: bold; width: 100%; }
+  pre { background: #f0f0f0; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; font-size: 11px; max-height: 300px; overflow: auto; }
+  .info { background: #e8f5e9; padding: 10px; border-radius: 8px; margin: 8px 0; }
+</style>
+</head>
+<body>
+
+<h1>GeoJSON → Compact</h1>
+<p>Επικόλλησε το GeoJSON από το Overpass Turbo, διάλεξε κατηγορία, πάτα Convert.</p>
+
+<p>Κατηγορία:
+  <select id="cat">
+    <option value="pharmacy">Φαρμακεία</option>
+    <option value="health">Υγεία (όλα)</option>
+    <option value="services">Υπηρεσίες</option>
+    <option value="food">Φαγητό</option>
+    <option value="shopping">Ψώνια</option>
+    <option value="culture">Πολιτισμός</option>
+    <option value="transport">Μεταφορές</option>
+  </select>
+</p>
+
+<textarea id="input" placeholder="Κόλλησε εδώ το GeoJSON..."></textarea>
+
+<button id="run">Convert</button>
+
+<div class="info" id="stats">Έτοιμο.</div>
+
+<pre id="output">Το compact JSON θα εμφανιστεί εδώ.</pre>
+
+<button id="copy">Αντιγραφή στο clipboard</button>
+
+<script>
+const $ = id => document.getElementById(id);
+
+$("run").addEventListener("click", () => {
+  const cat = $("cat").value;
+  let data;
+  try {
+    data = JSON.parse($("input").value);
+  } catch (e) {
+    $("stats").textContent = "❌ Λάθος JSON: " + e.message;
+    return;
+  }
+
+  const features = data.features || [];
+  const out = [];
+
+  for (const f of features) {
+    const p = f.properties || {};
+    const g = f.geometry || {};
+    if (!g.coordinates) continue;
+
+    const item = {
+      n: p.name || p["name:el"] || p.brand || p.operator || "",
+      la: Math.round(g.coordinates[1] * 100000) / 100000,
+      lo: Math.round(g.coordinates[0] * 100000) / 100000
+    };
+
+    if (p.opening_hours) item.oh = p.opening_hours;
+    if (p.phone) item.ph = p.phone;
+    else if (p["contact:phone"]) item.ph = p["contact:phone"];
+    if (p.wheelchair) item.wh = p.wheelchair;
+
+    out.push(item);
+  }
+
+  const compact = JSON.stringify(out);
+  const kb = (compact.length / 1024).toFixed(1);
+
+  $("output").textContent = compact;
+  $("stats").innerHTML =
+    "✅ <b>" + out.length + "</b> σημεία<br>" +
+    "📦 " + kb + " KB (από " + (JSON.stringify(data).length / 1024).toFixed(1) + " KB)<br>" +
+    "🏷️ Κατηγορία: " + cat;
+});
+
+$("copy").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText($("output").textContent);
+    $("stats").textContent = "✅ Αντιγράφηκε!";
+  } catch (e) {
+    $("stats").textContent = "❌ Δεν αντιγράφηκε. Κράτα πατημένο για επιλογή.";
+  }
+});
+</script>
+</body>
+</html>
