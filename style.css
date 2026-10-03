@@ -1154,6 +1154,17 @@ dialog input[type="text"] { resize: none; font-size: 1.1rem; }
 
 /* ─── Χάρτης ────────────────────────────────────────────────── */
 
+.map-intro {
+  margin: 0 0 var(--sp-3) 0;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--r-md);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--text);
+}
+
 .map-container {
   width: 100%;
   height: calc(100vh - var(--header-height) - var(--tabbar-total) - var(--sp-4) * 2 - env(safe-area-inset-bottom, 0px));
@@ -1477,130 +1488,6 @@ dialog input[type="text"] { resize: none; font-size: 1.1rem; }
 
   .print-footer p { margin: 2px 0; }
 }
-/* ─── Map filters (chips πάνω από τον χάρτη) ──────────────── */
-
-.map-filters-wrap {
-  margin-bottom: var(--sp-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-
-.map-filter-bar {
-  display: flex;
-  gap: var(--sp-2);
-  overflow-x: auto;
-  padding-bottom: var(--sp-1);
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.map-filter-bar::-webkit-scrollbar { display: none; }
-
-.map-filter-chip {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
-  border: 2px solid var(--border);
-  border-radius: var(--r-full);
-  background: var(--surface);
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  min-height: 40px;
-  letter-spacing: 0.02em;
-  transition: background 150ms, color 150ms, border-color 150ms;
-}
-
-.map-filter-chip-active {
-  background: var(--accent);
-  color: var(--accent-contrast);
-  border-color: var(--accent);
-}
-
-.map-toggle-bar {
-  display: flex;
-  gap: var(--sp-2);
-}
-
-.map-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-4);
-  border: 2px solid var(--border);
-  border-radius: var(--r-full);
-  background: var(--surface);
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  min-height: 40px;
-  letter-spacing: 0.02em;
-  transition: background 150ms, color 150ms, border-color 150ms;
-}
-
-.map-toggle svg.map-toggle-icon {
-  width: 18px;
-  height: 18px;
-  color: var(--accent);
-}
-
-.map-toggle-active {
-  background: #f9a825;
-  color: #0a0a0a;
-  border-color: #f9a825;
-}
-
-.map-toggle-active svg.map-toggle-icon {
-  color: #0a0a0a;
-}
-
-/* ─── Map OSM popup ─────────────────────────────────────────── */
-
-.map-popup-osm .map-popup-title {
-  font-size: 0.95rem;
-}
-
-.map-popup-address,
-.map-popup-hours {
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: #444444;
-  margin: 4px 0;
-}
-
-.map-popup-phone,
-.map-popup-website {
-  display: inline-block;
-  font-size: 0.8rem;
-  color: #2d6a4f;
-  font-weight: 600;
-  text-decoration: none;
-  margin-right: var(--sp-3);
-  margin-top: 4px;
-}
-
-.map-popup-phone:hover,
-.map-popup-website:hover {
-  text-decoration: underline;
-}
-
-.map-popup-osm-note {
-  font-size: 0.7rem;
-  color: #888888;
-  line-height: 1.4;
-  margin: var(--sp-2) 0 0 0;
-  padding-top: var(--sp-2);
-  border-top: 1px dashed #e0e0e5;
-  font-style: italic;
-                 }
 /* ─── Reduced motion ──────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
