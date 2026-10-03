@@ -1,6 +1,7 @@
 // Δίαυλος — app.js
-// Οθόνες: αρχική, λίστες φράσεων, Έκτακτη Ανάγκη, Αγαπημένα, Ιστορικό, Χάρτης.
-// Interactive response modal + PDF export + Leaflet + Overpass API.
+// Οθόνες: αρχική, κατηγορίες φράσεων, Έκτακτη Ανάγκη, Αγαπημένα, Ιστορικό,
+// Χάρτης, Μεταγραφή, Δομημένη συνομιλία.
+// Interactive response modal + PDF export + Leaflet + Whisper transcription.
 
 "use strict";
 
@@ -10,14 +11,24 @@ const VIEWS = {
   HOME: "home",
   EMERGENCY_CALL: "emergency-call",
   EMERGENCY_FIELD: "emergency-field",
+  PROTOCOL: "protocol",
   CUSTOM: "custom",
   FAVORITES: "favorites",
   MAP: "map",
   TRANSCRIBE: "transcribe"
 };
 
-const TABS = { CARDS: "cards", FAVORITES: "favorites", MAP: "map", TRANSCRIBE: "transcribe" };
-const FAV_TABS = { FAVORITES: "favorites", HISTORY: "history" };
+const TABS = {
+  CARDS: "cards",
+  FAVORITES: "favorites",
+  MAP: "map",
+  TRANSCRIBE: "transcribe"
+};
+
+const FAV_TABS = {
+  FAVORITES: "favorites",
+  HISTORY: "history"
+};
 
 const EMERGENCY_SERVICES = [
   { id: "police",    label: "Αστυνομία",         iconId: "icon-police" },
@@ -38,6 +49,35 @@ const EMERGENCY_FIELD_PHRASES = [
   { id: "ef-6", text: "Μπορείτε να μου το γράψετε;", response: "yesno" }
 ];
 
+const PROTOCOL_DEFINITIONS = {
+  kep: {
+    id: "kep",
+    title: "ΚΕΠ",
+    icon: "icon-services"
+  },
+  pharmacy: {
+    id: "pharmacy",
+    title: "Φαρμακείο",
+    icon: "icon-pharmacy"
+  },
+  doctor: {
+    id: "doctor",
+    title: "Γιατρός",
+    icon: "icon-services"
+  },
+  police: {
+    id: "police",
+    title: "Αστυνομία",
+    icon: "icon-police"
+  }
+};
+
+const PROTOCOL_ANSWER_DELAY_MS = 900;
+
+const RESPONSES_KEY = "diavlos_v1_responses";
+const PROTOCOL_HISTORY_KEY = "diavlos_v1_protocol_history";
+const TRANSCRIBE_CONSENT_KEY = "diavlos_v1_transcribe_consent";
+
 // ─── Κατάσταση ────────────────────────────────────────────────────
 
 let currentView = VIEWS.HOME;
@@ -56,11 +96,22 @@ let pendingResponseCategory = null;
 let currentResponseValue = null;
 let currentResponseType = null;
 
+// Protocol state
+let currentProtocolId = null;
+let currentProtocol = null;
+let currentProtocolStepIndex = 0;
+let currentProtocolAnswers = [];
+let protocolSelectedAnswer = "";
+let protocolAnswerLocked = false;
+
 // Map state
 let mapInstance = null;
 let userMarker = null;
 let curatedLayerGroup = null;
 let userLocation = null;
+
+// Κοινόχρηστα toast/confirm
+let deleteAllDataConfirmed = false;
 
 const els = {};
 
@@ -68,8 +119,15 @@ const els = {};
 
 function h(tag, className, text) {
   const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
+
+  if (className) {
+    node.className = className;
+  }
+
+  if (text !== undefined && text !== null) {
+    node.textContent = text;
+  }
+
   return node;
 }
 
@@ -87,35 +145,77 @@ function svgIcon(name, className) {
   return svg;
 }
 
-function clear(node) { node.replaceChildren(); }
+function clear(node) {
+  if (node) {
+    node.replaceChildren();
+  }
+}
 
 function isKnownView(view) {
-  if (view === VIEWS.HOME || view === VIEWS.CUSTOM || view === VIEWS.FAVORITES) return true;
-  if (view === VIEWS.EMERGENCY_CALL || view === VIEWS.EMERGENCY_FIELD) return true;
-  if (view === VIEWS.MAP || view === VIEWS.TRANSCRIBE) return true;
+  if (
+    view === VIEWS.HOME ||
+    view === VIEWS.CUSTOM ||
+    view === VIEWS.FAVORITES ||
+    view === VIEWS.PROTOCOL
+  ) {
+    return true;
+  }
+
+  if (
+    view === VIEWS.EMERGENCY_CALL ||
+    view === VIEWS.EMERGENCY_FIELD
+  ) {
+    return true;
+  }
+
+  if (view === VIEWS.MAP || view === VIEWS.TRANSCRIBE) {
+    return true;
+  }
+
   return CARD_CATEGORIES.some((c) => c.id === view);
 }
 
 function showToast(message) {
+  if (!els.toast) return;
+
   els.toast.textContent = message;
   els.toast.hidden = false;
+
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { els.toast.hidden = true; }, 5000);
+
+  toastTimer = setTimeout(() => {
+    els.toast.hidden = true;
+  }, 5000);
 }
 
+// ─── Dialogs ──────────────────────────────────────────────────────
+
 function openDialog(dialog, opener) {
+  if (!dialog) return;
+
   dialogOpener = opener || document.activeElement;
-  if (typeof dialog.showModal === "function") dialog.showModal();
-  else dialog.setAttribute("open", "");
+
+  if (typeof dialog.showModal === "function") {
+    dialog.showModal();
+  } else {
+    dialog.setAttribute("open", "");
+  }
 }
 
 function closeDialog(dialog) {
-  if (typeof dialog.close === "function") dialog.close();
-  else dialog.removeAttribute("open");
+  if (!dialog) return;
+
+  if (typeof dialog.close === "function") {
+    dialog.close();
+  } else {
+    dialog.removeAttribute("open");
+  }
 }
 
 function restoreFocusAfterDialog() {
-  if (dialogOpener && document.contains(dialogOpener)) dialogOpener.focus();
+  if (dialogOpener && document.contains(dialogOpener)) {
+    dialogOpener.focus();
+  }
   dialogOpener = null;
 }
 
@@ -123,23 +223,32 @@ function restoreFocusAfterDialog() {
 
 function navigateTo(view) {
   if (view === currentView) return;
+
   history.pushState({ view: view }, "");
   render(view, true);
 }
 
 function goBack() {
-  if (currentView === VIEWS.HOME && currentTab === TABS.CARDS) return;
+  if (currentView === VIEWS.HOME && currentTab === TABS.CARDS) {
+    return;
+  }
   history.back();
 }
 
 function switchTab(tab) {
   if (tab === currentTab) return;
+
   currentTab = tab;
 
   let view = VIEWS.HOME;
-  if (tab === TABS.FAVORITES) view = VIEWS.FAVORITES;
-  else if (tab === TABS.MAP) view = VIEWS.MAP;
-  else if (tab === TABS.TRANSCRIBE) view = VIEWS.TRANSCRIBE;
+
+  if (tab === TABS.FAVORITES) {
+    view = VIEWS.FAVORITES;
+  } else if (tab === TABS.MAP) {
+    view = VIEWS.MAP;
+  } else if (tab === TABS.TRANSCRIBE) {
+    view = VIEWS.TRANSCRIBE;
+  }
 
   history.replaceState({ view: view }, "");
   render(view, true);
@@ -152,69 +261,255 @@ function updateTabBar() {
     [TABS.MAP, els.tabMap],
     [TABS.TRANSCRIBE, els.tabTranscribe]
   ];
+
   tabs.forEach(([id, el]) => {
     if (!el) return;
+
     const active = currentTab === id;
     el.classList.toggle("active", active);
-    if (active) el.setAttribute("aria-current", "page");
-    else el.removeAttribute("aria-current");
+
+    if (active) {
+      el.setAttribute("aria-current", "page");
+    } else {
+      el.removeAttribute("aria-current");
+    }
   });
 }
 
 function render(view, moveFocus) {
   currentView = view;
 
-  // Φεύγοντας από τη Μεταγραφή, κλείνει το μικρόφωνο
-  if (view !== VIEWS.TRANSCRIBE && typeof stopTranscription === "function") stopTranscription();
+  if (
+    view !== VIEWS.TRANSCRIBE &&
+    typeof stopTranscription === "function"
+  ) {
+    stopTranscription();
+  }
 
-  const isTopLevel = (view === VIEWS.HOME || view === VIEWS.FAVORITES || view === VIEWS.MAP || view === VIEWS.TRANSCRIBE);
+  const isTopLevel = (
+    view === VIEWS.HOME ||
+    view === VIEWS.FAVORITES ||
+    view === VIEWS.MAP ||
+    view === VIEWS.TRANSCRIBE
+  );
+
   els.headerLogo.hidden = !isTopLevel;
   els.headerSubtitle.hidden = !isTopLevel;
   els.back.hidden = isTopLevel;
 
-  const showFab = (view === VIEWS.CUSTOM || (view === VIEWS.FAVORITES && currentFavTab === FAV_TABS.FAVORITES));
+  const showFab = (
+    view === VIEWS.CUSTOM ||
+    (view === VIEWS.FAVORITES && currentFavTab === FAV_TABS.FAVORITES)
+  );
+
   els.fab.hidden = !showFab;
+
   els.fab.setAttribute(
     "aria-label",
     view === VIEWS.FAVORITES ? "Νέο Αγαπημένο" : "Προσθήκη κάρτας"
   );
 
-  if (view === VIEWS.FAVORITES) currentTab = TABS.FAVORITES;
-  else if (view === VIEWS.MAP) currentTab = TABS.MAP;
-  else if (view === VIEWS.TRANSCRIBE) currentTab = TABS.TRANSCRIBE;
-  else if (view === VIEWS.HOME || CARD_CATEGORIES.some((c) => c.id === view)) currentTab = TABS.CARDS;
+  if (view === VIEWS.FAVORITES) {
+    currentTab = TABS.FAVORITES;
+  } else if (view === VIEWS.MAP) {
+    currentTab = TABS.MAP;
+  } else if (view === VIEWS.TRANSCRIBE) {
+    currentTab = TABS.TRANSCRIBE;
+  } else if (
+    view === VIEWS.HOME ||
+    CARD_CATEGORIES.some((c) => c.id === view)
+  ) {
+    currentTab = TABS.CARDS;
+  }
+
   updateTabBar();
 
-  if (view === VIEWS.HOME) renderHome();
-  else if (view === VIEWS.EMERGENCY_CALL) renderEmergencyCall();
-  else if (view === VIEWS.EMERGENCY_FIELD) renderEmergencyField();
-  else if (view === VIEWS.CUSTOM) renderCustom();
-  else if (view === VIEWS.FAVORITES) renderFavorites();
-  else if (view === VIEWS.MAP) renderMap();
-  else if (view === VIEWS.TRANSCRIBE) renderTranscribe();
-  else renderPhraseList(view);
+  if (view === VIEWS.HOME) {
+    renderHome();
+  } else if (view === VIEWS.EMERGENCY_CALL) {
+    renderEmergencyCall();
+  } else if (view === VIEWS.EMERGENCY_FIELD) {
+    renderEmergencyField();
+  } else if (view === VIEWS.PROTOCOL) {
+    renderProtocol(currentProtocolId);
+  } else if (view === VIEWS.CUSTOM) {
+    renderCustom();
+  } else if (view === VIEWS.FAVORITES) {
+    renderFavorites();
+  } else if (view === VIEWS.MAP) {
+    renderMap();
+  } else if (view === VIEWS.TRANSCRIBE) {
+    renderTranscribe();
+  } else {
+    renderPhraseList(view);
+  }
 
-  if (moveFocus) els.title.focus();
+  if (moveFocus) {
+    els.title.focus();
+  }
 }
-
 // ─── Αρχική ───────────────────────────────────────────────────────
 
 function renderHome() {
   els.title.textContent = "Δίαυλος";
+
   const frag = document.createDocumentFragment();
 
+  frag.appendChild(structuredConversationSelector());
   frag.appendChild(emergencyCard());
+  frag.appendChild(communicationNowButton());
 
   const grid = h("div", "category-grid");
+
   CARD_CATEGORIES.forEach((cat) => {
     if (cat.id === "emergency") return;
-    grid.appendChild(categoryButton(cat.iconId, cat.name, cat.id));
+    grid.appendChild(
+      categoryButton(cat.iconId, cat.name, cat.id, cat.cards ? cat.cards.length : 0)
+    );
   });
+
   frag.appendChild(grid);
+  frag.appendChild(homeFooter());
 
   clear(els.content);
   els.content.appendChild(frag);
 }
+
+// ─── Δομημένη συνομιλία — dropdown ────────────────────────────────
+
+function structuredConversationSelector() {
+  const section = h("section", "structured-conversation");
+
+  const label = h(
+    "label",
+    "structured-conversation-label",
+    "Δομημένη συνομιλία"
+  );
+
+  const select = h("select", "structured-conversation-select");
+
+  select.setAttribute("aria-label", "Επιλογή δομημένης συνομιλίας");
+
+  const empty = h("option", null, "Επίλεξε υπηρεσία...");
+  empty.value = "";
+  empty.selected = true;
+  select.appendChild(empty);
+
+  Object.keys(PROTOCOL_DEFINITIONS).forEach((id) => {
+    const def = PROTOCOL_DEFINITIONS[id];
+    const option = h("option", null, def.title);
+    option.value = id;
+    select.appendChild(option);
+  });
+
+  select.addEventListener("change", () => {
+    const protocolId = select.value;
+    if (!protocolId) return;
+    openProtocol(protocolId);
+    select.value = "";
+  });
+
+  section.append(label, select);
+  return section;
+}
+
+// ─── Κουμπί «Επικοινωνία τώρα» ────────────────────────────────────
+
+function communicationNowButton() {
+  const wrap = h("div", "communication-now-wrap");
+
+  const button = h("button", "communication-now-btn");
+  button.type = "button";
+  button.append(
+    svgIcon("icon-check", "communication-now-icon"),
+    h("span", null, "Επικοινωνία τώρα")
+  );
+
+  button.addEventListener("click", () => {
+    navigateTo(VIEWS.EMERGENCY_FIELD);
+  });
+
+  wrap.appendChild(button);
+  return wrap;
+}
+
+// ─── Footer ───────────────────────────────────────────────────────
+
+function homeFooter() {
+  const footer = h("footer", "home-footer");
+
+  const links = h("div", "home-footer-links");
+
+  const privacy = h("a", "home-footer-link", "Πολιτική Απορρήτου");
+  privacy.href = "privacy.html";
+
+  const separator = h("span", "home-footer-separator", "·");
+
+  const contact = h(
+    "a",
+    "home-footer-link",
+    "Επικοινωνία"
+  );
+  contact.href = "mailto:thetechshaman@gmail.com";
+
+  links.append(privacy, separator, contact);
+
+  const deleteButton = h(
+    "button",
+    "delete-all-data-btn",
+    "Διαγραφή όλων των δεδομένων μου"
+  );
+  deleteButton.type = "button";
+  deleteButton.addEventListener("click", askDeleteAllData);
+
+  footer.append(links, deleteButton);
+  return footer;
+}
+
+function askDeleteAllData() {
+  deleteAllDataConfirmed = false;
+
+  els.confirmTitle.textContent = "Διαγραφή όλων των δεδομένων;";
+
+  els.confirmText.textContent =
+    "Θα διαγραφούν οι προσωπικές σου φράσεις, τα αγαπημένα, το ιστορικό και οι ρυθμίσεις. Η ενέργεια δεν αναιρείται.";
+
+  els.confirmOk.onclick = performDeleteAllData;
+
+  openDialog(els.confirmDialog);
+}
+
+function performDeleteAllData() {
+  if (deleteAllDataConfirmed) return;
+  deleteAllDataConfirmed = true;
+
+  let removed = 0;
+
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.indexOf("diavlos_v1_") === 0) {
+        localStorage.removeItem(key);
+        removed++;
+      }
+    });
+  } catch (error) {
+    // ignore
+  }
+
+  closeDialog(els.confirmDialog);
+  showToast("Διαγράφηκαν όλα τα δεδομένα σου.");
+
+  // Επαναφόρτωση δεδομένων από μνήμη
+  selectedTags = [];
+  currentFavTab = FAV_TABS.FAVORITES;
+  currentHistoryFilter = "all";
+
+  // Επαναφορά στην αρχική για καθαρή κατάσταση
+  history.replaceState({ view: VIEWS.HOME }, "");
+  render(VIEWS.HOME, false);
+}
+
+// ─── SOS κάρτα ────────────────────────────────────────────────────
 
 function emergencyCard() {
   const wrap = h("div", "emergency-card");
@@ -226,29 +521,38 @@ function emergencyCard() {
 
   const actions = h("div", "emergency-actions");
 
-  const smsBtn = h("button", "btn-emergency-sms", "SMS");
+  const smsBtn = h("button", "btn-emergency-sms", "SMS 112");
   smsBtn.type = "button";
-  smsBtn.addEventListener("click", () => navigateTo(VIEWS.EMERGENCY_CALL));
+  smsBtn.addEventListener("click", () => {
+    navigateTo(VIEWS.EMERGENCY_CALL);
+  });
 
-  const fieldBtn = h("button", "btn-emergency-field", "ΝΑΙ / ΟΧΙ");
-  fieldBtn.type = "button";
-  fieldBtn.addEventListener("click", () => navigateTo(VIEWS.EMERGENCY_FIELD));
-
-  actions.append(smsBtn, fieldBtn);
+  // Μόνο SMS. Το ΝΑΙ / ΟΧΙ βγήκε σε ξεχωριστό κουμπί.
+  actions.appendChild(smsBtn);
   wrap.appendChild(actions);
 
   return wrap;
 }
 
-function categoryButton(iconId, name, view) {
+// ─── Κατηγορίες ───────────────────────────────────────────────────
+
+function categoryButton(iconId, name, view, count) {
   const btn = h("button", "category-card");
   btn.type = "button";
-  btn.append(svgIcon(iconId, "category-icon"), h("span", "category-name", name));
+
+  btn.appendChild(svgIcon(iconId, "category-icon"));
+  btn.appendChild(h("span", "category-name", name));
+
+  if (count > 0) {
+    const label = count === 1 ? "φράση" : "φράσεις";
+    btn.appendChild(h("span", "category-count", count + " " + label));
+  }
+
   btn.addEventListener("click", () => navigateTo(view));
   return btn;
 }
 
-// ─── Χάρτης ──────────────────────────────────────────────────────
+// ─── Χάρτης ───────────────────────────────────────────────────────
 
 function renderMap() {
   els.title.textContent = "Χάρτης";
@@ -256,14 +560,20 @@ function renderMap() {
   if (typeof L === "undefined") {
     clear(els.content);
     els.content.appendChild(
-      h("p", "empty-state",
-        "Ο χάρτης χρειάζεται σύνδεση στο internet την πρώτη φορά που ανοίγει. Δοκίμασε ξανά όταν συνδεθείς.")
+      h(
+        "p",
+        "empty-state",
+        "Ο χάρτης χρειάζεται σύνδεση στο internet την πρώτη φορά που ανοίγει. Δοκίμασε ξανά όταν συνδεθείς."
+      )
     );
     return;
   }
 
-  const intro = h("p", "map-intro",
-    "Deaf-friendly σημεία που έχουν επιβεβαιωθεί. Πάτα σε ένα σημείο για λεπτομέρειες.");
+  const intro = h(
+    "p",
+    "map-intro",
+    "Deaf-friendly σημεία που έχουν επιβεβαιωθεί. Πάτα σε ένα σημείο για λεπτομέρειες."
+  );
 
   const mapContainer = h("div", "map-container");
   mapContainer.id = "map";
@@ -271,7 +581,6 @@ function renderMap() {
   clear(els.content);
   els.content.append(intro, mapContainer, renderRemoteServices());
 
-  // Destroy προηγούμενου instance
   if (mapInstance) {
     mapInstance.remove();
     mapInstance = null;
@@ -287,21 +596,23 @@ function renderMap() {
   L.control.zoom({ position: "bottomright" }).addTo(mapInstance);
 
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attribution:
+      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19
   }).addTo(mapInstance);
 
   curatedLayerGroup = L.layerGroup().addTo(mapInstance);
   renderCuratedMarkers();
 
-  // Κέντρο στη θέση του χρήστη
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
         userLocation = { lat: latitude, lng: longitude };
 
-        if (mapInstance) mapInstance.setView([latitude, longitude], 14);
+        if (mapInstance) {
+          mapInstance.setView([latitude, longitude], 14);
+        }
 
         userMarker = L.circleMarker([latitude, longitude], {
           radius: 8,
@@ -322,21 +633,37 @@ function renderMap() {
   }
 }
 
-// ─── Υπηρεσίες από απόσταση ──────────────────────────────────────
+// ─── Υπηρεσίες από απόσταση ───────────────────────────────────────
 
 function renderRemoteServices() {
   const section = h("section", "remote-section");
-  section.appendChild(h("h2", "remote-title", "Υπηρεσίες από απόσταση"));
-  section.appendChild(h("p", "remote-intro",
-    "Δεν χρειάζεται να πας κάπου: μιλάς στη νοηματική από το κινητό σου. Έλεγξε ωράρια και διαθεσιμότητα στο site κάθε υπηρεσίας."));
 
-  const list = typeof REMOTE_SERVICES !== "undefined" ? REMOTE_SERVICES : [];
+  section.appendChild(h("h2", "remote-title", "Υπηρεσίες από απόσταση"));
+
+  section.appendChild(
+    h(
+      "p",
+      "remote-intro",
+      "Δεν χρειάζεται να πας κάπου: μιλάς στη νοηματική από το κινητό σου. Έλεγξε ωράρια και διαθεσιμότητα στο site κάθε υπηρεσίας."
+    )
+  );
+
+  const list =
+    typeof REMOTE_SERVICES !== "undefined" ? REMOTE_SERVICES : [];
+
   list.forEach((svc) => {
     const card = h("article", "remote-card");
     card.appendChild(h("h3", "remote-card-title", svc.name));
     card.appendChild(h("p", "remote-card-text", svc.what));
-    if (svc.how) card.appendChild(h("p", "remote-card-how", svc.how));
-    if (svc.hours) card.appendChild(h("p", "remote-card-hours", svc.hours));
+
+    if (svc.how) {
+      card.appendChild(h("p", "remote-card-how", svc.how));
+    }
+
+    if (svc.hours) {
+      card.appendChild(h("p", "remote-card-hours", svc.hours));
+    }
+
     if (svc.url) {
       const link = h("a", "remote-link", "Άνοιγμα");
       link.href = svc.url;
@@ -344,13 +671,14 @@ function renderRemoteServices() {
       link.rel = "noopener noreferrer";
       card.appendChild(link);
     }
+
     section.appendChild(card);
   });
 
   return section;
 }
 
-// ─── Curated markers ─────────────────────────────────────────────
+// ─── Χρώματα & ετικέτες κατηγοριών ────────────────────────────────
 
 function getCategoryColor(category) {
   const colors = {
@@ -364,6 +692,7 @@ function getCategoryColor(category) {
     education: "#00796b",
     hotel:     "#f9a825"
   };
+
   return colors[category] || "#2d6a4f";
 }
 
@@ -379,6 +708,7 @@ function getCategoryLabel(category) {
     education: "Εκπαίδευση",
     hotel:     "Ξενοδοχείο"
   };
+
   return labels[category] || "Άλλο";
 }
 
@@ -388,6 +718,7 @@ function getAvailabilityLabel(availability) {
     "on-request": "Κατόπιν ραντεβού",
     "on-events":  "Περιστασιακά"
   };
+
   return labels[availability] || "";
 }
 
@@ -397,20 +728,36 @@ function getReliabilityLabel(reliability) {
     medium: "Μέτρια αξιοπιστία",
     low:    "Χαμηλή αξιοπιστία"
   };
+
   return labels[reliability] || "";
 }
 
-// Όλα τα σημεία: data.js + locations-extra.js, με διορθωμένες συντεταγμένες από locations-coords.js
+// ─── Συνδυασμός όλων των σημείων ──────────────────────────────────
+
 function getAllLocations() {
-  const base = typeof MAP_LOCATIONS !== "undefined" ? MAP_LOCATIONS : [];
-  const extra = typeof EXTRA_LOCATIONS !== "undefined" ? EXTRA_LOCATIONS : [];
-  const fixes = typeof COORD_OVERRIDES !== "undefined" ? COORD_OVERRIDES : {};
-  return base.concat(extra).map((loc) => {
-    const fix = fixes[loc.id];
-    if (!fix) return loc;
-    return Object.assign({}, loc, { coords: { lat: fix[0], lng: fix[1] } });
-  });
+  const base =
+    typeof MAP_LOCATIONS !== "undefined" ? MAP_LOCATIONS : [];
+
+  const extra =
+    typeof EXTRA_LOCATIONS !== "undefined" ? EXTRA_LOCATIONS : [];
+
+  const fixes =
+    typeof COORD_OVERRIDES !== "undefined" ? COORD_OVERRIDES : {};
+
+  return base
+    .concat(extra)
+    .map((loc) => {
+      const fix = fixes[loc.id];
+
+      if (!fix) return loc;
+
+      return Object.assign({}, loc, {
+        coords: { lat: fix[0], lng: fix[1] }
+      });
+    });
 }
+
+// ─── Curated markers ──────────────────────────────────────────────
 
 function renderCuratedMarkers() {
   if (!curatedLayerGroup) return;
@@ -422,13 +769,16 @@ function renderCuratedMarkers() {
 
     const color = getCategoryColor(loc.category);
 
-    const marker = L.circleMarker([loc.coords.lat, loc.coords.lng], {
-      radius: 8,
-      fillColor: color,
-      color: "#ffffff",
-      weight: 2.5,
-      fillOpacity: 1
-    });
+    const marker = L.circleMarker(
+      [loc.coords.lat, loc.coords.lng],
+      {
+        radius: 8,
+        fillColor: color,
+        color: "#ffffff",
+        weight: 2.5,
+        fillOpacity: 1
+      }
+    );
 
     marker.bindPopup(buildLocationPopup(loc), {
       maxWidth: 300,
@@ -461,6 +811,7 @@ function buildLocationPopup(loc) {
   }
 
   const featuresList = h("ul", "map-popup-features");
+
   const featureLabels = {
     signLanguage:      "ΕΝΓ επί τόπου",
     signLanguageVideo: "Βίντεο στην ΕΝΓ",
@@ -484,34 +835,43 @@ function buildLocationPopup(loc) {
   }
 
   const footer = h("div", "map-popup-footer");
+
   const avail = getAvailabilityLabel(loc.availability);
   const rel = getReliabilityLabel(loc.reliability);
+
   if (avail) footer.appendChild(h("span", "map-popup-badge", avail));
   if (rel) footer.appendChild(h("span", "map-popup-reliability", rel));
+
   wrap.appendChild(footer);
 
   return wrap;
 }
-
 // ─── Emergency SMS ────────────────────────────────────────────────
 
 function renderEmergencyCall() {
   els.title.textContent = "SMS Έκτακτης Ανάγκης";
 
-  const note = h("p", "emergency-note",
-    "Ποτέ κλήση. Διάλεξε τι χρειάζεσαι· θα ανοίξει έτοιμο SMS προς το 112, " +
-    "με την τοποθεσία σου αν το επιτρέψεις."
+  const note = h(
+    "p",
+    "emergency-note",
+    "Ποτέ κλήση. Διάλεξε τι χρειάζεσαι· θα ανοίξει έτοιμο SMS προς το 112, με την τοποθεσία σου αν το επιτρέψεις."
   );
 
   const list = h("div", "emergency-numbers");
+
   EMERGENCY_SERVICES.forEach((item) => {
     const btn = h("button", "emergency-number-btn");
     btn.type = "button";
+
     btn.append(
       svgIcon(item.iconId, "emergency-number-icon"),
       h("span", "emergency-number-label", item.label)
     );
-    btn.addEventListener("click", () => composeEmergencySms(item.label));
+
+    btn.addEventListener("click", () => {
+      composeEmergencySms(item.label);
+    });
+
     list.appendChild(btn);
   });
 
@@ -521,7 +881,11 @@ function renderEmergencyCall() {
 
 function buildEmergencySmsBody(serviceLabel, locationLine) {
   let body = "Είμαι κωφός/κωφή. Χρειάζομαι: " + serviceLabel + ".";
-  if (locationLine) body += " " + locationLine;
+
+  if (locationLine) {
+    body += " " + locationLine;
+  }
+
   return body;
 }
 
@@ -531,7 +895,13 @@ function isIOSDevice() {
 
 function openEmergencySms(body) {
   const sep = isIOSDevice() ? "&" : "?";
-  window.location.href = "sms:" + EMERGENCY_SMS_NUMBER + sep + "body=" + encodeURIComponent(body);
+
+  window.location.href =
+    "sms:" +
+    EMERGENCY_SMS_NUMBER +
+    sep +
+    "body=" +
+    encodeURIComponent(body);
 }
 
 function composeEmergencySms(serviceLabel) {
@@ -541,6 +911,7 @@ function composeEmergencySms(serviceLabel) {
   }
 
   let settled = false;
+
   const finish = (locationLine) => {
     if (settled) return;
     settled = true;
@@ -556,16 +927,21 @@ function composeEmergencySms(serviceLabel) {
       finish("Τοποθεσία: https://maps.google.com/?q=" + lat + "," + lng);
     },
     () => finish(""),
-    { timeout: EMERGENCY_GEOLOCATION_TIMEOUT_MS, maximumAge: 60000 }
+    {
+      timeout: EMERGENCY_GEOLOCATION_TIMEOUT_MS,
+      maximumAge: 60000
+    }
   );
 }
 
-// ─── Emergency field ──────────────────────────────────────────────
+// ─── Emergency field (Επικοινωνία στο σημείο) ─────────────────────
 
 function renderEmergencyField() {
   els.title.textContent = "Επικοινωνία στο σημείο";
 
-  const note = h("p", "emergency-note",
+  const note = h(
+    "p",
+    "emergency-note",
     "Δείξτε την οθόνη στον αστυνομικό, διασώστη ή όποιον σας βοηθά."
   );
 
@@ -578,27 +954,34 @@ function renderEmergencyField() {
   const yesBtn = h("button", "yesno-btn yesno-yes");
   yesBtn.type = "button";
   yesBtn.setAttribute("aria-label", "Ναι");
-  yesBtn.append(svgIcon("icon-check", "yesno-icon"), h("span", "yesno-label", "ΝΑΙ"));
+  yesBtn.append(
+    svgIcon("icon-check", "yesno-icon"),
+    h("span", "yesno-label", "ΝΑΙ")
+  );
+  yesBtn.addEventListener("click", () => openFullscreen("ΝΑΙ"));
 
   const noBtn = h("button", "yesno-btn yesno-no");
   noBtn.type = "button";
   noBtn.setAttribute("aria-label", "Όχι");
-  noBtn.append(svgIcon("icon-close", "yesno-icon"), h("span", "yesno-label", "ΟΧΙ"));
-
-  yesBtn.addEventListener("click", () => openFullscreen("ΝΑΙ"));
+  noBtn.append(
+    svgIcon("icon-close", "yesno-icon"),
+    h("span", "yesno-label", "ΟΧΙ")
+  );
   noBtn.addEventListener("click", () => openFullscreen("ΟΧΙ"));
 
   yesNo.append(yesBtn, noBtn);
 
   const phraseTitle = h("h2", "field-phrases-title", "Γρήγορες φράσεις");
   const phraseList = h("div", "card-list");
+
   EMERGENCY_FIELD_PHRASES.forEach((card) => {
-    phraseList.appendChild(phraseCard(card, false, false));
+    phraseList.appendChild(phraseCard(card, false, false, null));
   });
 
   clear(els.content);
   els.content.append(note, header, yesNo, phraseTitle, phraseList);
 }
+
 // ─── Λίστα φράσεων ────────────────────────────────────────────────
 
 function renderPhraseList(view) {
@@ -606,7 +989,9 @@ function renderPhraseList(view) {
   if (!cat) return;
 
   els.title.textContent = cat.name;
+
   const list = h("div", "card-list");
+
   (cat.cards || []).forEach((card) => {
     list.appendChild(phraseCard(card, false, true, cat));
   });
@@ -619,28 +1004,36 @@ function renderPhraseList(view) {
 
 function renderCustom() {
   els.title.textContent = "Οι Κάρτες μου";
+
   const cards = getCustomCards();
 
   if (cards.length === 0) {
     clear(els.content);
     els.content.appendChild(
-      h("p", "empty-state",
-        "Δεν έχεις προσθέσει ακόμα δικές σου κάρτες. Πάτα το + για να γράψεις την πρώτη.")
+      h(
+        "p",
+        "empty-state",
+        "Δεν έχεις προσθέσει ακόμα δικές σου κάρτες. Πάτα το + για να γράψεις την πρώτη."
+      )
     );
     return;
   }
 
   const list = h("div", "card-list");
-  cards.forEach((card) => list.appendChild(phraseCard(card, true, true, null)));
+
+  cards.forEach((card) => {
+    list.appendChild(phraseCard(card, true, true, null));
+  });
 
   clear(els.content);
   els.content.appendChild(list);
 }
 
-// ─── Αγαπημένα + Ιστορικό ─────────────────────────────────────────
+// ─── Αγαπημένα / Ιστορικό ────────────────────────────────────────
 
 function renderFavorites() {
-  els.title.textContent = currentFavTab === FAV_TABS.HISTORY ? "Ιστορικό" : "Αγαπημένα";
+  els.title.textContent =
+    currentFavTab === FAV_TABS.HISTORY ? "Ιστορικό" : "Αγαπημένα";
 
   const frag = document.createDocumentFragment();
   frag.appendChild(favoritesSegmented());
@@ -664,7 +1057,10 @@ function favoritesSegmented() {
   favBtn.append(svgIcon("icon-favorites", null), h("span", null, "Αγαπημένα"));
   favBtn.classList.toggle("active", currentFavTab === FAV_TABS.FAVORITES);
   favBtn.setAttribute("role", "tab");
-  favBtn.setAttribute("aria-selected", currentFavTab === FAV_TABS.FAVORITES ? "true" : "false");
+  favBtn.setAttribute(
+    "aria-selected",
+    currentFavTab === FAV_TABS.FAVORITES ? "true" : "false"
+  );
   favBtn.addEventListener("click", () => {
     if (currentFavTab === FAV_TABS.FAVORITES) return;
     currentFavTab = FAV_TABS.FAVORITES;
@@ -676,7 +1072,10 @@ function favoritesSegmented() {
   histBtn.append(svgIcon("icon-history", null), h("span", null, "Ιστορικό"));
   histBtn.classList.toggle("active", currentFavTab === FAV_TABS.HISTORY);
   histBtn.setAttribute("role", "tab");
-  histBtn.setAttribute("aria-selected", currentFavTab === FAV_TABS.HISTORY ? "true" : "false");
+  histBtn.setAttribute(
+    "aria-selected",
+    currentFavTab === FAV_TABS.HISTORY ? "true" : "false"
+  );
   histBtn.addEventListener("click", () => {
     if (currentFavTab === FAV_TABS.HISTORY) return;
     currentFavTab = FAV_TABS.HISTORY;
@@ -691,12 +1090,16 @@ function favoritesSegmented() {
 
 function renderFavoritesList(frag) {
   const favorites = sortFavoritesAlphabetically(getFavorites());
+
   frag.appendChild(favoritesFilterBar());
 
   if (favorites.length === 0) {
     frag.appendChild(
-      h("p", "empty-state",
-        "Δεν έχεις ακόμα αγαπημένα. Πάτα το + για να προσθέσεις στοιχεία όπως ΑΦΜ, διεύθυνση ή τον καφέ σου.")
+      h(
+        "p",
+        "empty-state",
+        "Δεν έχεις ακόμα αγαπημένα. Πάτα το + για να προσθέσεις στοιχεία όπως ΑΦΜ, διεύθυνση ή τον καφέ σου."
+      )
     );
     return;
   }
@@ -704,21 +1107,34 @@ function renderFavoritesList(frag) {
   const filtered = filterFavoritesByTags(favorites, selectedTags);
 
   if (filtered.length === 0) {
-    frag.appendChild(h("p", "empty-state", "Κανένα αποτέλεσμα με τα επιλεγμένα φίλτρα."));
+    frag.appendChild(
+      h("p", "empty-state", "Κανένα αποτέλεσμα με τα επιλεγμένα φίλτρα.")
+    );
     return;
   }
 
   const list = h("div", "favorites-list");
-  filtered.forEach((fav) => list.appendChild(favoriteRow(fav)));
+
+  filtered.forEach((fav) => {
+    list.appendChild(favoriteRow(fav));
+  });
+
   frag.appendChild(list);
 }
 
 function favoritesFilterBar() {
   const bar = h("div", "filter-bar");
 
-  const allBtn = h("button", "filter-chip" + (selectedTags.length === 0 ? " filter-chip-active" : ""), "Όλα");
+  const allBtn = h(
+    "button",
+    "filter-chip" + (selectedTags.length === 0 ? " filter-chip-active" : ""),
+    "Όλα"
+  );
   allBtn.type = "button";
-  allBtn.setAttribute("aria-pressed", selectedTags.length === 0 ? "true" : "false");
+  allBtn.setAttribute(
+    "aria-pressed",
+    selectedTags.length === 0 ? "true" : "false"
+  );
   allBtn.addEventListener("click", () => {
     selectedTags = [];
     renderFavorites();
@@ -727,16 +1143,30 @@ function favoritesFilterBar() {
 
   TAGS.forEach((tag) => {
     const active = selectedTags.indexOf(tag.id) !== -1;
-    const chip = h("button", "filter-chip" + (active ? " filter-chip-active" : ""));
+
+    const chip = h(
+      "button",
+      "filter-chip" + (active ? " filter-chip-active" : "")
+    );
     chip.type = "button";
     chip.setAttribute("aria-pressed", active ? "true" : "false");
-    chip.append(svgIcon(tag.iconId, "filter-chip-icon"), h("span", null, tag.label));
+    chip.append(
+      svgIcon(tag.iconId, "filter-chip-icon"),
+      h("span", null, tag.label)
+    );
+
     chip.addEventListener("click", () => {
       const i = selectedTags.indexOf(tag.id);
-      if (i === -1) selectedTags.push(tag.id);
-      else selectedTags.splice(i, 1);
+
+      if (i === -1) {
+        selectedTags.push(tag.id);
+      } else {
+        selectedTags.splice(i, 1);
+      }
+
       renderFavorites();
     });
+
     bar.appendChild(chip);
   });
 
@@ -748,7 +1178,10 @@ function favoriteRow(fav) {
 
   const main = h("button", "favorite-main");
   main.type = "button";
-  main.addEventListener("click", () => openFullscreen(fav.value, fav.label));
+  main.addEventListener("click", () => {
+    openFullscreen(fav.value, fav.label);
+  });
+
   main.append(
     h("span", "favorite-label", fav.label),
     h("span", "favorite-value", fav.value)
@@ -766,36 +1199,55 @@ function favoriteRow(fav) {
   delBtn.type = "button";
   delBtn.setAttribute("aria-label", "Διαγραφή");
   delBtn.appendChild(svgIcon("icon-trash", "icon-btn-icon"));
-  delBtn.addEventListener("click", () => askDelete("favorite", fav.id, fav.label, delBtn));
+  delBtn.addEventListener("click", () => {
+    askDelete("favorite", fav.id, fav.label, delBtn);
+  });
 
   actions.append(editBtn, delBtn);
   row.append(main, actions);
+
   return row;
 }
 
 // ─── Ιστορικό λίστα ───────────────────────────────────────────────
 
 function renderHistoryList(frag) {
-  const all = getResponses();
-  const filtered = filterResponsesByDate(all, currentHistoryFilter);
+  const combined = getResponses()
+    .concat(getProtocolHistory())
+    .sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+
+  const filtered = filterResponsesByDate(combined, currentHistoryFilter);
 
   frag.appendChild(historyToolbar(filtered.length));
 
-  if (all.length === 0) {
+  if (combined.length === 0) {
     frag.appendChild(
-      h("p", "empty-state",
-        "Δεν έχεις ακόμα αποθηκευμένες απαντήσεις. Όταν χρησιμοποιήσεις μια κάρτα με «Απάντηση» και πατήσεις «Αποθήκευση», θα εμφανιστεί εδώ.")
+      h(
+        "p",
+        "empty-state",
+        "Δεν έχεις ακόμα αποθηκευμένες απαντήσεις. Όταν χρησιμοποιήσεις μια κάρτα με «Απάντηση» ή μια δομημένη συνομιλία, θα εμφανιστούν εδώ."
+      )
     );
     return;
   }
 
   if (filtered.length === 0) {
-    frag.appendChild(h("p", "empty-state", "Καμία απάντηση σε αυτό το διάστημα."));
+    frag.appendChild(
+      h("p", "empty-state", "Καμία εγγραφή σε αυτό το διάστημα.")
+    );
     return;
   }
 
   const list = h("div", "history-list");
-  filtered.forEach((resp) => list.appendChild(historyRow(resp)));
+
+  filtered.forEach((resp) => {
+    if (resp.responseType === "protocol") {
+      list.appendChild(protocolHistoryRow(resp));
+    } else {
+      list.appendChild(historyRow(resp));
+    }
+  });
+
   frag.appendChild(list);
 }
 
@@ -811,22 +1263,35 @@ function historyToolbar(visibleCount) {
   ];
 
   chips.forEach((c) => {
-    const chip = h("button", "history-date-chip" + (currentHistoryFilter === c.id ? " active" : ""), c.label);
+    const chip = h(
+      "button",
+      "history-date-chip" + (currentHistoryFilter === c.id ? " active" : ""),
+      c.label
+    );
     chip.type = "button";
+
     chip.addEventListener("click", () => {
       if (currentHistoryFilter === c.id) return;
       currentHistoryFilter = c.id;
       renderFavorites();
     });
+
     filters.appendChild(chip);
   });
 
   const exportBtn = h("button", "history-export-btn");
   exportBtn.type = "button";
   exportBtn.setAttribute("aria-label", "Εξαγωγή σε PDF");
-  exportBtn.append(svgIcon("icon-download", null), h("span", null, "PDF"));
+  exportBtn.append(
+    svgIcon("icon-download", null),
+    h("span", null, "PDF")
+  );
   exportBtn.disabled = visibleCount === 0;
-  if (visibleCount === 0) exportBtn.style.opacity = "0.4";
+
+  if (visibleCount === 0) {
+    exportBtn.style.opacity = "0.4";
+  }
+
   exportBtn.addEventListener("click", () => exportHistoryToPdf());
 
   bar.append(filters, exportBtn);
@@ -839,18 +1304,30 @@ function historyRow(resp) {
   const main = h("button", "history-main");
   main.type = "button";
   main.addEventListener("click", () => {
-    openResponseFullscreen(resp.phrase, resp.response, resp.responseType, resp.unit, true);
+    openResponseFullscreen(
+      resp.phrase,
+      resp.response,
+      resp.responseType,
+      resp.unit,
+      true
+    );
   });
 
   const meta = h("div", "history-meta");
+
   if (resp.categoryName) {
     meta.appendChild(h("span", "history-category", resp.categoryName));
   }
-  meta.appendChild(h("span", "history-time", formatDateTimeShort(resp.timestamp)));
+
+  meta.appendChild(
+    h("span", "history-time", formatDateTimeShort(resp.timestamp))
+  );
   main.appendChild(meta);
 
   main.appendChild(h("span", "history-phrase", resp.phrase));
-  main.appendChild(h("span", "history-response", formatResponseForDisplay(resp)));
+  main.appendChild(
+    h("span", "history-response", formatResponseForDisplay(resp))
+  );
 
   const actions = h("div", "favorite-actions");
 
@@ -858,13 +1335,113 @@ function historyRow(resp) {
   delBtn.type = "button";
   delBtn.setAttribute("aria-label", "Διαγραφή απάντησης");
   delBtn.appendChild(svgIcon("icon-trash", "icon-btn-icon"));
-  delBtn.addEventListener("click", () => askDelete("response", resp.id, resp.phrase, delBtn));
+  delBtn.addEventListener("click", () => {
+    askDelete("response", resp.id, resp.phrase, delBtn);
+  });
 
   actions.appendChild(delBtn);
   row.append(main, actions);
+
   return row;
 }
 
+function protocolHistoryRow(resp) {
+  const row = h("div", "history-row protocol-history-row");
+
+  const main = h("button", "history-main");
+  main.type = "button";
+  main.addEventListener("click", () => {
+    openProtocolHistoryFullscreen(resp);
+  });
+
+  const meta = h("div", "history-meta");
+  meta.appendChild(
+    h(
+      "span",
+      "history-category",
+      "Δομημένη συνομιλία · " + (resp.protocolTitle || "Πρωτόκολλο")
+    )
+  );
+  meta.appendChild(
+    h("span", "history-time", formatDateTimeShort(resp.timestamp))
+  );
+  main.appendChild(meta);
+
+  main.appendChild(
+    h("span", "history-phrase", resp.protocolTitle || resp.phrase)
+  );
+
+  const steps = resp.steps || [];
+  const summary =
+    steps.length +
+    " " +
+    (steps.length === 1 ? "βήμα" : "βήματα") +
+    " απαντήθηκαν";
+
+  main.appendChild(h("span", "history-response", summary));
+
+  const actions = h("div", "favorite-actions");
+
+  const delBtn = h("button", "icon-btn icon-btn-danger", "");
+  delBtn.type = "button";
+  delBtn.setAttribute("aria-label", "Διαγραφή συνομιλίας");
+  delBtn.appendChild(svgIcon("icon-trash", "icon-btn-icon"));
+  delBtn.addEventListener("click", () => {
+    askDelete("protocol", resp.id, resp.protocolTitle || resp.phrase, delBtn);
+  });
+
+  actions.appendChild(delBtn);
+  row.append(main, actions);
+
+  return row;
+}
+
+// ─── Δομημένη συνομιλία — fullscreen ιστορικό ──────────────────────
+
+function openProtocolHistoryFullscreen(resp) {
+  // ΔΕΝ αγγίζουμε το responseFullscreen. Φτιάχνουμε ξεχωριστό dialog.
+  const dialog = h("dialog", "protocol-history-dialog");
+  dialog.setAttribute("aria-labelledby", "protocol-history-title");
+
+  const heading = h(
+    "h2",
+    "protocol-history-title",
+    resp.protocolTitle || "Δομημένη συνομιλία"
+  );
+
+  const meta = h(
+    "p",
+    "protocol-history-meta",
+    formatDateTimeLong(resp.timestamp)
+  );
+
+  const list = h("ul", "protocol-history-list");
+
+  (resp.steps || []).forEach((item) => {
+    const li = h("li", "protocol-history-item");
+    li.appendChild(h("p", "protocol-history-q", item.question));
+    li.appendChild(h("p", "protocol-history-a", item.answer));
+    list.appendChild(li);
+  });
+
+  const actions = h("div", "dialog-actions");
+
+  const closeBtn = h("button", "btn-primary", "Κλείσιμο");
+  closeBtn.type = "button";
+  closeBtn.addEventListener("click", () => {
+    closeDialog(dialog);
+    if (dialog.parentNode) {
+      dialog.parentNode.removeChild(dialog);
+    }
+  });
+
+  actions.appendChild(closeBtn);
+
+  dialog.append(heading, meta, list, actions);
+
+  document.body.appendChild(dialog);
+  openDialog(dialog);
+}
 // ─── Κάρτα φράσης ─────────────────────────────────────────────────
 
 function phraseCard(card, isCustom, showFavorite, category) {
@@ -873,44 +1450,67 @@ function phraseCard(card, isCustom, showFavorite, category) {
 
   const actions = h("div", "phrase-actions");
 
-  const speakBtn = h("button", "speak-btn");
-  speakBtn.type = "button";
-  speakBtn.append(svgIcon("icon-speak", "btn-icon"), h("span", "btn-label", "Ανάγνωση"));
-  speakBtn.setAttribute("aria-label", "Ανάγνωση φωνητικά");
-  speakBtn.addEventListener("click", () => speak(card.text));
-  actions.appendChild(speakBtn);
-
+  // 1. Εμφάνιση — ΠΡΩΤΗ, μεγαλύτερη, κύρια λειτουργία
   const showBtn = h("button", "show-btn");
   showBtn.type = "button";
-  showBtn.append(svgIcon("icon-show", "btn-icon"), h("span", "btn-label", "Εμφάνιση"));
+  showBtn.append(
+    svgIcon("icon-show", "btn-icon"),
+    h("span", "btn-label", "Εμφάνιση")
+  );
   showBtn.setAttribute("aria-label", "Εμφάνιση σε μεγάλα γράμματα");
   showBtn.addEventListener("click", () => openFullscreen(card.text));
   actions.appendChild(showBtn);
 
+  // 2. Ανάγνωση
+  const speakBtn = h("button", "speak-btn");
+  speakBtn.type = "button";
+  speakBtn.append(
+    svgIcon("icon-speak", "btn-icon"),
+    h("span", "btn-label", "Ανάγνωση")
+  );
+  speakBtn.setAttribute("aria-label", "Ανάγνωση φωνητικά");
+  speakBtn.addEventListener("click", () => speak(card.text));
+  actions.appendChild(speakBtn);
+
+  // 3. Απάντηση (αν υπάρχει)
   if (card.response) {
     const replyBtn = h("button", "reply-btn");
     replyBtn.type = "button";
-    replyBtn.append(svgIcon("icon-reply", "btn-icon"), h("span", "btn-label", "Απάντηση"));
-    replyBtn.setAttribute("aria-label", "Άνοιξε για απάντηση από τον συνομιλητή");
-    replyBtn.addEventListener("click", () => openResponseDialog(card, category));
+    replyBtn.append(
+      svgIcon("icon-reply", "btn-icon"),
+      h("span", "btn-label", "Απάντηση")
+    );
+    replyBtn.setAttribute(
+      "aria-label",
+      "Άνοιξε για απάντηση από τον συνομιλητή"
+    );
+    replyBtn.addEventListener("click", () => {
+      openResponseDialog(card, category);
+    });
     actions.appendChild(replyBtn);
   }
 
+  // 4. Αγαπημένο
   if (showFavorite) {
     const favBtn = h("button", "fav-btn");
     favBtn.type = "button";
     favBtn.setAttribute("aria-label", "Αποθήκευση στα Αγαπημένα");
     favBtn.appendChild(svgIcon("icon-star", "btn-icon"));
-    favBtn.addEventListener("click", () => quickSaveFavorite(card.text, favBtn));
+    favBtn.addEventListener("click", () => {
+      quickSaveFavorite(card.text, favBtn);
+    });
     actions.appendChild(favBtn);
   }
 
+  // 5. Διαγραφή (αν custom)
   if (isCustom) {
     const delBtn = h("button", "delete-btn");
     delBtn.type = "button";
     delBtn.setAttribute("aria-label", "Διαγραφή κάρτας");
     delBtn.appendChild(svgIcon("icon-trash", "btn-icon"));
-    delBtn.addEventListener("click", () => askDelete("custom", card.id, card.text, delBtn));
+    delBtn.addEventListener("click", () => {
+      askDelete("custom", card.id, card.text, delBtn);
+    });
     actions.appendChild(delBtn);
   }
 
@@ -918,14 +1518,16 @@ function phraseCard(card, isCustom, showFavorite, category) {
   return wrap;
 }
 
-// ─── Fullscreen (φράσεις/αγαπημένα) ───────────────────────────────
+// ─── Fullscreen (φράσεις / αγαπημένα) ─────────────────────────────
 
 function openFullscreen(text, label) {
   els.fullscreenLabel.textContent = label || "";
   els.fullscreenLabel.hidden = !label;
   els.fullscreenText.textContent = text;
+
   els.fullscreen.hidden = false;
   setBackgroundInert(true);
+
   document.addEventListener("keydown", onFullscreenKeydown);
   els.fullscreenClose.focus();
 }
@@ -937,25 +1539,32 @@ function closeFullscreen() {
 }
 
 function onFullscreenKeydown(event) {
-  if (event.key === "Escape") {
-    if (!els.responseFullscreen.hidden) closeResponseFullscreen();
-    else if (!els.fullscreen.hidden) closeFullscreen();
+  if (event.key !== "Escape") return;
+
+  if (!els.responseFullscreen.hidden) {
+    closeResponseFullscreen();
+  } else if (!els.fullscreen.hidden) {
+    closeFullscreen();
   }
 }
 
 function setBackgroundInert(on) {
   [els.header, els.content, els.fab, els.tabbarEl].forEach((el) => {
     if (!el) return;
-    if (on) el.setAttribute("inert", "");
-    else el.removeAttribute("inert");
+
+    if (on) {
+      el.setAttribute("inert", "");
+    } else {
+      el.removeAttribute("inert");
+    }
   });
 }
 
-// ─── Response dialog ──────────────────────────────────────────────
+// ─── Response dialog (5 στάδια) ───────────────────────────────────
 
 function openResponseDialog(card, category) {
   pendingResponseCard = card;
-  pendingResponseCategory = category;
+  pendingResponseCategory = category || null;
   currentResponseValue = null;
   currentResponseType = card.response;
 
@@ -1011,16 +1620,19 @@ function onResponseSubmit() {
 
   if (type === "number") {
     value = (els.responseNumberInput.value || "").trim();
+
     if (!value) {
       showResponseError("Γράψε την τιμή.");
       return;
     }
+
     if (!/^\d[\d.,\s]*$/.test(value)) {
       showResponseError("Γράψε έναν αριθμό, π.χ. 12 ή 12,50.");
       return;
     }
   } else if (type === "text") {
     value = (els.responseTextInput.value || "").trim();
+
     if (!value) {
       showResponseError("Γράψε την απάντηση.");
       return;
@@ -1028,10 +1640,12 @@ function onResponseSubmit() {
   } else if (type === "datetime") {
     const date = els.responseDateInput.value;
     const time = els.responseTimeInput.value;
+
     if (!date && !time) {
       showResponseError("Διάλεξε ημερομηνία ή ώρα.");
       return;
     }
+
     value = [date, time].filter(Boolean).join(" ");
   }
 
@@ -1060,14 +1674,17 @@ function showResponseResult(value, type) {
   const phrase = pendingResponseCard ? pendingResponseCard.text : "";
   const unit = pendingResponseCard ? (pendingResponseCard.unit || "") : "";
 
-  openResponseFullscreen(phrase, value, type, unit);
+  openResponseFullscreen(phrase, value, type, unit, false);
 }
 
 // ─── Response fullscreen ──────────────────────────────────────────
 
 function openResponseFullscreen(phrase, value, type, unit, fromHistory) {
   els.responseFullscreenPhrase.textContent = phrase;
-  els.responseFullscreenText.textContent = formatResponseForFullscreen(value, type);
+  els.responseFullscreenText.textContent = formatResponseForFullscreen(
+    value,
+    type
+  );
 
   if (type === "number" && unit) {
     els.responseFullscreenUnit.textContent = unit;
@@ -1077,11 +1694,11 @@ function openResponseFullscreen(phrase, value, type, unit, fromHistory) {
     els.responseFullscreenUnit.hidden = true;
   }
 
-  // Από το Ιστορικό είναι απλή προβολή: κρύβουμε το "Αποθήκευση"
   els.responseSave.hidden = !!fromHistory;
 
   els.responseFullscreen.hidden = false;
   setBackgroundInert(true);
+
   document.addEventListener("keydown", onFullscreenKeydown);
   els.responseSave.focus();
 }
@@ -1089,6 +1706,7 @@ function openResponseFullscreen(phrase, value, type, unit, fromHistory) {
 function closeResponseFullscreen() {
   els.responseFullscreen.hidden = true;
   els.responseSave.hidden = false;
+
   setBackgroundInert(false);
   document.removeEventListener("keydown", onFullscreenKeydown);
 }
@@ -1096,7 +1714,9 @@ function closeResponseFullscreen() {
 function onResponseSave() {
   const phrase = pendingResponseCard ? pendingResponseCard.text : "";
   const categoryId = pendingResponseCategory ? pendingResponseCategory.id : "";
-  const categoryName = pendingResponseCategory ? pendingResponseCategory.name : "";
+  const categoryName = pendingResponseCategory
+    ? pendingResponseCategory.name
+    : "";
   const unit = pendingResponseCard ? (pendingResponseCard.unit || "") : "";
 
   const result = saveResponse(
@@ -1108,7 +1728,7 @@ function onResponseSave() {
     categoryName
   );
 
-  if (!result.ok) {
+  if (!result || result.ok === false) {
     showToast("Δεν ήταν δυνατή η αποθήκευση.");
     return;
   }
@@ -1127,6 +1747,7 @@ function onResponseDone() {
   pendingResponseCategory = null;
   currentResponseValue = null;
   currentResponseType = null;
+
   closeResponseFullscreen();
 }
 
@@ -1136,46 +1757,69 @@ function formatResponseForFullscreen(value, type) {
   if (type === "number") {
     return formatNumber(value);
   }
+
   if (type === "yesno") {
     return value === "yes" ? "ΝΑΙ" : "ΟΧΙ";
   }
+
   if (type === "datetime") {
     return formatDateTimeValue(value);
   }
+
   return value;
 }
 
 function formatResponseForDisplay(resp) {
+  if (!resp) return "";
+
   if (resp.responseType === "number") {
     return formatNumber(resp.response) + (resp.unit ? " " + resp.unit : "");
   }
+
   if (resp.responseType === "yesno") {
     return resp.response === "yes" ? "ΝΑΙ" : "ΟΧΙ";
   }
+
   if (resp.responseType === "datetime") {
     return formatDateTimeValue(resp.response);
   }
+
   return resp.response;
 }
 
 function formatNumber(value) {
-  // Εμφάνιση όπως τη έγραψε ο συνομιλητής — καμία στρογγυλοποίηση ή
-  // αναδιάταξη, ώστε το «1.500» να μην διαβαστεί ποτέ ως «1,50».
   const s = String(value).trim();
-  if (/^\d+\.\d{1,2}$/.test(s)) return s.replace(".", ",");
+
+  // Διατήρηση όπως το έγραψε ο συνομιλητής.
+  // Μόνο η αλλαγή τελείας σε κόμμα για δεκαδικά 1-2 ψηφία.
+  if (/^\d+\.\d{1,2}$/.test(s)) {
+    return s.replace(".", ",");
+  }
+
   return s;
 }
 
 function formatDateTimeValue(value) {
   if (!value) return "";
-  const parts = value.split(" ");
+
+  const parts = String(value).split(" ");
   const date = parts[0] || "";
   const time = parts[1] || "";
 
   let dateFormatted = "";
+
   if (date && date.indexOf("-") !== -1) {
-    const [y, m, d] = date.split("-");
-    if (y && m && d) dateFormatted = d + "/" + m + "/" + y;
+    const segments = date.split("-");
+
+    if (segments.length === 3) {
+      const y = segments[0];
+      const m = segments[1];
+      const d = segments[2];
+
+      if (y && m && d) {
+        dateFormatted = d + "/" + m + "/" + y;
+      }
+    }
   }
 
   return [dateFormatted, time].filter(Boolean).join(", ");
@@ -1188,23 +1832,48 @@ function formatDateTimeShort(timestamp) {
   const year = d.getFullYear();
   const hours = String(d.getHours()).padStart(2, "0");
   const mins = String(d.getMinutes()).padStart(2, "0");
+
   return day + "/" + month + "/" + year + ", " + hours + ":" + mins;
 }
 
 function formatDateTimeLong(timestamp) {
   const d = new Date(timestamp);
-  const months = ["Ιανουαρίου", "Φεβρουαρίου", "Μαρτίου", "Απριλίου", "Μαΐου", "Ιουνίου",
-                  "Ιουλίου", "Αυγούστου", "Σεπτεμβρίου", "Οκτωβρίου", "Νοεμβρίου", "Δεκεμβρίου"];
+  const months = [
+    "Ιανουαρίου",
+    "Φεβρουαρίου",
+    "Μαρτίου",
+    "Απριλίου",
+    "Μαΐου",
+    "Ιουνίου",
+    "Ιουλίου",
+    "Αυγούστου",
+    "Σεπτεμβρίου",
+    "Οκτωβρίου",
+    "Νοεμβρίου",
+    "Δεκεμβρίου"
+  ];
+
   const hours = String(d.getHours()).padStart(2, "0");
   const mins = String(d.getMinutes()).padStart(2, "0");
-  return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear() + ", " + hours + ":" + mins;
+
+  return (
+    d.getDate() +
+    " " +
+    months[d.getMonth()] +
+    " " +
+    d.getFullYear() +
+    ", " +
+    hours +
+    ":" +
+    mins
+  );
 }
 
 // ─── PDF Export ───────────────────────────────────────────────────
 
 function exportHistoryToPdf() {
-  const all = getResponses();
-  const responses = filterResponsesByDate(all, currentHistoryFilter);
+  const combined = getResponses().concat(getProtocolHistory());
+  const responses = filterResponsesByDate(combined, currentHistoryFilter);
 
   if (responses.length === 0) {
     showToast("Δεν υπάρχουν απαντήσεις για εξαγωγή.");
@@ -1213,16 +1882,35 @@ function exportHistoryToPdf() {
 
   buildPrintArea({
     title: "Ιστορικό Απαντήσεων",
-    cards: responses.map((r) => ({
-      category: r.categoryName,
-      meta: formatDateTimeLong(r.timestamp),
-      question: r.phrase,
-      answer: formatResponseForDisplay(r)
-    }))
+    cards: responses.map((r) => {
+      const isProtocol = r.responseType === "protocol";
+
+      let answer = "";
+
+      if (isProtocol) {
+        answer = (r.steps || [])
+          .map((s, i) => i + 1 + ". " + s.question + " → " + s.answer)
+          .join("\n");
+      } else {
+        answer = formatResponseForDisplay(r);
+      }
+
+      return {
+        category: isProtocol
+          ? "Δομημένη συνομιλία · " + (r.protocolTitle || "")
+          : r.categoryName || "",
+        meta: formatDateTimeLong(r.timestamp),
+        question: r.phrase || r.protocolTitle || "",
+        answer: answer
+      };
+    })
   });
 
   window.print();
-  setTimeout(() => { els.printArea.replaceChildren(); }, 500);
+
+  setTimeout(() => {
+    els.printArea.replaceChildren();
+  }, 500);
 }
 
 function exportFavoritesToPdf() {
@@ -1244,11 +1932,15 @@ function exportFavoritesToPdf() {
   });
 
   window.print();
-  setTimeout(() => { els.printArea.replaceChildren(); }, 500);
+
+  setTimeout(() => {
+    els.printArea.replaceChildren();
+  }, 500);
 }
 
 function tagLabelsFor(tagIds) {
   if (!Array.isArray(tagIds) || tagIds.length === 0) return "";
+
   return tagIds
     .map((id) => {
       const t = TAGS.find((x) => x.id === id);
@@ -1260,6 +1952,8 @@ function tagLabelsFor(tagIds) {
 
 function buildPrintArea(opts) {
   const area = els.printArea;
+
+  if (!area) return;
   area.replaceChildren();
 
   const header = h("div", "print-header");
@@ -1274,11 +1968,9 @@ function buildPrintArea(opts) {
     const card = h("div", "print-card");
 
     const meta = h("div", "print-card-meta");
-    if (c.category) {
-      meta.appendChild(h("span", "print-card-category", c.category));
-    } else {
-      meta.appendChild(h("span", "print-card-category", ""));
-    }
+    meta.appendChild(
+      h("span", "print-card-category", c.category || "")
+    );
     meta.appendChild(h("span", "print-card-time", c.meta || ""));
     card.appendChild(meta);
 
@@ -1291,7 +1983,9 @@ function buildPrintArea(opts) {
   });
 
   const footer = h("div", "print-footer");
-  footer.appendChild(h("p", null, "Δημιουργήθηκε από την εφαρμογή Δίαυλος"));
+  footer.appendChild(
+    h("p", null, "Δημιουργήθηκε από την εφαρμογή Δίαυλος")
+  );
   footer.appendChild(h("p", null, location.host));
   area.appendChild(footer);
 }
@@ -1299,7 +1993,10 @@ function buildPrintArea(opts) {
 // ─── Ανάγνωση φωνητικά ────────────────────────────────────────────
 
 function speak(text) {
-  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+  if (
+    !("speechSynthesis" in window) ||
+    typeof SpeechSynthesisUtterance === "undefined"
+  ) {
     showToast("Η συσκευή δεν υποστηρίζει ανάγνωση κειμένου.");
     return;
   }
@@ -1308,7 +2005,11 @@ function speak(text) {
   utterance.lang = "el-GR";
 
   const voices = window.speechSynthesis.getVoices();
-  const greek = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("el"));
+
+  const greek = voices.find(
+    (v) => v.lang && v.lang.toLowerCase().startsWith("el")
+  );
+
   if (greek) {
     utterance.voice = greek;
   } else if (voices.length > 0) {
@@ -1324,51 +2025,693 @@ function speak(text) {
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 }
+// ─── Δομημένη συνομιλία — είσοδος ─────────────────────────────────
 
+function openProtocol(protocolId) {
+  if (!PROTOCOL_DEFINITIONS[protocolId]) {
+    showToast("Δεν βρέθηκε το συγκεκριμένο πρωτόκολλο.");
+    return;
+  }
+
+  currentProtocolId = protocolId;
+  currentProtocol = null;
+  currentProtocolStepIndex = 0;
+  currentProtocolAnswers = [];
+  protocolSelectedAnswer = "";
+  protocolAnswerLocked = false;
+
+  history.pushState(
+    { view: VIEWS.PROTOCOL, protocolId: protocolId },
+    ""
+  );
+
+  render(VIEWS.PROTOCOL, true);
+}
+
+// ─── Render πρωτόκολλου ───────────────────────────────────────────
+
+async function renderProtocol(protocolId) {
+  if (!protocolId) {
+    navigateTo(VIEWS.HOME);
+    return;
+  }
+
+  const def = PROTOCOL_DEFINITIONS[protocolId];
+
+  els.title.textContent = def ? def.title : "Δομημένη συνομιλία";
+
+  clear(els.content);
+
+  const loading = h("p", "empty-state", "Φόρτωση συνομιλίας...");
+  els.content.appendChild(loading);
+
+  try {
+    if (
+      !currentProtocol ||
+      currentProtocol.id !== protocolId
+    ) {
+      const response = await fetch(
+        "data/protocols/" +
+          encodeURIComponent(protocolId) +
+          ".json",
+        { cache: "no-cache" }
+      );
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
+
+      currentProtocol = await response.json();
+    }
+
+    if (
+      !currentProtocol ||
+      !Array.isArray(currentProtocol.steps) ||
+      currentProtocol.steps.length === 0
+    ) {
+      throw new Error("Invalid protocol");
+    }
+
+    if (
+      currentProtocolStepIndex >= currentProtocol.steps.length
+    ) {
+      renderProtocolSummary();
+      return;
+    }
+
+    renderProtocolStep();
+  } catch (error) {
+    clear(els.content);
+
+    const errorBox = h("div", "empty-state");
+
+    errorBox.appendChild(
+      h(
+        "p",
+        null,
+        "Δεν ήταν δυνατή η φόρτωση της δομημένης συνομιλίας."
+      )
+    );
+
+    const retry = h("button", "btn-primary", "Δοκιμή ξανά");
+    retry.type = "button";
+    retry.addEventListener("click", () =>
+      renderProtocol(protocolId)
+    );
+
+    const back = h("button", "btn-secondary", "Επιστροφή");
+    back.type = "button";
+    back.style.marginTop = "8px";
+    back.addEventListener("click", goBack);
+
+    errorBox.append(retry, h("br"), back);
+    els.content.appendChild(errorBox);
+  }
+}
+
+// ─── Render βήματος ───────────────────────────────────────────────
+
+function renderProtocolStep() {
+  if (!currentProtocol || !currentProtocol.steps) return;
+
+  const step = currentProtocol.steps[currentProtocolStepIndex];
+
+  if (!step) {
+    renderProtocolSummary();
+    return;
+  }
+
+  protocolAnswerLocked = false;
+  protocolSelectedAnswer = "";
+
+  els.title.textContent = currentProtocol.title || "Δομημένη συνομιλία";
+
+  const frag = document.createDocumentFragment();
+
+  // Disclaimer πριν από το πρώτο βήμα
+  if (
+    currentProtocolStepIndex === 0 &&
+    currentProtocol.disclaimer
+  ) {
+    const disclaimerBox = h(
+      "div",
+      "protocol-disclaimer-box"
+    );
+
+    disclaimerBox.appendChild(
+      h(
+        "p",
+        "protocol-disclaimer-text",
+        currentProtocol.disclaimer
+      )
+    );
+
+    frag.appendChild(disclaimerBox);
+  }
+
+  // Progress
+  const progress = h("div", "protocol-progress");
+  progress.setAttribute("aria-label", "Πρόοδος συνομιλίας");
+
+  progress.appendChild(
+    h(
+      "span",
+      "protocol-progress-text",
+      "Βήμα " +
+        (currentProtocolStepIndex + 1) +
+        " από " +
+        currentProtocol.steps.length
+    )
+  );
+
+  const progressTrack = h("div", "protocol-progress-track");
+  const progressValue = h("div", "protocol-progress-value");
+
+  progressValue.style.width =
+    (
+      ((currentProtocolStepIndex + 1) /
+        currentProtocol.steps.length) *
+      100
+    ) + "%";
+
+  progressTrack.appendChild(progressValue);
+  progress.appendChild(progressTrack);
+
+  frag.appendChild(progress);
+
+  // Ερώτηση
+  const questionCard = h("section", "protocol-question-card");
+
+  questionCard.appendChild(
+    h(
+      "p",
+      "protocol-question",
+      step.question || ""
+    )
+  );
+
+  const answerArea = h("div", "protocol-answer-area");
+
+  buildProtocolAnswerControl(step, answerArea);
+
+  questionCard.appendChild(answerArea);
+
+  frag.appendChild(questionCard);
+
+  clear(els.content);
+  els.content.appendChild(frag);
+
+  // Focus στο πρώτο διαθέσιμο στοιχείο
+  const firstControl = answerArea.querySelector(
+    "button, input, select, textarea"
+  );
+
+  if (firstControl) {
+    firstControl.focus();
+  }
+}
+
+// ─── Build UI ανά τύπο βήματος ────────────────────────────────────
+
+function buildProtocolAnswerControl(step, container) {
+  const type = step.type || "text";
+
+  if (type === "choice") {
+    buildProtocolChoice(container, step);
+    return;
+  }
+
+  if (type === "yesno") {
+    buildProtocolYesNo(container, step);
+    return;
+  }
+
+  if (type === "number") {
+    buildProtocolNumber(container, step);
+    return;
+  }
+
+  if (type === "datetime") {
+    buildProtocolDateTime(container, step);
+    return;
+  }
+
+  if (type === "info") {
+    buildProtocolInfo(container, step);
+    return;
+  }
+
+  buildProtocolText(container, step);
+}
+
+function buildProtocolChoice(container, step) {
+  const options = Array.isArray(step.options) ? step.options : [];
+
+  const group = h("div", "protocol-choice-grid");
+  group.setAttribute("role", "group");
+
+  options.forEach((option) => {
+    const value =
+      typeof option === "string"
+        ? option
+        : option.value || option.label || "";
+
+    const label =
+      typeof option === "string"
+        ? option
+        : option.label || option.value || "";
+
+    const button = h("button", "protocol-choice-btn", label);
+    button.type = "button";
+
+    button.addEventListener("click", () => {
+      completeProtocolStep(value);
+    });
+
+    group.appendChild(button);
+  });
+
+  container.appendChild(group);
+}
+
+function buildProtocolYesNo(container, step) {
+  const group = h("div", "yesno-grid protocol-yesno");
+
+  const yes = h("button", "yesno-btn yesno-yes");
+  yes.type = "button";
+  yes.append(
+    svgIcon("icon-check", "yesno-icon"),
+    h("span", "yesno-label", "ΝΑΙ")
+  );
+  yes.addEventListener("click", () => {
+    completeProtocolStep("ΝΑΙ");
+  });
+
+  const no = h("button", "yesno-btn yesno-no");
+  no.type = "button";
+  no.append(
+    svgIcon("icon-close", "yesno-icon"),
+    h("span", "yesno-label", "ΟΧΙ")
+  );
+  no.addEventListener("click", () => {
+    completeProtocolStep("ΟΧΙ");
+  });
+
+  group.append(yes, no);
+  container.appendChild(group);
+}
+
+function buildProtocolNumber(container, step) {
+  const field = h("div", "protocol-input-group");
+
+  const input = h("input", "protocol-input");
+  input.type = "text";
+  input.inputMode = "decimal";
+  input.autocomplete = "off";
+
+  if (step.placeholder) {
+    input.placeholder = step.placeholder;
+  }
+
+  const action = h("button", "btn-primary", "Συνέχεια");
+  action.type = "button";
+
+  const submit = () => {
+    const value = input.value.trim();
+
+    if (!value) {
+      showToast("Γράψε πρώτα την απάντηση.");
+      input.focus();
+      return;
+    }
+
+    if (!/^[\d.,\s]+$/.test(value)) {
+      showToast("Γράψε έναν αριθμό.");
+      input.focus();
+      return;
+    }
+
+    completeProtocolStep(
+      value + (step.unit ? " " + step.unit : "")
+    );
+  };
+
+  action.addEventListener("click", submit);
+
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      submit();
+    }
+  });
+
+  field.append(input, action);
+  container.appendChild(field);
+}
+
+function buildProtocolText(container, step) {
+  const field = h("div", "protocol-input-group");
+
+  const input = h("textarea", "protocol-textarea");
+  input.rows = 3;
+  input.autocomplete = "off";
+
+  if (step.placeholder) {
+    input.placeholder = step.placeholder;
+  }
+
+  input.setAttribute(
+    "aria-label",
+    step.question || "Απάντηση"
+  );
+
+  const action = h("button", "btn-primary", "Συνέχεια");
+  action.type = "button";
+
+  const submit = () => {
+    const value = input.value.trim();
+
+    if (!value) {
+      showToast("Γράψε πρώτα την απάντηση.");
+      input.focus();
+      return;
+    }
+
+    completeProtocolStep(value);
+  };
+
+  action.addEventListener("click", submit);
+
+  input.addEventListener("keydown", (event) => {
+    if (
+      event.key === "Enter" &&
+      (event.ctrlKey || event.metaKey)
+    ) {
+      event.preventDefault();
+      submit();
+    }
+  });
+
+  field.append(input, action);
+  container.appendChild(field);
+}
+
+function buildProtocolDateTime(container, step) {
+  const field = h("div", "protocol-input-group protocol-datetime");
+
+  const date = h("input", "protocol-input");
+  date.type = "date";
+  date.setAttribute("aria-label", "Ημερομηνία");
+
+  const time = h("input", "protocol-input");
+  time.type = "time";
+  time.setAttribute("aria-label", "Ώρα");
+
+  const action = h("button", "btn-primary", "Συνέχεια");
+  action.type = "button";
+
+  action.addEventListener("click", () => {
+    if (!date.value && !time.value) {
+      showToast("Διάλεξε ημερομηνία ή ώρα.");
+      return;
+    }
+
+    const value = [date.value, time.value]
+      .filter(Boolean)
+      .join(" ");
+
+    completeProtocolStep(formatDateTimeValue(value));
+  });
+
+  field.append(date, time, action);
+  container.appendChild(field);
+}
+
+function buildProtocolInfo(container, step) {
+  container.appendChild(
+    h(
+      "p",
+      "protocol-info",
+      step.text || step.question || ""
+    )
+  );
+
+  const action = h("button", "btn-primary", "Συνέχεια");
+  action.type = "button";
+  action.addEventListener("click", () =>
+    completeProtocolStep("Ενημερώθηκα")
+  );
+
+  container.appendChild(action);
+}
+
+// ─── Ολοκλήρωση βήματος ───────────────────────────────────────────
+
+function completeProtocolStep(answer) {
+  if (protocolAnswerLocked || !currentProtocol) return;
+
+  const step = currentProtocol.steps[currentProtocolStepIndex];
+
+  if (!step) return;
+
+  protocolAnswerLocked = true;
+
+  const cleanAnswer = String(answer).trim();
+
+  currentProtocolAnswers[currentProtocolStepIndex] = {
+    question: step.question || "",
+    answer: cleanAnswer
+  };
+
+  openFullscreen(cleanAnswer, "Απάντηση");
+
+  setTimeout(() => {
+    closeFullscreen();
+
+    currentProtocolStepIndex += 1;
+    protocolAnswerLocked = false;
+
+    if (
+      currentProtocolStepIndex >=
+      currentProtocol.steps.length
+    ) {
+      renderProtocolSummary();
+      return;
+    }
+
+    renderProtocolStep();
+  }, PROTOCOL_ANSWER_DELAY_MS);
+}
+
+// ─── Σύνοψη πρωτοκόλλου ───────────────────────────────────────────
+
+function renderProtocolSummary() {
+  els.title.textContent = currentProtocol
+    ? currentProtocol.title
+    : "Σύνοψη συνομιλίας";
+
+  const frag = document.createDocumentFragment();
+
+  frag.appendChild(
+    h(
+      "h2",
+      "protocol-summary-title",
+      "Ολοκληρώθηκε η συνομιλία"
+    )
+  );
+
+  frag.appendChild(
+    h(
+      "p",
+      "protocol-summary-intro",
+      "Αυτές είναι οι απαντήσεις που δόθηκαν."
+    )
+  );
+
+  if (currentProtocol && currentProtocol.disclaimer) {
+    const discBox = h("div", "protocol-disclaimer-box");
+    discBox.appendChild(
+      h(
+        "p",
+        "protocol-disclaimer-text",
+        currentProtocol.disclaimer
+      )
+    );
+    frag.appendChild(discBox);
+  }
+
+  const list = h("div", "protocol-summary-list");
+
+  currentProtocolAnswers.forEach((item, index) => {
+    if (!item) return;
+
+    const row = h("article", "protocol-summary-row");
+
+    row.append(
+      h("span", "protocol-summary-step", "Βήμα " + (index + 1)),
+      h("p", "protocol-summary-question", item.question),
+      h("p", "protocol-summary-answer", item.answer)
+    );
+
+    list.appendChild(row);
+  });
+
+  frag.appendChild(list);
+
+  const actions = h("div", "protocol-summary-actions");
+
+  const save = h("button", "btn-primary", "Αποθήκευση στο Ιστορικό");
+  save.type = "button";
+  save.addEventListener("click", saveProtocolToHistory);
+
+  const newConversation = h("button", "btn-secondary", "Νέα συνομιλία");
+  newConversation.type = "button";
+  newConversation.addEventListener("click", () => {
+    currentProtocolStepIndex = 0;
+    currentProtocolAnswers = [];
+    protocolAnswerLocked = false;
+    protocolSelectedAnswer = "";
+    renderProtocol(currentProtocolId);
+  });
+
+  const home = h("button", "btn-secondary", "Αρχική");
+  home.type = "button";
+  home.addEventListener("click", () => navigateTo(VIEWS.HOME));
+
+  actions.append(save, newConversation, home);
+  frag.appendChild(actions);
+
+  clear(els.content);
+  els.content.appendChild(frag);
+}
+
+// ─── Αποθήκευση πρωτοκόλλου στο Ιστορικό ──────────────────────────
+
+function saveProtocolToHistory() {
+  if (!currentProtocol || !currentProtocol.id) return;
+
+  const entries = getProtocolHistory();
+
+  const record = {
+    id:
+      "protocol-" +
+      Date.now() +
+      "-" +
+      Math.random().toString(36).slice(2, 8),
+
+    phrase: currentProtocol.title || "Δομημένη συνομιλία",
+
+    response: currentProtocolAnswers
+      .filter(Boolean)
+      .map((item) => item.question + ": " + item.answer)
+      .join("\n"),
+
+    responseType: "protocol",
+
+    protocolId: currentProtocol.id,
+
+    protocolTitle: currentProtocol.title || "",
+
+    steps: currentProtocolAnswers
+      .filter(Boolean)
+      .map((item) => ({
+        question: item.question,
+        answer: item.answer
+      })),
+
+    timestamp: Date.now()
+  };
+
+  entries.push(record);
+
+  try {
+    localStorage.setItem(
+      PROTOCOL_HISTORY_KEY,
+      JSON.stringify(entries)
+    );
+
+    showToast("Η συνομιλία αποθηκεύτηκε στο Ιστορικό.");
+  } catch (error) {
+    showToast("Δεν ήταν δυνατή η αποθήκευση.");
+  }
+}
+
+// ─── Ιστορικό πρωτοκόλλων ─────────────────────────────────────────
+
+function getProtocolHistory() {
+  try {
+    const raw = localStorage.getItem(PROTOCOL_HISTORY_KEY);
+
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
 // ─── Διάλογος: Νέα προσωπική κάρτα ────────────────────────────────
 
 function openCustomDialog() {
   els.addText.value = "";
   els.addError.hidden = true;
+
   openDialog(els.addDialog, els.fab);
   els.addText.focus();
 }
 
 function onAddCustomSubmit(event) {
   event.preventDefault();
+
   const result = saveCustomCard(els.addText.value);
 
-  if (!result.ok) {
+  if (!result || result.ok === false) {
     const messages = {
-      "empty": "Γράψε πρώτα μια φράση.",
-      "too-long": "Η φράση είναι πολύ μεγάλη. Το μέγιστο είναι " + CUSTOM_CARD_MAX_LENGTH + " χαρακτήρες.",
-      "storage": "Δεν ήταν δυνατή η αποθήκευση στη συσκευή."
+      empty: "Γράψε πρώτα μια φράση.",
+      "too-long":
+        "Η φράση είναι πολύ μεγάλη. Το μέγιστο είναι " +
+        (typeof CUSTOM_CARD_MAX_LENGTH !== "undefined"
+          ? CUSTOM_CARD_MAX_LENGTH
+          : 300) +
+        " χαρακτήρες.",
+      storage: "Δεν ήταν δυνατή η αποθήκευση στη συσκευή."
     };
-    els.addError.textContent = messages[result.reason] || messages.storage;
+
+    els.addError.textContent =
+      messages[result.reason] || messages.storage;
     els.addError.hidden = false;
     els.addText.focus();
     return;
   }
 
   closeDialog(els.addDialog);
+
   render(VIEWS.CUSTOM, false);
   showToast("Η κάρτα αποθηκεύτηκε.");
 }
 
-// ─── Διάλογος: Αγαπημένο ─────────────────────────────────────────
+// ─── Διάλογος: Αγαπημένο ──────────────────────────────────────────
 
 function openFavoriteDialog(favorite) {
   editingFavoriteId = favorite ? favorite.id : null;
 
-  els.favDialogTitle.textContent = favorite ? "Επεξεργασία" : "Νέο Αγαπημένο";
+  els.favDialogTitle.textContent = favorite
+    ? "Επεξεργασία"
+    : "Νέο Αγαπημένο";
+
   els.favLabel.value = favorite ? favorite.label : "";
   els.favValue.value = favorite ? favorite.value : "";
   els.favError.hidden = true;
 
-  const activeTags = favorite ? favorite.tags : [];
-  els.favTags.querySelectorAll("button").forEach((btn) => {
+  const activeTags = favorite ? favorite.tags || [] : [];
+
+  const tagButtons = els.favTags.querySelectorAll("button");
+
+  tagButtons.forEach((btn) => {
     const tagId = btn.dataset.tagId;
     const active = activeTags.indexOf(tagId) !== -1;
+
     btn.classList.toggle("tag-btn-active", active);
     btn.setAttribute("aria-pressed", active ? "true" : "false");
   });
@@ -1380,6 +2723,7 @@ function openFavoriteDialog(favorite) {
 function onFavTagToggle(event) {
   const btn = event.currentTarget;
   const active = btn.classList.toggle("tag-btn-active");
+
   btn.setAttribute("aria-pressed", active ? "true" : "false");
 }
 
@@ -1388,7 +2732,10 @@ function onFavSubmit(event) {
 
   const label = els.favLabel.value;
   const value = els.favValue.value;
-  const tags = Array.from(els.favTags.querySelectorAll("button"))
+
+  const tags = Array.from(
+    els.favTags.querySelectorAll("button")
+  )
     .filter((btn) => btn.classList.contains("tag-btn-active"))
     .map((btn) => btn.dataset.tagId);
 
@@ -1396,37 +2743,46 @@ function onFavSubmit(event) {
     ? updateFavorite(editingFavoriteId, label, value, tags)
     : saveFavorite(label, value, tags);
 
-  if (!result.ok) {
+  if (!result || result.ok === false) {
     const messages = {
       "label-empty": "Δώσε έναν σύντομο τίτλο.",
       "value-empty": "Γράψε το περιεχόμενο.",
       "label-too-long": "Ο τίτλος είναι πολύ μεγάλος.",
       "value-too-long": "Το περιεχόμενο είναι πολύ μεγάλο.",
-      "storage": "Δεν ήταν δυνατή η αποθήκευση."
+      storage: "Δεν ήταν δυνατή η αποθήκευση."
     };
-    els.favError.textContent = messages[result.reason] || messages.storage;
+
+    els.favError.textContent =
+      messages[result.reason] || messages.storage;
     els.favError.hidden = false;
     return;
   }
 
   const wasEditing = editingFavoriteId !== null;
+
   closeDialog(els.favDialog);
   editingFavoriteId = null;
-  // Αν αποθηκεύτηκε από λίστα φράσεων, μένουμε εκεί (δεν μεταφέρουμε τον χρήστη)
-  if (currentView === VIEWS.FAVORITES) render(VIEWS.FAVORITES, false);
+
+  if (currentView === VIEWS.FAVORITES) {
+    render(VIEWS.FAVORITES, false);
+  }
+
   showToast(wasEditing ? "Ενημερώθηκε." : "Αποθηκεύτηκε στα Αγαπημένα.");
 }
 
 function quickSaveFavorite(text, opener) {
   editingFavoriteId = null;
+
   els.favDialogTitle.textContent = "Αποθήκευση στα Αγαπημένα";
   els.favLabel.value = "";
   els.favValue.value = text;
   els.favError.hidden = true;
+
   els.favTags.querySelectorAll("button").forEach((btn) => {
     btn.classList.remove("tag-btn-active");
     btn.setAttribute("aria-pressed", "false");
   });
+
   openDialog(els.favDialog, opener);
   els.favLabel.focus();
 }
@@ -1435,58 +2791,111 @@ function quickSaveFavorite(text, opener) {
 
 function askDelete(type, id, text, opener) {
   pendingDelete = { type: type, id: id, text: text };
-  els.confirmText.textContent = text;
+
+  els.confirmTitle.textContent = "Διαγραφή;";
+  els.confirmText.textContent = text || "";
+
+  els.confirmOk.onclick = onConfirmDelete;
+
   openDialog(els.confirmDialog, opener);
 }
 
 function onConfirmDelete() {
   if (!pendingDelete) return;
 
-  let ok;
+  let ok = false;
+
   if (pendingDelete.type === "custom") {
     ok = deleteCustomCard(pendingDelete.id);
   } else if (pendingDelete.type === "favorite") {
     ok = deleteFavorite(pendingDelete.id);
+  } else if (pendingDelete.type === "protocol") {
+    ok = deleteProtocolFromHistory(pendingDelete.id);
   } else {
     ok = deleteResponse(pendingDelete.id);
   }
 
-  const view = pendingDelete.type === "custom" ? VIEWS.CUSTOM : VIEWS.FAVORITES;
+  const wasProtocol = pendingDelete.type === "protocol";
+  const wasCustom = pendingDelete.type === "custom";
+
+  const view = wasCustom ? VIEWS.CUSTOM : VIEWS.FAVORITES;
+
   pendingDelete = null;
   closeDialog(els.confirmDialog);
   dialogOpener = null;
-  render(view, true);
+
+  if (wasProtocol) {
+    renderFavorites();
+  } else {
+    render(view, true);
+  }
+
   showToast(ok ? "Διαγράφηκε." : "Δεν ήταν δυνατή η διαγραφή.");
+}
+
+// ─── Διαγραφή από ιστορικό πρωτοκόλλων ────────────────────────────
+
+function deleteProtocolFromHistory(id) {
+  const entries = getProtocolHistory();
+  const filtered = entries.filter((item) => item.id !== id);
+
+  if (filtered.length === entries.length) return false;
+
+  try {
+    localStorage.setItem(
+      PROTOCOL_HISTORY_KEY,
+      JSON.stringify(filtered)
+    );
+
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 // ─── Εκκίνηση ─────────────────────────────────────────────────────
 
 function init() {
+  // Content
   els.content = document.getElementById("content");
   els.title = document.getElementById("screen-title");
   els.back = document.getElementById("back-btn");
   els.fab = document.getElementById("add-custom-btn");
   els.toast = document.getElementById("toast");
+
+  // Header
   els.headerLogo = document.getElementById("header-logo");
   els.headerSubtitle = document.getElementById("header-subtitle");
   els.header = document.querySelector("header");
   els.tabbarEl = document.querySelector(".tabbar");
 
+  // Print
   els.printArea = document.getElementById("print-area");
 
+  // Fullscreen
   els.fullscreen = document.getElementById("fullscreen");
   els.fullscreenLabel = document.getElementById("fullscreen-label");
   els.fullscreenText = document.getElementById("fullscreen-text");
   els.fullscreenClose = document.getElementById("fullscreen-close");
 
+  // Response fullscreen
   els.responseFullscreen = document.getElementById("response-fullscreen");
-  els.responseFullscreenPhrase = document.getElementById("response-fullscreen-phrase");
-  els.responseFullscreenText = document.getElementById("response-fullscreen-text");
-  els.responseFullscreenUnit = document.getElementById("response-fullscreen-unit");
-  els.responseFullscreenClose = document.getElementById("response-fullscreen-close");
+  els.responseFullscreenPhrase = document.getElementById(
+    "response-fullscreen-phrase"
+  );
+  els.responseFullscreenText = document.getElementById(
+    "response-fullscreen-text"
+  );
+  els.responseFullscreenUnit = document.getElementById(
+    "response-fullscreen-unit"
+  );
+  els.responseFullscreenClose = document.getElementById(
+    "response-fullscreen-close"
+  );
   els.responseSave = document.getElementById("response-save");
   els.responseDone = document.getElementById("response-done");
 
+  // Response dialog
   els.responseDialog = document.getElementById("response-dialog");
   els.responseStage1 = document.getElementById("response-stage-1");
   els.responseStage2 = document.getElementById("response-stage-2");
@@ -1509,15 +2918,19 @@ function init() {
   els.responseYes = document.getElementById("response-yes");
   els.responseNo = document.getElementById("response-no");
 
-  els.responseInputDatetime = document.getElementById("response-input-datetime");
+  els.responseInputDatetime = document.getElementById(
+    "response-input-datetime"
+  );
   els.responseDateInput = document.getElementById("response-date-input");
   els.responseTimeInput = document.getElementById("response-time-input");
 
+  // Add dialog
   els.addDialog = document.getElementById("add-dialog");
   els.addForm = document.getElementById("add-form");
   els.addText = document.getElementById("add-text");
   els.addError = document.getElementById("add-error");
 
+  // Favorite dialog
   els.favDialog = document.getElementById("fav-dialog");
   els.favForm = document.getElementById("fav-form");
   els.favDialogTitle = document.getElementById("fav-dialog-title");
@@ -1526,58 +2939,106 @@ function init() {
   els.favTags = document.getElementById("fav-tags");
   els.favError = document.getElementById("fav-error");
 
+  // Confirm dialog
   els.confirmDialog = document.getElementById("confirm-dialog");
+  els.confirmTitle = document.getElementById("confirm-title");
   els.confirmText = document.getElementById("confirm-text");
-
+els.confirmOk = document.getElementById("confirm-ok");
+els.confirmCancel = document.getElementById("confirm-cancel");
+  // Tabs
   els.tabCards = document.getElementById("tab-cards");
   els.tabFavorites = document.getElementById("tab-favorites");
   els.tabMap = document.getElementById("tab-map");
   els.tabTranscribe = document.getElementById("tab-transcribe");
 
-  TAGS.forEach((tag) => {
-    const btn = h("button", "tag-btn");
-    btn.type = "button";
-    btn.dataset.tagId = tag.id;
-    btn.setAttribute("aria-pressed", "false");
-    btn.append(svgIcon(tag.iconId, "tag-btn-icon"), h("span", null, tag.label));
-    btn.addEventListener("click", onFavTagToggle);
-    els.favTags.appendChild(btn);
-  });
+  // Δημιουργία tag buttons μια φορά
+  if (els.favTags) {
+    clear(els.favTags);
 
+    TAGS.forEach((tag) => {
+      const btn = h("button", "tag-btn");
+      btn.type = "button";
+      btn.dataset.tagId = tag.id;
+      btn.setAttribute("aria-pressed", "false");
+
+      btn.append(
+        svgIcon(tag.iconId, "tag-btn-icon"),
+        h("span", null, tag.label)
+      );
+
+      btn.addEventListener("click", onFavTagToggle);
+      els.favTags.appendChild(btn);
+    });
+  }
+
+  // Navigation
   els.back.addEventListener("click", goBack);
+
   els.fab.addEventListener("click", () => {
-    if (currentView === VIEWS.FAVORITES) openFavoriteDialog(null);
-    else openCustomDialog();
+    if (currentView === VIEWS.FAVORITES) {
+      openFavoriteDialog(null);
+    } else {
+      openCustomDialog();
+    }
   });
 
+  // Custom dialog
   els.addForm.addEventListener("submit", onAddCustomSubmit);
-  document.getElementById("add-cancel")
-    .addEventListener("click", () => closeDialog(els.addDialog));
 
+  const addCancel = document.getElementById("add-cancel");
+  if (addCancel) {
+    addCancel.addEventListener("click", () =>
+      closeDialog(els.addDialog)
+    );
+  }
+
+  // Favorite dialog
   els.favForm.addEventListener("submit", onFavSubmit);
-  document.getElementById("fav-cancel")
-    .addEventListener("click", () => {
+
+  const favCancel = document.getElementById("fav-cancel");
+  if (favCancel) {
+    favCancel.addEventListener("click", () => {
       editingFavoriteId = null;
       closeDialog(els.favDialog);
     });
+  }
 
-  document.getElementById("confirm-cancel")
-    .addEventListener("click", () => closeDialog(els.confirmDialog));
-  document.getElementById("confirm-ok")
-    .addEventListener("click", onConfirmDelete);
+  // Confirm dialog
+  const confirmCancel = document.getElementById("confirm-cancel");
+  if (confirmCancel) {
+    confirmCancel.addEventListener("click", () =>
+      closeDialog(els.confirmDialog)
+    );
+  }
 
+  const confirmOk = document.getElementById("confirm-ok");
+  if (confirmOk) {
+    // Ο πραγματικός handler ορίζεται από askDelete
+    confirmOk.addEventListener("click", () => {
+      // Ο handler έχει ήδη οριστεί μέσω els.confirmOk.onclick
+      // Δεν κάνουμε τίποτα εδώ.
+    });
+  }
+
+  // Fullscreen listeners
   els.fullscreenClose.addEventListener("click", closeFullscreen);
   els.responseFullscreenClose.addEventListener("click", onResponseDone);
   els.responseSave.addEventListener("click", onResponseSave);
   els.responseDone.addEventListener("click", onResponseDone);
 
+  // Response dialog listeners
   els.responseReady.addEventListener("click", onResponseReady);
-  els.responseCancel1.addEventListener("click", () => closeDialog(els.responseDialog));
-  els.responseCancel2.addEventListener("click", () => closeDialog(els.responseDialog));
+  els.responseCancel1.addEventListener("click", () =>
+    closeDialog(els.responseDialog)
+  );
+  els.responseCancel2.addEventListener("click", () =>
+    closeDialog(els.responseDialog)
+  );
   els.responseSubmit.addEventListener("click", onResponseSubmit);
   els.responseYes.addEventListener("click", onResponseYes);
   els.responseNo.addEventListener("click", onResponseNo);
 
+  // Enter στο number input
   els.responseNumberInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -1585,20 +3046,34 @@ function init() {
     }
   });
 
+  // Tabs
   els.tabCards.addEventListener("click", () => switchTab(TABS.CARDS));
-  els.tabFavorites.addEventListener("click", () => switchTab(TABS.FAVORITES));
+  els.tabFavorites.addEventListener("click", () =>
+    switchTab(TABS.FAVORITES)
+  );
   els.tabMap.addEventListener("click", () => switchTab(TABS.MAP));
-  els.tabTranscribe.addEventListener("click", () => switchTab(TABS.TRANSCRIBE));
+  els.tabTranscribe.addEventListener("click", () =>
+    switchTab(TABS.TRANSCRIBE)
+  );
 
+  // Dialog close handlers
   els.addDialog.addEventListener("close", restoreFocusAfterDialog);
   els.favDialog.addEventListener("close", restoreFocusAfterDialog);
   els.confirmDialog.addEventListener("close", restoreFocusAfterDialog);
   els.responseDialog.addEventListener("close", restoreFocusAfterDialog);
 
+  // Back button
   window.addEventListener("popstate", (event) => {
-    if (!els.fullscreen.hidden) closeFullscreen();
-    if (!els.responseFullscreen.hidden) closeResponseFullscreen();
+    if (els.fullscreen && !els.fullscreen.hidden) {
+      closeFullscreen();
+    }
+
+    if (els.responseFullscreen && !els.responseFullscreen.hidden) {
+      closeResponseFullscreen();
+    }
+
     const view = event.state && event.state.view;
+
     render(isKnownView(view) ? view : VIEWS.HOME, true);
   });
 
@@ -1606,4 +3081,6 @@ function init() {
   render(VIEWS.HOME, false);
 }
 
-document.addEventListener("DOMContentLoaded", init); 
+// ─── Εκκίνηση εφαρμογής ───────────────────────────────────────────
+
+document.addEventListener("DOMContentLoaded", init);
