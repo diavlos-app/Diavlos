@@ -5,75 +5,47 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Overpass Test</title>
 <style>
-  body { font-family: system-ui; padding: 16px; line-height: 1.5; font-size: 15px; }
+  body { font-family: system-ui; padding: 16px; line-height: 1.5; }
   pre { background: #f0f0f0; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; font-size: 12px; }
-  .ok { color: green; font-weight: bold; }
-  .err { color: red; font-weight: bold; }
-  button { padding: 14px 24px; font-size: 16px; margin: 12px 0; border-radius: 10px; border: 0; background: #2d6a4f; color: white; font-weight: bold; width: 100%; }
-  button:active { transform: scale(0.97); }
+  button { padding: 14px 20px; font-size: 15px; margin: 6px 0; border-radius: 10px; border: 0; background: #2d6a4f; color: white; font-weight: bold; width: 100%; }
 </style>
 </head>
 <body>
-
-<h1>Overpass Test</h1>
-<button id="run">Δοκίμασε ΟΛΑ τα mirrors</button>
-<pre id="output">Πάτα το κουμπί...</pre>
+<h1>Test 3 mirrors — μόνο pharmacy</h1>
+<button data-url="https://overpass.kumi.systems/api/interpreter">Kumi</button>
+<button data-url="https://overpass.private.coffee/api/interpreter">private.coffee</button>
+<button data-url="https://overpass-api.de/api/interpreter">overpass-api.de</button>
+<pre id="output">Πάτα ένα κουμπί...</pre>
 
 <script>
 const out = document.getElementById("output");
 
-const ENDPOINTS = [
-  "https://overpass.kumi.systems/api/interpreter",
-  "https://overpass.private.coffee/api/interpreter",
-  "https://overpass.openstreetmap.ru/api/interpreter",
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.osm.ch/api/interpreter"
-];
-
-document.getElementById("run").addEventListener("click", async () => {
-  out.textContent = "";
-  const lat = 37.9838;
-  const lng = 23.7275;
-  const query = `[out:json][timeout:25];(nwr[amenity~"^(pharmacy|hospital|cafe)$"](around:1500,${lat},${lng}););out center 50;`;
-
-  for (const url of ENDPOINTS) {
-    const short = url.replace("https://", "").replace("/api/interpreter", "");
-    out.textContent += "━━━ " + short + " ━━━\n";
-    out.textContent += "Δοκιμή...\n";
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
-
+document.querySelectorAll("button").forEach(b => {
+  b.addEventListener("click", async () => {
+    const url = b.dataset.url;
+    out.textContent = "Δοκιμή " + url + "...\n";
+    const query = `[out:json][timeout:25];node[amenity=pharmacy](around:500,37.9838,23.7275);out 20;`;
     try {
       const start = Date.now();
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: "data=" + encodeURIComponent(query),
-        signal: controller.signal
+        body: "data=" + encodeURIComponent(query)
       });
-      clearTimeout(timeoutId);
-      const elapsed = Date.now() - start;
-
-      out.textContent += "HTTP " + res.status + " (" + elapsed + "ms)\n";
-
+      out.textContent += "HTTP " + res.status + " (" + (Date.now()-start) + "ms)\n";
       const text = await res.text();
-      if (text.trim().startsWith("<")) {
-        out.textContent += "❌ HTML response\n\n";
-        continue;
+      out.textContent += "Length: " + text.length + "\n";
+      out.textContent += text.slice(0, 200);
+      if (text.includes('"elements"')) {
+        const data = JSON.parse(text);
+        out.textContent += "\n✅ Elements: " + data.elements.length;
+      } else {
+        out.textContent += "\n❌ No elements field";
       }
-
-      const data = JSON.parse(text);
-      const count = data.elements ? data.elements.length : 0;
-      out.textContent += "✅ " + count + " elements\n\n";
     } catch (err) {
-      clearTimeout(timeoutId);
-      out.textContent += "❌ " + (err.name === "AbortError" ? "Timeout 25s" : err.message) + "\n\n";
+      out.textContent += "❌ " + err.message;
     }
-    // scroll to bottom
-    out.scrollTop = out.scrollHeight;
-  }
-  out.textContent += "ΤΕΛΟΣ";
+  });
 });
 </script>
 </body>
