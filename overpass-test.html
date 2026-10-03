@@ -9,68 +9,71 @@
   pre { background: #f0f0f0; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; font-size: 12px; }
   .ok { color: green; font-weight: bold; }
   .err { color: red; font-weight: bold; }
-  button { padding: 14px 24px; font-size: 16px; margin: 12px 0; border-radius: 10px; border: 0; background: #2d6a4f; color: white; font-weight: bold; }
+  button { padding: 14px 24px; font-size: 16px; margin: 12px 0; border-radius: 10px; border: 0; background: #2d6a4f; color: white; font-weight: bold; width: 100%; }
   button:active { transform: scale(0.97); }
 </style>
 </head>
 <body>
 
 <h1>Overpass Test</h1>
-
-<p>Cross-Origin Isolated: <span id="coi-status" class="ok">...</span></p>
-<p>User Agent: <span id="ua"></span></p>
-
-<button id="run">Δοκίμασε Overpass fetch</button>
-
+<button id="run">Δοκίμασε ΟΛΑ τα mirrors</button>
 <pre id="output">Πάτα το κουμπί...</pre>
 
 <script>
 const out = document.getElementById("output");
-const coiEl = document.getElementById("coi-status");
 
-coiEl.textContent = self.crossOriginIsolated ? "✅ ΝΑΙ" : "❌ ΟΧΙ";
-coiEl.className = self.crossOriginIsolated ? "ok" : "err";
-document.getElementById("ua").textContent = navigator.userAgent;
+const ENDPOINTS = [
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+  "https://overpass.openstreetmap.ru/api/interpreter",
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.osm.ch/api/interpreter"
+];
 
 document.getElementById("run").addEventListener("click", async () => {
-  out.textContent = "Φόρτωση...\n\n";
-  
+  out.textContent = "";
   const lat = 37.9838;
   const lng = 23.7275;
-  const query = `[out:json][timeout:15];(nwr[amenity~"^(pharmacy|hospital|cafe)$"](around:1500,${lat},${lng}););out center 50;`;
-  
-  out.textContent += "Query:\n" + query + "\n\n";
-  
-  try {
-    out.textContent += "Fetching https://overpass-api.de/api/interpreter ...\n\n";
-    
-    const res = await fetch("https://overpass.kumi.systems/api/interpreter", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "data=" + encodeURIComponent(query)
-    });
-    
-    out.textContent += "HTTP status: " + res.status + "\n";
-    out.textContent += "Content-Type: " + res.headers.get("content-type") + "\n";
-    out.textContent += "Access-Control-Allow-Origin: " + (res.headers.get("access-control-allow-origin") || "—") + "\n\n";
-    
-    const text = await res.text();
-    out.textContent += "Response length: " + text.length + " chars\n\n";
-    out.textContent += "First 300 chars:\n" + text.slice(0, 300) + "\n\n";
-    
-    if (text.trim().startsWith("<")) {
-      out.textContent += "❌ HTML response (server busy or error)";
-      return;
+  const query = `[out:json][timeout:25];(nwr[amenity~"^(pharmacy|hospital|cafe)$"](around:1500,${lat},${lng}););out center 50;`;
+
+  for (const url of ENDPOINTS) {
+    const short = url.replace("https://", "").replace("/api/interpreter", "");
+    out.textContent += "━━━ " + short + " ━━━\n";
+    out.textContent += "Δοκιμή...\n";
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+    try {
+      const start = Date.now();
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "data=" + encodeURIComponent(query),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      const elapsed = Date.now() - start;
+
+      out.textContent += "HTTP " + res.status + " (" + elapsed + "ms)\n";
+
+      const text = await res.text();
+      if (text.trim().startsWith("<")) {
+        out.textContent += "❌ HTML response\n\n";
+        continue;
+      }
+
+      const data = JSON.parse(text);
+      const count = data.elements ? data.elements.length : 0;
+      out.textContent += "✅ " + count + " elements\n\n";
+    } catch (err) {
+      clearTimeout(timeoutId);
+      out.textContent += "❌ " + (err.name === "AbortError" ? "Timeout 25s" : err.message) + "\n\n";
     }
-    
-    const data = JSON.parse(text);
-    out.textContent += "✅ JSON parsed OK\n";
-    out.textContent += "Elements returned: " + (data.elements ? data.elements.length : 0);
-  } catch (err) {
-    out.textContent += "❌ ERROR: " + err.message + "\n\n";
-    out.textContent += "Error name: " + err.name + "\n";
-    out.textContent += "Stack:\n" + (err.stack || "n/a");
+    // scroll to bottom
+    out.scrollTop = out.scrollHeight;
   }
+  out.textContent += "ΤΕΛΟΣ";
 });
 </script>
 </body>
