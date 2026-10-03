@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Δίαυλος — Συντεταγμένες σημείων</title>
+<style>
+  body { font-family: system-ui; padding: 16px; line-height: 1.5; max-width: 720px; margin: 0 auto; }
+  button { padding: 14px 24px; font-size: 16px; margin: 8px 0; border-radius: 10px; border: 0; background: #2d6a4f; color: #fff; font-weight: bold; width: 100%; }
+  button:disabled { opacity: .5; }
+  .info { background: #e8f5e9; padding: 10px; border-radius: 8px; margin: 8px 0; }
+  .row { border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px; margin: 6px 0; }
+  .row.flag { border-color: #c62828; background: #fff5f5; }
+  .row.fail { border-color: #f57c00; background: #fff8ee; }
+  .row small { color: #555; display: block; }
+  textarea { width: 100%; min-height: 220px; font-family: monospace; font-size: 11px; padding: 8px; box-sizing: border-box; }
+  #bar { height: 10px; background: #eee; border-radius: 5px; overflow: hidden; margin: 8px 0; }
+  #bar span { display: block; height: 100%; width: 0; background: #2d6a4f; }
+</style>
+</head>
+<body>
+<h1>Συντεταγμένες σημείων</h1>
+<div class="info">
+  Βρίσκει θέση στον χάρτη για κάθε σημείο από τη διεύθυνσή του (υπηρεσία Nominatim του OpenStreetMap).
+  Χρειάζεται internet και κρατά 2–3 λεπτά. Έλεγξε τις κόκκινες/πορτοκαλί γραμμές πριν κάνεις αντιγραφή.
+</div>
+
+<button id="run">Έναρξη</button>
+<div id="bar"><span></span></div>
+<p id="status"></p>
+<div id="rows"></div>
+
+<h2>Αποτέλεσμα</h2>
+<p>Πάτα «Αντιγραφή», άνοιξε το αρχείο <b>locations-coords.js</b> στο GitHub και αντικατάστησε ΟΛΟ το περιεχόμενό του.</p>
+<button id="copy" disabled>Αντιγραφή</button>
+<textarea id="out" readonly></textarea>
+
+<script src="../data.js"></script>
+<script src="../locations-extra.js"></script>
+<script src="../locations-coords.js"></script>
+<script>
+"use strict";
+
+const FLAG_DISTANCE_M = 300;   // σημεία που μετακινούνται πάνω από αυτό σημαίνονται ως «ύποπτα»
+const DELAY_MS = 1100;         // όριο Nominatim: 1 αίτημα/δευτερόλεπτο
+
+const $ = (id) => document.getElementById(id);
+const accepted = {};            // id -> [lat, lng]
+
+function distanceM(a, b) {
+  const R = 6371000, toRad = (x) => x * Math.PI / 180;
+  const dLat = toRad(b[0] - a[0]), dLng = toRad(b[1] - a[1]);
+  const s = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
+function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+async function search(q) {
+  const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=gr&accept-language=el&q=" +
+              encodeURIComponent(q);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const data = await res.json();
+  return data.length ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), name: data[0].display_name } : null;
+}
+
+function currentCoords(loc) {
+  if (COORD_OVERRIDES[loc.id]) return COORD_OVERRIDES[loc.id];
+  return loc.coords ? [loc.coords.lat, loc.coords.lng] : null;
+}
+
+function addRow(loc, cls, lines, osmLink, acceptCoords) {
+  const row = document.createElement("div");
+  row.className = "row " + cls;
+  const t = document.createElement("b");
+  t.textContent = loc.name;
+  row.appendChild(t);
+  lines.forEach((l) => {
+    const s = document.createElement("small");
+    s.textContent = l;
+    row.appendChild(s);
+  });
+  if (osmLink) {
+    const a = document.createElement("a");
+    a.href = osmLink; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = "Δες στον χάρτη";
+    row.appendChild(a);
+  }
+  if (acceptCoords) {
+    const btn = document.createElement("button");
+    btn.textContent = "Χρήση αυτής της θέσης";
+    btn.addEventListener("click", () => {
+      accepted[loc.id] = acceptCoords;
+      btn.textContent = "Θα αλλάξει ✓";
+      btn.disabled = true;
+      buildOutput();
+    });
+    row.appendChild(btn);
+  }
+  $("rows").appendChild(row);
+}
+
+function buildOutput() {
+  const all = Object.assign({}, COORD_OVERRIDES, accepted);
+  const keys = Object.keys(all).sort();
+  const body = keys.map((k) => '  "' + k + '": [' + all[k][0].toFixed(6) + ", " + all[k][1].toFixed(6) + "]").join(",\n");
+  $("out").value =
+    "// Δίαυλος — locations-coords.js\n" +
+    "// Διορθωμένες/νέες συντεταγμένες ανά id σημείου: \"id\": [γεωγρ. πλάτος, γεωγρ. μήκος].\n" +
+    "// Το αρχείο φτιάχνεται από το tools/geocode-locations.html.\n" +
+    "const COORD_OVERRIDES = {\n" + body + "\n};\n";
+  $("copy").disabled = false;
+}
+
+async function run() {
+  $("run").disabled = true;
+  $("rows").textContent = "";
+
+  // Πρώτα τα νέα σημεία (χωρίς συντεταγμένες), μετά έλεγχος των υπαρχόντων
+  const items = [];
+  EXTRA_LOCATIONS.forEach((l) => { if (!currentCoords(l)) items.push({ loc: l, isNew: true }); });
+  MAP_LOCATIONS.forEach((l) => { if (!COORD_OVERRIDES[l.id]) items.push({ loc: l, isNew: false }); });
+
+  let done = 0, newOk = 0, flagged = 0, failed = 0;
+
+  for (const it of items) {
+    const loc = it.loc;
+    const queries = [];
+    if (loc.geocodeQuery) queries.push(loc.geocodeQuery);
+    if (loc.address) queries.push(loc.address);
+    queries.push(loc.name + ", " + loc.city);
+
+    $("status").textContent = (done + 1) + " / " + items.length + " — " + loc.name;
+    let found = null;
+    for (const q of queries) {
+      try {
+        found = await search(q);
+      } catch (err) {
+        found = null;
+      }
+      await sleep(DELAY_MS);
+      if (found) break;
+    }
+
+    const old = currentCoords(loc);
+    if (!found) {
+      if (it.isNew) { failed++; addRow(loc, "fail", ["Δεν βρέθηκε. Βάλε τη θέση χειροκίνητα.", loc.address || ""], null); }
+    } else {
+      const coords = [found.lat, found.lng];
+      const link = "https://www.openstreetmap.org/?mlat=" + found.lat + "&mlon=" + found.lng + "#map=17/" + found.lat + "/" + found.lng;
+      if (it.isNew) {
+        accepted[loc.id] = coords;
+        newOk++;
+        addRow(loc, "", ["Βρέθηκε: " + found.name], link);
+      } else if (old && distanceM(old, coords) > FLAG_DISTANCE_M) {
+        const d = Math.round(distanceM(old, coords));
+        flagged++;
+        addRow(loc, "flag", ["Η τωρινή θέση απέχει " + d + " μ. από το αποτέλεσμα αναζήτησης.", "Βρέθηκε: " + found.name], link, coords);
+        // ΔΕΝ γίνεται αυτόματη αλλαγή — έλεγξε πρώτα στον χάρτη και πάτα το κουμπί αν συμφωνείς
+      }
+    }
+
+    done++;
+    $("bar").firstChild.style.width = Math.round(done / items.length * 100) + "%";
+  }
+
+  $("status").textContent = "Τέλος: " + newOk + " νέα σημεία βρέθηκαν, " + failed + " δεν βρέθηκαν, " +
+                            flagged + " υπάρχοντα με ύποπτη θέση (δες τις κόκκινες γραμμές).";
+  buildOutput();
+  $("run").disabled = false;
+}
+
+$("run").addEventListener("click", run);
+$("copy").addEventListener("click", async () => {
+  const text = $("out").value;
+  try { await navigator.clipboard.writeText(text); $("copy").textContent = "Αντιγράφηκε ✓"; }
+  catch (e) { $("out").select(); document.execCommand("copy"); $("copy").textContent = "Αντιγράφηκε ✓"; }
+});
+</script>
+</body>
+</html>
