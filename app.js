@@ -71,7 +71,7 @@ const OSM_CATEGORIES = {
   }
 };
 
-const OVERPASS_ENDPOINT = "https://z.overpass-api.de/api/interpreter";
+const OVERPASS_ENDPOINT = "https://diavlos-overpass.sinoriakos.workers.dev";
 const OVERPASS_RADIUS_M = 1500;
 const OVERPASS_TIMEOUT_MS = 25000;
 
