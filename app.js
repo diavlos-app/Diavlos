@@ -402,7 +402,11 @@ function structuredConversationSelector() {
     "Δομημένη συνομιλία"
   );
 
+  label.setAttribute("for", "protocol-select");
+
   const select = h("select", "structured-conversation-select");
+
+  select.id = "protocol-select";
 
   select.setAttribute("aria-label", "Επιλογή δομημένης συνομιλίας");
 
