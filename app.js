@@ -12,6 +12,8 @@ const VIEWS = {
   EMERGENCY_CALL: "emergency-call",
   EMERGENCY_FIELD: "emergency-field",
   PROTOCOL: "protocol",
+  COMPOSER: "composer",
+  COMPOSER_DETAIL: "composer-detail",
   CUSTOM: "custom",
   FAVORITES: "favorites",
   MAP: "map",
@@ -72,8 +74,6 @@ const PROTOCOL_DEFINITIONS = {
   }
 };
 
-const PROTOCOL_ANSWER_DELAY_MS = 900;
-
 const PROTOCOL_HISTORY_KEY = "diavlos_v1_protocol_history";
 const TRANSCRIBE_CONSENT_KEY = "diavlos_v1_transcribe_consent";
 
@@ -102,6 +102,14 @@ let currentProtocolStepIndex = 0;
 let currentProtocolAnswers = [];
 let protocolSelectedAnswer = "";
 let protocolAnswerLocked = false;
+
+// Composer state (Φτιάξε το αίτημά σου)
+let currentComposerCategoryId = null;
+let currentComposerPurposeId = null;
+let composerSelectedPrefix = "";
+
+// Protocol fullscreen mode
+let fullscreenProtocolMode = false;
 
 // Map state
 let mapInstance = null;
@@ -156,7 +164,9 @@ function isKnownView(view) {
     view === VIEWS.HOME ||
     view === VIEWS.CUSTOM ||
     view === VIEWS.FAVORITES ||
-    view === VIEWS.PROTOCOL
+    view === VIEWS.PROTOCOL ||
+    view === VIEWS.COMPOSER ||
+    view === VIEWS.COMPOSER_DETAIL
   ) {
     return true;
   }
@@ -317,6 +327,8 @@ function render(view, moveFocus) {
     currentTab = TABS.TRANSCRIBE;
   } else if (
     view === VIEWS.HOME ||
+    view === VIEWS.COMPOSER ||
+    view === VIEWS.COMPOSER_DETAIL ||
     CARD_CATEGORIES.some((c) => c.id === view)
   ) {
     currentTab = TABS.CARDS;
@@ -332,6 +344,10 @@ function render(view, moveFocus) {
     renderEmergencyField();
   } else if (view === VIEWS.PROTOCOL) {
     renderProtocol(currentProtocolId);
+  } else if (view === VIEWS.COMPOSER) {
+    renderComposerCategory();
+  } else if (view === VIEWS.COMPOSER_DETAIL) {
+    renderComposerDetail();
   } else if (view === VIEWS.CUSTOM) {
     renderCustom();
   } else if (view === VIEWS.FAVORITES) {
@@ -990,14 +1006,68 @@ function renderPhraseList(view) {
 
   els.title.textContent = cat.name;
 
+  const frag = document.createDocumentFragment();
+
+  if (Array.isArray(cat.purposes) && cat.purposes.length > 0) {
+    frag.appendChild(composerEntryButton(cat.id));
+  }
+
+  if (Array.isArray(cat.protocols) && cat.protocols.length > 0) {
+    cat.protocols.forEach((protocolId) => {
+      const btn = protocolEntryButton(protocolId);
+      if (btn) frag.appendChild(btn);
+    });
+  }
+
   const list = h("div", "card-list");
 
   (cat.cards || []).forEach((card) => {
     list.appendChild(phraseCard(card, false, true, cat));
   });
 
+  frag.appendChild(list);
+
   clear(els.content);
-  els.content.appendChild(list);
+  els.content.appendChild(frag);
+}
+
+function composerEntryButton(categoryId) {
+  const wrap = h("div", "composer-entry-wrap");
+
+  const btn = h("button", "composer-entry-btn");
+  btn.type = "button";
+  btn.append(
+    svgIcon("icon-edit", "composer-entry-icon"),
+    h("span", null, "Φτιάξε το αίτημά σου")
+  );
+
+  btn.addEventListener("click", () => {
+    openComposer(categoryId);
+  });
+
+  wrap.appendChild(btn);
+  return wrap;
+}
+
+function protocolEntryButton(protocolId) {
+  const def = PROTOCOL_DEFINITIONS[protocolId];
+  if (!def) return null;
+
+  const wrap = h("div", "protocol-entry-wrap");
+
+  const btn = h("button", "protocol-entry-btn");
+  btn.type = "button";
+  btn.append(
+    svgIcon(def.icon || "icon-services", "protocol-entry-icon"),
+    h("span", null, "Δομημένη συνομιλία: " + def.title)
+  );
+
+  btn.addEventListener("click", () => {
+    openProtocol(protocolId);
+  });
+
+  wrap.appendChild(btn);
+  return wrap;
 }
 
 // ─── «Οι Κάρτες μου» ──────────────────────────────────────────────
@@ -1521,6 +1591,9 @@ function phraseCard(card, isCustom, showFavorite, category) {
 // ─── Fullscreen (φράσεις / αγαπημένα) ─────────────────────────────
 
 function openFullscreen(text, label) {
+  fullscreenProtocolMode = false;
+  els.fullscreenClose.textContent = "Κλείσιμο";
+
   els.fullscreenLabel.textContent = label || "";
   els.fullscreenLabel.hidden = !label;
   els.fullscreenText.textContent = text;
@@ -1533,9 +1606,17 @@ function openFullscreen(text, label) {
 }
 
 function closeFullscreen() {
+  const wasProtocolAnswer = fullscreenProtocolMode;
+  fullscreenProtocolMode = false;
+  els.fullscreenClose.textContent = "Κλείσιμο";
+
   els.fullscreen.hidden = true;
   setBackgroundInert(false);
   document.removeEventListener("keydown", onFullscreenKeydown);
+
+  if (wasProtocolAnswer) {
+    advanceProtocol();
+  }
 }
 
 function onFullscreenKeydown(event) {
@@ -2483,24 +2564,34 @@ function completeProtocolStep(answer) {
     answer: cleanAnswer
   };
 
-  openFullscreen(cleanAnswer, "Απάντηση");
+  showProtocolAnswer(cleanAnswer);
+}
 
-  setTimeout(() => {
-    closeFullscreen();
+function showProtocolAnswer(answer) {
+  fullscreenProtocolMode = true;
+  els.fullscreenClose.textContent = "Συνέχεια";
 
-    currentProtocolStepIndex += 1;
-    protocolAnswerLocked = false;
+  els.fullscreenLabel.textContent = "Η απάντησή σας";
+  els.fullscreenLabel.hidden = false;
+  els.fullscreenText.textContent = answer;
 
-    if (
-      currentProtocolStepIndex >=
-      currentProtocol.steps.length
-    ) {
-      renderProtocolSummary();
-      return;
-    }
+  els.fullscreen.hidden = false;
+  setBackgroundInert(true);
 
-    renderProtocolStep();
-  }, PROTOCOL_ANSWER_DELAY_MS);
+  document.addEventListener("keydown", onFullscreenKeydown);
+  els.fullscreenClose.focus();
+}
+
+function advanceProtocol() {
+  currentProtocolStepIndex += 1;
+  protocolAnswerLocked = false;
+
+  if (currentProtocolStepIndex >= currentProtocol.steps.length) {
+    renderProtocolSummary();
+    return;
+  }
+
+  renderProtocolStep();
 }
 
 // ─── Σύνοψη πρωτοκόλλου ───────────────────────────────────────────
@@ -2651,6 +2742,183 @@ function getProtocolHistory() {
     return [];
   }
 }
+
+// ─── Φτιάξε το αίτημά σου (Composer) ─────────────────────────────
+
+function openComposer(categoryId) {
+  currentComposerCategoryId = categoryId;
+  currentComposerPurposeId = null;
+  composerSelectedPrefix = "";
+
+  history.pushState(
+    { view: VIEWS.COMPOSER, categoryId: categoryId },
+    ""
+  );
+
+  render(VIEWS.COMPOSER, true);
+}
+
+function openComposerDetail(purposeId) {
+  currentComposerPurposeId = purposeId;
+  composerSelectedPrefix = "";
+
+  history.pushState(
+    {
+      view: VIEWS.COMPOSER_DETAIL,
+      categoryId: currentComposerCategoryId,
+      purposeId: purposeId
+    },
+    ""
+  );
+
+  render(VIEWS.COMPOSER_DETAIL, true);
+}
+
+function renderComposerCategory() {
+  const cat = CARD_CATEGORIES.find((c) => c.id === currentComposerCategoryId);
+
+  if (!cat || !Array.isArray(cat.purposes) || cat.purposes.length === 0) {
+    navigateTo(VIEWS.HOME);
+    return;
+  }
+
+  els.title.textContent = "Φτιάξε το αίτημά σου";
+
+  const intro = h(
+    "p",
+    "composer-intro",
+    "Διάλεξε τι θέλεις να κάνεις. Θα φτιάξουμε μαζί την κάρτα που θα δείξεις."
+  );
+
+  const list = h("div", "composer-purpose-list");
+
+  cat.purposes.forEach((purpose) => {
+    const btn = h("button", "composer-purpose-btn");
+    btn.type = "button";
+    btn.appendChild(h("span", "composer-purpose-label", purpose.label));
+
+    btn.addEventListener("click", () => {
+      openComposerDetail(purpose.id);
+    });
+
+    list.appendChild(btn);
+  });
+
+  clear(els.content);
+  els.content.append(intro, list);
+}
+
+function renderComposerDetail() {
+  const cat = CARD_CATEGORIES.find((c) => c.id === currentComposerCategoryId);
+
+  if (!cat || !Array.isArray(cat.purposes)) {
+    navigateTo(VIEWS.HOME);
+    return;
+  }
+
+  const purpose = cat.purposes.find((p) => p.id === currentComposerPurposeId);
+
+  if (!purpose) {
+    render(VIEWS.COMPOSER, true);
+    return;
+  }
+
+  els.title.textContent = purpose.label;
+
+  const frag = document.createDocumentFragment();
+
+  frag.appendChild(
+    h("p", "composer-prompt", purpose.prompt || "Γράψε τι θέλεις:")
+  );
+
+  if (Array.isArray(purpose.prefixes) && purpose.prefixes.length > 0) {
+    const chips = h("div", "composer-chips");
+    chips.setAttribute("role", "group");
+    chips.setAttribute("aria-label", "Γρήγορες επιλογές");
+
+    purpose.prefixes.forEach((prefix) => {
+      const chip = h("button", "composer-chip", prefix);
+      chip.type = "button";
+      chip.setAttribute("aria-pressed", "false");
+
+      chip.addEventListener("click", () => {
+        const wasActive = chip.classList.contains("composer-chip-active");
+
+        chips.querySelectorAll(".composer-chip").forEach((other) => {
+          other.classList.remove("composer-chip-active");
+          other.setAttribute("aria-pressed", "false");
+        });
+
+        if (!wasActive) {
+          chip.classList.add("composer-chip-active");
+          chip.setAttribute("aria-pressed", "true");
+          composerSelectedPrefix = prefix;
+        } else {
+          composerSelectedPrefix = "";
+        }
+      });
+
+      chips.appendChild(chip);
+    });
+
+    frag.appendChild(chips);
+  }
+
+  const textarea = h("textarea", "composer-textarea");
+  textarea.rows = 3;
+  textarea.maxLength = 300;
+  textarea.placeholder = purpose.placeholder || "";
+  textarea.setAttribute("aria-label", purpose.prompt || "Λεπτομέρειες");
+
+  frag.appendChild(textarea);
+
+  const error = h("p", "form-error", "");
+  error.hidden = true;
+  frag.appendChild(error);
+
+  const showBtn = h("button", "composer-show-btn", "ΕΜΦΑΝΙΣΗ");
+  showBtn.type = "button";
+
+  showBtn.addEventListener("click", () => {
+    onComposerShow(purpose, textarea, error);
+  });
+
+  frag.appendChild(showBtn);
+
+  clear(els.content);
+  els.content.appendChild(frag);
+
+  textarea.focus();
+}
+
+function onComposerShow(purpose, textarea, error) {
+  const typedText = (textarea.value || "").trim();
+
+  let detail = "";
+
+  if (composerSelectedPrefix && typedText) {
+    detail = composerSelectedPrefix + " (" + typedText + ")";
+  } else if (composerSelectedPrefix) {
+    detail = composerSelectedPrefix;
+  } else if (typedText) {
+    detail = typedText;
+  }
+
+  if (!detail) {
+    error.textContent = "Γράψε τι θέλεις ή διάλεξε από τις επιλογές.";
+    error.hidden = false;
+    textarea.focus();
+    return;
+  }
+
+  error.hidden = true;
+
+  const prefixClean = String(purpose.finalPrefix || "").replace(/\n+/g, " ");
+  const composed = prefixClean + " " + detail;
+
+  openFullscreen(composed, purpose.label);
+}
+
 // ─── Διάλογος: Νέα προσωπική κάρτα ────────────────────────────────
 
 function openCustomDialog() {
@@ -3072,7 +3340,17 @@ els.confirmCancel = document.getElementById("confirm-cancel");
       closeResponseFullscreen();
     }
 
-    const view = event.state && event.state.view;
+    const state = event.state || {};
+
+    if (state.categoryId !== undefined) {
+      currentComposerCategoryId = state.categoryId || null;
+    }
+    if (state.purposeId !== undefined) {
+      currentComposerPurposeId = state.purposeId || null;
+    }
+    composerSelectedPrefix = "";
+
+    const view = state.view;
 
     render(isKnownView(view) ? view : VIEWS.HOME, true);
   });
