@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#2d6a4f" />
-  <meta name="description" content="Δίαυλος - Δωρεάν προσβάσιμη εφαρμογή επικοινωνίας (PWA) για κωφούς και βαρήκοους. Μεταγραφή ομιλίας σε κείμενο, κάρτες φράσεων, SOS 112 και προσβάσιμος χάρτης, με απόλυτο σεβασμό στα προσωπικά δεδομένα. Η μεταγραφή στέλνει στιγμιαία τον ήχο στο Cloudflare, χωρίς αποθήκευση .">
+  <meta name="description" content="Δίαυλος - Δωρεάν προσβάσιμη εφαρμογή επικοινωνίας (PWA) για κωφούς και βαρήκοους. Μεταγραφή ομιλίας σε κείμενο, κάρτες φράσεων, SOS 112 και προσβάσιμος χάρτης, με απόλυτο σεβασμό στα προσωπικά δεδομένα. Η μεταγραφή στέλνει στιγμιαία τον ήχο στο Cloudflare, χωρίς αποθήκευση.">
 
   <link rel="apple-touch-icon" href="icon-192.png" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -187,11 +187,11 @@
 
   <header>
     <div class="header-logo" id="header-logo" aria-hidden="true">
-      <svg viewBox="0 0 100 100"><use href="#logo-diavlos"/></svg>
+      <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#logo-diavlos"/></svg>
     </div>
 
     <button id="back-btn" type="button" hidden aria-label="Πίσω">
-      <svg class="icon"><use href="#icon-back"/></svg>
+      <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-back"/></svg>
     </button>
 
     <div class="header-titles">
@@ -209,7 +209,7 @@
   </main>
 
   <button id="add-custom-btn" type="button" hidden aria-label="Προσθήκη">
-    <svg class="icon"><use href="#icon-plus"/></svg>
+    <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"/></svg>
   </button>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
@@ -251,11 +251,11 @@
       <div id="response-input-yesno" class="response-input-block" hidden>
         <div class="response-yesno-grid">
           <button type="button" id="response-yes" class="response-yesno-btn response-yesno-yes">
-            <svg class="response-yesno-icon"><use href="#icon-check"/></svg>
+            <svg class="response-yesno-icon" aria-hidden="true" focusable="false"><use href="#icon-check"/></svg>
             <span>ΝΑΙ</span>
           </button>
           <button type="button" id="response-no" class="response-yesno-btn response-yesno-no">
-            <svg class="response-yesno-icon"><use href="#icon-close"/></svg>
+            <svg class="response-yesno-icon" aria-hidden="true" focusable="false"><use href="#icon-close"/></svg>
             <span>ΟΧΙ</span>
           </button>
         </div>
@@ -284,7 +284,7 @@
     <p id="response-fullscreen-unit" class="response-fullscreen-unit" hidden></p>
     <div class="response-fullscreen-actions">
       <button type="button" id="response-save" class="btn-primary">
-        <svg class="btn-icon"><use href="#icon-save"/></svg>
+        <svg class="btn-icon" aria-hidden="true" focusable="false"><use href="#icon-save"/></svg>
         Αποθήκευση
       </button>
       <button type="button" id="response-done" class="btn-secondary">Τέλος</button>
@@ -337,19 +337,19 @@
 
   <nav class="tabbar" aria-label="Κύρια πλοήγηση">
     <button id="tab-cards" type="button" class="tab active" aria-current="page">
-      <svg class="tab-icon"><use href="#icon-cards"/></svg>
+      <svg class="tab-icon" aria-hidden="true" focusable="false"><use href="#icon-cards"/></svg>
       Κάρτες
     </button>
     <button id="tab-favorites" type="button" class="tab">
-      <svg class="tab-icon"><use href="#icon-favorites"/></svg>
+      <svg class="tab-icon" aria-hidden="true" focusable="false"><use href="#icon-favorites"/></svg>
       Αγαπημένα
     </button>
     <button id="tab-map" type="button" class="tab">
-      <svg class="tab-icon"><use href="#icon-map"/></svg>
+      <svg class="tab-icon" aria-hidden="true" focusable="false"><use href="#icon-map"/></svg>
       Χάρτης
     </button>
     <button id="tab-transcribe" type="button" class="tab">
-      <svg class="tab-icon"><use href="#icon-transcribe"/></svg>
+      <svg class="tab-icon" aria-hidden="true" focusable="false"><use href="#icon-transcribe"/></svg>
       Μεταγραφή
     </button>
   </nav>
