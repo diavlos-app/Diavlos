@@ -1262,6 +1262,12 @@ dialog input[type="text"] { resize: none; font-size: 1.1rem; }
   font-weight: 600;
 }
 
+.map-popup-address {
+  margin: var(--sp-1) 0 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 .map-popup-note {
   font-size: 0.8rem;
   line-height: 1.4;
@@ -1488,33 +1494,6 @@ dialog input[type="text"] { resize: none; font-size: 1.1rem; }
 
   .print-footer p { margin: 2px 0; }
 }
-/* ─── Διεύθυνση σε popup + Υπηρεσίες από απόσταση ───────────── */
-.map-popup-address { margin: var(--sp-1) 0 0 0; font-size: 0.85rem; color: var(--text-muted); }
-.remote-section { margin-top: var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-3); }
-.remote-title { margin: 0; font-size: 1.25rem; }
-.remote-intro { margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.4; }
-.remote-card {
-  padding: var(--sp-4);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-.remote-card-title { margin: 0; font-size: 1.05rem; }
-.remote-card-text, .remote-card-how, .remote-card-hours { margin: 0; font-size: 0.95rem; line-height: 1.4; }
-.remote-card-hours { color: var(--text-muted); font-size: 0.85rem; }
-.remote-link {
-  align-self: flex-start;
-  padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--r-full);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-weight: 700;
-  text-decoration: none;
-}
-
 /* ─── Reduced motion ──────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -2142,3 +2121,187 @@ dialog.consent-dialog { width: min(94vw, 520px); }
 }
 .consent-dialog .dialog-actions { flex-direction: column-reverse; }
 .consent-dialog .dialog-actions button { min-height: 52px; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   Φτιάξε το αίτημά σου (Composer)
+   ═══════════════════════════════════════════════════════════════ */
+
+.composer-entry-wrap,
+.protocol-entry-wrap {
+  margin-bottom: var(--sp-3);
+}
+
+.composer-entry-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+  border-radius: var(--r-lg);
+  font-family: var(--font);
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 68px;
+  letter-spacing: 0.02em;
+}
+
+.composer-entry-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.protocol-entry-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  border-radius: var(--r-lg);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 56px;
+}
+
+.protocol-entry-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.composer-intro {
+  margin: 0 0 var(--sp-4) 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.composer-purpose-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.composer-purpose-btn {
+  width: 100%;
+  padding: var(--sp-5) var(--sp-5);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-left: 6px solid var(--accent);
+  border-radius: var(--r-lg);
+  font-family: var(--font);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  min-height: 84px;
+  transition: background 150ms, color 150ms, border-color 150ms, transform 100ms;
+  display: flex;
+  align-items: center;
+}
+
+.composer-purpose-btn:active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  border-left-color: var(--accent);
+  transform: scale(0.98);
+}
+
+.composer-purpose-label {
+  display: block;
+  width: 100%;
+}
+
+.composer-prompt {
+  margin: 0 0 var(--sp-4) 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.composer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.composer-chip {
+  padding: var(--sp-4) var(--sp-5);
+  border: 2px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 60px;
+  transition: background 150ms, color 150ms, border-color 150ms, transform 100ms;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.composer-chip:active {
+  transform: scale(0.97);
+}
+
+.composer-chip-active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px rgba(45, 106, 79, 0.35);
+}
+
+.composer-textarea {
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  font-family: var(--font);
+  font-size: 1.15rem;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  min-height: 100px;
+  resize: vertical;
+  margin-bottom: var(--sp-3);
+}
+
+.composer-textarea:focus {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-color: var(--accent);
+}
+
+.composer-show-btn {
+  width: 100%;
+  padding: var(--sp-5);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+  border-radius: var(--r-lg);
+  font-family: var(--font);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  min-height: 76px;
+  margin-top: var(--sp-3);
+}
