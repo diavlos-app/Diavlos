@@ -74,7 +74,6 @@ const PROTOCOL_DEFINITIONS = {
 
 const PROTOCOL_ANSWER_DELAY_MS = 900;
 
-const RESPONSES_KEY = "diavlos_v1_responses";
 const PROTOCOL_HISTORY_KEY = "diavlos_v1_protocol_history";
 const TRANSCRIBE_CONSENT_KEY = "diavlos_v1_transcribe_consent";
 
@@ -146,9 +145,10 @@ function svgIcon(name, className) {
 }
 
 function clear(node) {
-  if (node) {
-    node.replaceChildren();
-  }
+  if (!node) return;
+  // Παλιότεροι browser (π.χ. Huawei Browser) δεν έχουν replaceChildren
+  if (typeof node.replaceChildren === "function") node.replaceChildren();
+  else while (node.firstChild) node.removeChild(node.firstChild);
 }
 
 function isKnownView(view) {

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#2d6a4f" />
-  <meta name="description" content="Δίαυλος: εργαλείο επικοινωνίας για κωφούς και βαρήκοους. Έτοιμες φράσεις, αγαπημένα, έκτακτη ανάγκη. Λειτουργεί και χωρίς σύνδεση." />
+  <meta name="description" content="Δίαυλος - Δωρεάν προσβάσιμη εφαρμογή επικοινωνίας (PWA) για κωφούς και βαρήκοους. Μεταγραφή ομιλίας σε κείμενο, κάρτες φράσεων, SOS 112 και προσβάσιμος χάρτης, με απόλυτο σεβασμό στα προσωπικά δεδομένα (GDPR compliant).">
 
   <link rel="apple-touch-icon" href="icon-192.png" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -204,6 +204,8 @@
     <noscript>
       <p class="empty-state">Για να λειτουργήσει ο Δίαυλος χρειάζεται JavaScript. Ενεργοποίησέ το στον browser σου.</p>
     </noscript>
+    <!-- Εμφανίζεται μόνο αν σταματήσει κάποιο script (αντί για κενή οθόνη) -->
+    <p id="boot-error" class="empty-state" role="alert" hidden></p>
   </main>
 
   <button id="add-custom-btn" type="button" hidden aria-label="Προσθήκη">
@@ -359,6 +361,19 @@
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
           crossorigin=""></script>
 
+  <script>
+    // Αν κάποιο script αποτύχει, δείχνουμε το σφάλμα αντί για κενή οθόνη.
+    // Δεν δημιουργεί κόμβους: γράφει μόνο textContent σε στοιχείο που υπάρχει ήδη.
+    window.addEventListener("error", function (event) {
+      var box = document.getElementById("boot-error");
+      if (!box || !box.hidden) return;
+      var where = (event.filename || "").split("/").pop();
+      box.textContent = "Κάτι πήγε στραβά στη φόρτωση (" + (event.message || "άγνωστο σφάλμα") +
+        (where ? " — " + where + ":" + event.lineno : "") +
+        "). Δοκίμασε καθαρισμό της cache και ξανάνοιξε την εφαρμογή.";
+      box.hidden = false;
+    });
+  </script>
   <script src="data.js"></script>
   <script src="locations-extra.js"></script>
   <script src="locations-coords.js"></script>

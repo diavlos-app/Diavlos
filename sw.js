@@ -1,7 +1,7 @@
 // Δίαυλος — Service Worker
 // Cache-first για το app shell, ώστε η εφαρμογή να δουλεύει offline.
 
-const CACHE_NAME = "diavlos-v28";
+const CACHE_NAME = "diavlos-v29";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -11,7 +11,13 @@ const APP_SHELL = [
   "./locations-extra.js",
   "./locations-coords.js",
   "./data.js",
-  "./manifest.json"
+  "./manifest.json",
+  "./privacy.html",
+  "./kep.html",
+  "./data/protocols/kep.json",
+  "./data/protocols/pharmacy.json",
+  "./data/protocols/doctor.json",
+  "./data/protocols/police.json"
 ];
 
 // Προαιρετικά: δεν αποτυγχάνει η εγκατάσταση αν λείπουν

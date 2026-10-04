@@ -28,6 +28,9 @@ const TX_PHANTOM_FRAGMENTS = [
   "subtitles by"
 ];
 
+// Συγκατάθεση για επεξεργασία φωνής (αποθηκεύεται ως "true_<χρονοσφραγίδα>")
+const TX_CONSENT_KEY = "diavlos_v1_transcribe_consent";
+
 let txState = "idle";           // idle | starting | listening
 let txStream = null;
 let txCtx = null;
@@ -251,8 +254,94 @@ function txRenderList() {
 
 // ─── Ηχογράφηση ───────────────────────────────────────────────────
 
+// ─── Συγκατάθεση ───────────────────────────────────────────────────
+
+function txHasConsent() {
+  try {
+    const value = localStorage.getItem(TX_CONSENT_KEY);
+    return typeof value === "string" && value.indexOf("true_") === 0;
+  } catch (err) {
+    return false;
+  }
+}
+
+function txStoreConsent() {
+  try {
+    localStorage.setItem(TX_CONSENT_KEY, "true_" + Date.now());
+  } catch (err) {
+    // Αν δεν γίνεται αποθήκευση (π.χ. ιδιωτική περιήγηση), θα ξαναρωτήσουμε την επόμενη φορά
+  }
+}
+
+// Επιστρέφει Promise<boolean>: true αν ο χρήστης αποδέχτηκε.
+function txAskConsent() {
+  return new Promise((resolve) => {
+    const dialog = h("dialog", "consent-dialog");
+    dialog.setAttribute("aria-labelledby", "consent-title");
+
+    const title = h("h2", null, "Έγκριση Επεξεργασίας Φωνής");
+    title.id = "consent-title";
+
+    const p1 = h("p", "consent-text",
+      "Για τη λειτουργία της μεταγραφής, ο ήχος αποστέλλεται στιγμιαία στην υπηρεσία " +
+      "Cloudflare Workers AI για μετατροπή σε κείμενο. Δεν αποθηκεύεται κανένα αρχείο " +
+      "ήχου ή κειμένου σε διακομιστή.");
+
+    const p2 = h("p", "consent-text",
+      "Ο ήχος ενδέχεται να περιέχει αναφορές σε θέματα υγείας. Πατώντας «Αποδοχή», " +
+      "παρέχετε τη ρητή συγκατάθεσή σας (Άρθρο 9 GDPR) για τη στιγμιαία αυτή επεξεργασία " +
+      "σύμφωνα με την Πολιτική Απορρήτου.");
+
+    const actions = h("div", "dialog-actions");
+    const accept = h("button", "btn-primary", "Αποδοχή & Έναρξη");
+    accept.type = "button";
+    const cancel = h("button", "btn-secondary", "Άκυρο");
+    cancel.type = "button";
+    actions.append(accept, cancel);
+
+    dialog.append(title, p1, p2, actions);
+    document.body.appendChild(dialog);
+
+    let accepted = false;
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (dialog.parentNode) dialog.parentNode.removeChild(dialog);
+      resolve(accepted);
+    };
+    const closeDialog = () => {
+      if (typeof dialog.close === "function") dialog.close();
+      else dialog.removeAttribute("open");
+    };
+
+    accept.addEventListener("click", () => {
+      accepted = true;
+      txStoreConsent();
+      closeDialog();
+      finish();
+    });
+    cancel.addEventListener("click", () => {
+      closeDialog();
+      finish();
+    });
+    // Escape ή πίσω: θεωρείται άκυρο
+    dialog.addEventListener("close", finish);
+
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+    accept.focus();
+  });
+}
+
 async function txStart() {
   if (txState !== "idle") return;
+
+  // Πριν την πρώτη χρήση του μικροφώνου χρειάζεται ρητή συγκατάθεση
+  if (!txHasConsent()) {
+    const accepted = await txAskConsent();
+    if (!accepted) return;
+  }
 
   if (!navigator.onLine) {
     showToast("Η μεταγραφή χρειάζεται σύνδεση στο internet.");

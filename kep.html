@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2d6a4f">
+  <title>Δίαυλος — Εξυπηρέτηση ΚΕΠ (demo)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f7fa;
+      --surface: #ffffff;
+      --surface-2: #eceef1;
+      --text: #1a1a1a;
+      --muted: #5c5c5c;
+      --border: #d5d8de;
+      --accent: #2d6a4f;
+      --accent-contrast: #ffffff;
+      --yes: #2e7d32;
+      --no: #c62828;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161a;
+        --surface: #1e2126;
+        --surface-2: #2a2e35;
+        --text: #f1f1f1;
+        --muted: #b4b8c0;
+        --border: #3a3f48;
+        --accent: #52b788;
+        --accent-contrast: #0b1f16;
+        --yes: #66bb6a;
+        --no: #ef5350;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Jura", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button { font-family: inherit; }
+
+    .stage {
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    .stage.side { flex-direction: row; }
+
+    .half {
+      flex: 1 1 0;
+      min-height: 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px;
+      overflow-y: auto;
+    }
+    /* Αντικριστή διάταξη: η πάνω μισή οθόνη διαβάζεται από τον απέναντι */
+    .stage.face .half.top { transform: rotate(180deg); }
+
+    .strip {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      padding: 6px;
+      background: var(--accent);
+    }
+    .stage.side .strip { flex-direction: column; }
+    .strip button {
+      width: 48px;
+      height: 48px;
+      border: 2px solid var(--accent-contrast);
+      border-radius: 50%;
+      background: transparent;
+      color: var(--accent-contrast);
+      font-size: 1.3rem;
+      cursor: pointer;
+    }
+    .strip button:focus-visible { outline: 3px solid var(--accent-contrast); outline-offset: 2px; }
+
+    .msg {
+      flex: 0 0 auto;
+      padding: 16px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+    }
+    .msg-label { margin: 0 0 6px 0; font-size: 0.95rem; color: var(--muted); }
+    .msg-text {
+      margin: 0;
+      font-size: clamp(1.8rem, 6vw, 3.6rem);
+      font-weight: 700;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+    .msg-text.empty { color: var(--muted); font-weight: 500; font-size: clamp(1.2rem, 3.5vw, 2rem); }
+    .msg-sent { margin: 10px 0 0 0; font-size: 0.95rem; color: var(--muted); overflow-wrap: anywhere; }
+
+    .section-title { margin: 0; font-size: 1.1rem; font-weight: 700; }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    .tile {
+      min-height: 84px;
+      padding: 12px 10px;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 1.1rem;
+      font-weight: 600;
+      line-height: 1.2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .tile:active { transform: scale(0.98); }
+    .tile:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .tile-icon { font-size: 1.8rem; line-height: 1; }
+    .tile.yes { border-color: var(--yes); color: var(--yes); }
+    .tile.no { border-color: var(--no); color: var(--no); }
+    .tile.ghost { background: transparent; }
+
+    .writer { display: flex; flex-direction: column; gap: 10px; }
+    .writer textarea {
+      width: 100%;
+      min-height: 110px;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1.3rem;
+    }
+    .writer-actions { display: flex; gap: 10px; }
+    .btn {
+      flex: 1;
+      min-height: 56px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+
+    noscript { display: block; padding: 20px; font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+  <noscript>Για να λειτουργήσει η εφαρμογή χρειάζεται JavaScript.</noscript>
+
+  <main id="stage" class="stage face">
+    <section id="half-top" class="half top" aria-label="Πάνω μισή οθόνη"></section>
+
+    <div class="strip" role="toolbar" aria-label="Ρυθμίσεις οθόνης">
+      <button id="btn-swap" type="button" aria-label="Αλλαγή θέσεων" title="Αλλαγή θέσεων">⇅</button>
+      <button id="btn-layout" type="button" aria-label="Αλλαγή διάταξης: αντικριστά ή πλάι-πλάι" title="Διάταξη">◫</button>
+      <button id="btn-reset" type="button" aria-label="Καθαρισμός συνομιλίας" title="Καθαρισμός">↺</button>
+      <button id="btn-full" type="button" aria-label="Πλήρης οθόνη" title="Πλήρης οθόνη">⛶</button>
+    </div>
+
+    <section id="half-bottom" class="half bottom" aria-label="Κάτω μισή οθόνη"></section>
+  </main>
+
+<script>
+"use strict";
+
+// Δίαυλος — kep.html
+// Demo εξυπηρέτησης ΚΕΠ με «διπλή οθόνη»: δύο μισά, ένα για τον πολίτη και ένα για τον υπάλληλο.
+// Τίποτα δεν αποθηκεύεται: όλα μένουν στη μνήμη και χάνονται όταν κλείσει η σελίδα.
+
+// ─── Περιεχόμενο ─────────────────────────────────────────────────
+
+// Ουδέτερες διατυπώσεις: δεν αναφέρουν ότι ο πολίτης είναι κωφός.
+const NEEDS = [
+  { icon: "📄", text: "Θέλω ένα πιστοποιητικό" },
+  { icon: "📝", text: "Θέλω να κάνω μια αίτηση ή δήλωση" },
+  { icon: "🔑", text: "Χρειάζομαι κωδικούς gov.gr ή TAXISnet" },
+  { icon: "🪪", text: "Θέλω ΑΦΜ ή ΑΜΚΑ" },
+  { icon: "📅", text: "Θέλω να κλείσω ραντεβού" },
+  { icon: "📬", text: "Έρχομαι να παραλάβω ένα έγγραφο" },
+  { icon: "❓", text: "Έχω μια ερώτηση" },
+  { icon: "➕", text: "Θέλω κάτι άλλο" }
+];
+
+const CITIZEN_REPLIES = [
+  { icon: "✅", text: "Ναι", tone: "yes" },
+  { icon: "❌", text: "Όχι", tone: "no" },
+  { icon: "🤔", text: "Δεν κατάλαβα" },
+  { icon: "🐢", text: "Πιο αργά, παρακαλώ" },
+  { icon: "✍️", text: "Παρακαλώ γράψτε το" },
+  { icon: "🙏", text: "Ευχαριστώ" }
+];
+
+const CLERK_REPLIES = [
+  { icon: "👋", text: "Καλημέρα! Πώς μπορώ να βοηθήσω;" },
+  { icon: "✅", text: "Ναι", tone: "yes" },
+  { icon: "❌", text: "Όχι", tone: "no" },
+  { icon: "⏳", text: "Ένα λεπτό, παρακαλώ" },
+  { icon: "🪪", text: "Χρειάζομαι την ταυτότητά σας" },
+  { icon: "🔢", text: "Χρειάζομαι τον ΑΦΜ ή τον ΑΜΚΑ σας" },
+  { icon: "➡️", text: "Πρέπει να πάτε σε άλλη υπηρεσία" },
+  { icon: "👍", text: "Έτοιμο. Ευχαριστώ!" }
+];
+
+const OTHER_LABEL = { citizen: "Ο υπάλληλος λέει", clerk: "Ο πολίτης λέει" };
+const EMPTY_TEXT = { citizen: "Ο υπάλληλος θα απαντήσει εδώ.", clerk: "Ο πολίτης θα γράψει εδώ." };
+
+// ─── Κατάσταση ───────────────────────────────────────────────────
+
+const state = {
+  bottomRole: "citizen",       // ποιος κάθεται στην κάτω (ή δεξιά) μεριά — εκεί ανοίγει το πληκτρολόγιο
+  layout: "face",              // face = αντικριστά, side = πλάι-πλάι
+  citizenView: "needs",        // needs | replies
+  typing: null,                // role που γράφει αυτή τη στιγμή
+  log: []                      // { from, text }
+};
+
+function topRole() { return state.bottomRole === "citizen" ? "clerk" : "citizen"; }
+
+function lastFrom(role) {
+  for (let i = state.log.length - 1; i >= 0; i--) {
+    if (state.log[i].from === role) return state.log[i];
+  }
+  return null;
+}
+
+// ─── DOM helpers (μόνο createElement και textContent) ───────────────────────────────
+
+function h(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function clear(node) { node.replaceChildren(); }
+
+function tile(item, onClick) {
+  const btn = h("button", "tile" + (item.tone ? " " + item.tone : "") + (item.ghost ? " ghost" : ""));
+  btn.type = "button";
+  if (item.icon) btn.appendChild(h("span", "tile-icon", item.icon));
+  btn.appendChild(h("span", "tile-label", item.text));
+  btn.addEventListener("click", onClick);
+  return btn;
+}
+
+// ─── Ενέργειες ───────────────────────────────────────────────────
+
+function send(role, text) {
+  const clean = String(text || "").trim();
+  if (!clean) return;
+  state.log.push({ from: role, text: clean });
+  state.typing = null;
+  renderAll();
+}
+
+function pickNeed(item) {
+  state.citizenView = "replies";
+  send("citizen", item.text);
+}
+
+function startTyping(role) {
+  state.typing = role;
+  renderAll();
+  const area = document.querySelector("textarea");
+  if (area) area.focus();
+}
+
+// ─── Σχεδίαση κάθε μισής οθόνης ──────────────────────────────────
+
+function buildMessageBox(role) {
+  const theirs = lastFrom(role === "citizen" ? "clerk" : "citizen");
+  const mine = lastFrom(role);
+
+  const box = h("section", "msg");
+  box.setAttribute("aria-live", "polite");
+  box.appendChild(h("p", "msg-label", OTHER_LABEL[role]));
+
+  if (theirs) box.appendChild(h("p", "msg-text", theirs.text));
+  else box.appendChild(h("p", "msg-text empty", EMPTY_TEXT[role]));
+
+  if (mine) box.appendChild(h("p", "msg-sent", "Στείλατε: " + mine.text));
+  return box;
+}
+
+function buildWriter(role) {
+  const wrap = h("div", "writer");
+  const area = h("textarea");
+  area.setAttribute("aria-label", "Γράψε το μήνυμά σου");
+  area.rows = 3;
+  wrap.appendChild(area);
+
+  const actions = h("div", "writer-actions");
+  const cancel = h("button", "btn", "Άκυρο");
+  cancel.type = "button";
+  cancel.addEventListener("click", () => { state.typing = null; renderAll(); });
+  const sendBtn = h("button", "btn primary", "Αποστολή");
+  sendBtn.type = "button";
+  sendBtn.addEventListener("click", () => send(role, area.value));
+  actions.append(cancel, sendBtn);
+  wrap.appendChild(actions);
+  return wrap;
+}
+
+function buildTiles(role, isBottom) {
+  const wrap = h("div", "tiles-wrap");
+
+  if (role === "citizen" && state.citizenView === "needs") {
+    wrap.appendChild(h("p", "section-title", "Τι χρειάζεστε;"));
+    const grid = h("div", "tiles");
+    NEEDS.forEach((item) => grid.appendChild(tile(item, () => pickNeed(item))));
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  wrap.appendChild(h("p", "section-title", "Απάντηση"));
+  const grid = h("div", "tiles");
+  const replies = role === "citizen" ? CITIZEN_REPLIES : CLERK_REPLIES;
+  replies.forEach((item) => grid.appendChild(tile(item, () => send(role, item.text))));
+
+  // Γραπτό μήνυμα: μόνο στην κάτω μεριά, γιατί εκεί βρίσκεται το πληκτρολόγιο
+  if (isBottom) {
+    grid.appendChild(tile({ icon: "⌨️", text: "Γράψε", ghost: true }, () => startTyping(role)));
+  }
+  if (role === "citizen") {
+    grid.appendChild(tile({ icon: "↩️", text: "Νέο αίτημα", ghost: true }, () => {
+      state.citizenView = "needs";
+      renderAll();
+    }));
+  }
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+function renderHalf(el, role, isBottom) {
+  clear(el);
+  el.setAttribute("data-role", role);
+  el.appendChild(buildMessageBox(role));
+  if (state.typing === role && isBottom) el.appendChild(buildWriter(role));
+  else el.appendChild(buildTiles(role, isBottom));
+}
+
+function renderAll() {
+  const stage = document.getElementById("stage");
+  stage.className = "stage " + state.layout;
+
+  const keep = state.typing ? document.querySelector("textarea") : null;
+  const draft = keep ? keep.value : "";
+
+  renderHalf(document.getElementById("half-top"), topRole(), false);
+  renderHalf(document.getElementById("half-bottom"), state.bottomRole, true);
+
+  const area = document.querySelector("textarea");
+  if (area && draft) area.value = draft;
+}
+
+// ─── Κουμπιά στη μέση ────────────────────────────────────────────
+
+document.getElementById("btn-swap").addEventListener("click", () => {
+  state.bottomRole = topRole();
+  state.typing = null;
+  renderAll();
+});
+
+document.getElementById("btn-layout").addEventListener("click", () => {
+  state.layout = state.layout === "face" ? "side" : "face";
+  renderAll();
+});
+
+document.getElementById("btn-reset").addEventListener("click", () => {
+  state.log = [];
+  state.typing = null;
+  state.citizenView = "needs";
+  renderAll();
+});
+
+document.getElementById("btn-full").addEventListener("click", () => {
+  const root = document.documentElement;
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else if (root.requestFullscreen) {
+    root.requestFullscreen().catch(() => {});
+  }
+});
+
+renderAll();
+</script>
+</body>
+</html>
