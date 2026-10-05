@@ -11,9 +11,9 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{--bg:#f4f4f2;--fg:#111;--card:#fff;--line:#222;--mut:#555;--red:#d62828;--body:#c9c9c4;--flash:#1db954;--ok:#111;--okfg:#fff;--warn:#fff3c4;--warnfg:#4a3b00}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e0e0e;--fg:#f2f2f2;--card:#1b1b1b;--line:#eee;--mut:#aaa;--body:#555;--ok:#f2f2f2;--okfg:#111;--warn:#3a3000;--warnfg:#ffe98a}}
-:root[data-theme="dark"]{--bg:#0e0e0e;--fg:#f2f2f2;--card:#1b1b1b;--line:#eee;--mut:#aaa;--body:#555;--ok:#f2f2f2;--okfg:#111;--warn:#3a3000;--warnfg:#ffe98a}
+:root{--bg:#f4f4f2;--fg:#111;--card:#fff;--line:#222;--mut:#555;--red:#d62828;--body:#c9c9c4;--flash:#000;--ok:#111;--okfg:#fff;--warn:#fff3c4;--warnfg:#4a3b00}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e0e0e;--fg:#f2f2f2;--card:#1b1b1b;--line:#eee;--mut:#aaa;--body:#555;--flash:#fff;--ok:#f2f2f2;--okfg:#111;--warn:#3a3000;--warnfg:#ffe98a}}
+:root[data-theme="dark"]{--bg:#0e0e0e;--fg:#f2f2f2;--card:#1b1b1b;--line:#eee;--mut:#aaa;--body:#555;--flash:#fff;--ok:#f2f2f2;--okfg:#111;--warn:#3a3000;--warnfg:#ffe98a}
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*:before,*:after{box-sizing:inherit}
@@ -26,11 +26,11 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 .cb{min-width:68px;min-height:48px;padding:0 12px;border:2px solid var(--line);border-radius:12px;background:var(--card);font-size:15px;font-weight:700}
 #wl{width:12px;height:12px;border-radius:50%;background:#f5a623}
 #wl.ok{background:#1db954}
-.inst{padding:0 12px;font-size:15px;color:var(--mut);text-align:center;flex:none}
+.inst{padding:0 12px;font-size:21px;font-weight:800;color:var(--fg);text-align:center;flex:none;line-height:1.25}.inst small{display:block;font-size:15px;font-weight:500;color:var(--mut)}
 #nr{display:none;margin:8px 12px 0;padding:10px;border-radius:12px;background:var(--red);color:#fff;font-weight:800;font-size:20px;text-align:center;flex:none}
 #nr small{display:block;font-weight:500;font-size:14px}
 #big{flex:1;min-height:0;margin:10px 12px 12px;border:4px solid var(--line);border-radius:28px;background:var(--ok);color:var(--okfg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center}
-#big .el{font-size:38px;font-weight:900;line-height:1.1}
+#big .el{font-size:44px;font-weight:900;line-height:1.1}
 #big .en{font-size:22px;opacity:.85}
 #big:active{filter:brightness(1.4)}
 h1{font-size:26px;line-height:1.15;margin:4px 4px 2px}
@@ -67,6 +67,21 @@ h1 small{display:block;font-size:16px;font-weight:500;color:var(--mut);margin-to
 #mc .el{font-size:44px;font-weight:900;line-height:1.15}
 #mc .en{font-size:24px}
 #msg .nx{margin:0 12px 12px;min-height:84px;border-radius:16px;border:3px solid var(--line);background:var(--ok);color:var(--okfg);font-size:20px;font-weight:800}
+.rg{display:flex;gap:8px}
+#yn{display:none;position:fixed;inset:0;z-index:10;background:var(--bg);flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.yb{flex:1;min-height:0;margin:6px 12px 8px;border:4px solid var(--line);border-radius:28px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}
+.yb .el{font-size:64px;font-weight:900}.yb .en{font-size:26px}
+#yes.hit{background:#1a7f37;border-color:#1a7f37;color:#fff}
+#no.hit{background:var(--red);border-color:var(--red);color:#fff}
+.yb.hit .en{color:#fff}
+#intro{display:none;position:fixed;inset:0;z-index:30;background:var(--bg);flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+#intro .ib{flex:1;min-height:0;overflow-y:auto;padding:16px}
+#intro p,#intro li{font-size:18px;line-height:1.35}
+#intro li{margin-bottom:10px}
+#intro ul{padding-left:20px}
+.en2{color:var(--mut);font-size:15px;line-height:1.4;border-top:2px solid var(--line);padding-top:12px;margin-top:8px}
+.en2 li{font-size:15px;margin-bottom:6px}
+.okb{flex:none;margin:8px 12px 12px;min-height:84px;border-radius:16px;border:3px solid var(--line);background:var(--ok);color:var(--okfg);font-size:20px;font-weight:800}
 #flash{position:fixed;inset:0;z-index:20;background:var(--flash);opacity:0;pointer-events:none}
 #flash.on{opacity:.85}
 </style>
@@ -76,15 +91,15 @@ h1 small{display:block;font-size:16px;font-weight:500;color:var(--mut);margin-to
 
 <!-- Οθόνη 1 -->
 <section class="scr" id="s1">
-  <div class="top"><button class="cb" data-back>← Πίσω</button><span id="wl" title="Οθόνη ενεργή"></span><button class="cb" data-msg>Μήνυμα</button></div>
-  <div class="inst">Γύρνα την οθόνη προς το άτομο<br>Turn the screen toward the person</div>
+  <div class="top"><button class="cb" data-back>← Πίσω</button><span id="wl" title="Οθόνη ενεργή"></span><span class="rg"><button class="cb" data-yn>ΝΑΙ / ΟΧΙ</button><button class="cb" data-msg>Μήνυμα</button></span></div>
+  <div class="inst">Γύρνα την οθόνη προς το άτομο<small>Turn the screen toward the person</small></div>
   <div id="nr">Καμία απάντηση. Έλεγξε το άτομο.<small>No response. Check the person.</small></div>
   <button id="big"><span class="el">Πάτα εδώ αν με καταλαβαίνεις</span><span class="en">Tap here if you understand me</span></button>
 </section>
 
 <!-- Οθόνη 2 -->
 <section class="scr" id="s2">
-  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><button class="cb" data-msg>Μήνυμα</button></div>
+  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><span class="rg"><button class="cb" data-yn>ΝΑΙ / ΟΧΙ</button><button class="cb" data-msg>Μήνυμα</button></span></div>
   <div class="sc"><h1>Πού νιώθεις πόνο;<small>Where do you feel pain?</small></h1><div class="grid" id="g2"></div></div>
   <div class="bar c2">
     <button class="act main" id="m2"></button>
@@ -94,7 +109,7 @@ h1 small{display:block;font-size:16px;font-weight:500;color:var(--mut);margin-to
 
 <!-- Οθόνη 3 -->
 <section class="scr" id="s3">
-  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><button class="cb" data-msg>Μήνυμα</button></div>
+  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><span class="rg"><button class="cb" data-yn>ΝΑΙ / ΟΧΙ</button><button class="cb" data-msg>Μήνυμα</button></span></div>
   <div class="sc"><h1>Νιώθεις κάτι άλλο;<small>Do you feel anything else?</small></h1><div class="grid" id="g3"></div></div>
   <div class="bar c3">
     <button class="act" id="n3"><span class="el">Δεν μπορώ να απαντήσω</span><span class="en">I can't answer</span></button>
@@ -105,7 +120,7 @@ h1 small{display:block;font-size:16px;font-weight:500;color:var(--mut);margin-to
 
 <!-- Σύνοψη -->
 <section class="scr" id="s4">
-  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><button class="cb" data-msg>Μήνυμα</button></div>
+  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><span class="rg"><button class="cb" data-yn>ΝΑΙ / ΟΧΙ</button><button class="cb" data-msg>Μήνυμα</button></span></div>
   <div class="sc">
     <h1>Τι έδειξε το άτομο<small>What the person indicated</small></h1>
     <div class="time" id="tm"></div>
@@ -124,6 +139,39 @@ h1 small{display:block;font-size:16px;font-weight:500;color:var(--mut);margin-to
   <button class="nx" id="mnext">Επόμενο →</button>
 </div>
 
+<!-- ΝΑΙ / ΟΧΙ -->
+<div id="yn">
+  <div class="top"><button class="cb" id="yx">✕ Κλείσε</button><span></span><span style="min-width:68px"></span></div>
+  <button class="yb" id="yes"><span class="el">ΝΑΙ</span><span class="en">YES</span></button>
+  <button class="yb" id="no"><span class="el">ΟΧΙ</span><span class="en">NO</span></button>
+</div>
+
+<!-- Πριν ξεκινήσεις (μία φορά) -->
+<div id="intro">
+  <div class="ib">
+    <h1>Πριν ξεκινήσεις<small>Before you start</small></h1>
+    <p>Ο Δίαυλος Responder είναι βοηθητικό εργαλείο επικοινωνίας με άτομο που δεν μπορεί να μιλήσει.</p>
+    <ul>
+      <li>Δεν είναι ιατρική εφαρμογή και δεν κάνει διάγνωση.</li>
+      <li>Δεν αξιολογεί συνείδηση ή αναπνοή και δεν αντικαθιστά τις διαδικασίες πρώτων βοηθειών, το ΕΚΑΒ ή τον γιατρό.</li>
+      <li>Δείχνει μόνο ό,τι επιλέγει το άτομο. Αν δεν επιλέξει κάτι, αυτό δεν σημαίνει ότι δεν υπάρχει πρόβλημα.</li>
+      <li>Δεν αποθηκεύει δεδομένα. Ό,τι καταγράφεται σβήνει όταν κλείσει η εφαρμογή.</li>
+      <li>Μπορείς να την αφήσεις ανά πάσα στιγμή και να συνεχίσεις κανονικά.</li>
+    </ul>
+    <div class="en2">
+      <p>Diavlos Responder is a supporting communication tool for a person who cannot speak.</p>
+      <ul>
+        <li>It is not a medical app and does not diagnose.</li>
+        <li>It does not assess consciousness or breathing, and does not replace first-aid procedures, the ambulance service, or a doctor.</li>
+        <li>It shows only what the person selects. If they select nothing, that does not mean there is no problem.</li>
+        <li>It stores no data. Everything is erased when the app is closed.</li>
+        <li>You can leave it at any moment and continue as normal.</li>
+      </ul>
+    </div>
+  </div>
+  <button class="okb" id="introok">Κατάλαβα · I understand</button>
+</div>
+
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
@@ -132,7 +180,7 @@ var ALL=['head','neck','chest','abdomen','pelvis','arms','legs'];
 function fig(red,back){var s='<svg viewBox="0 0 80 160" aria-hidden="true">';ALL.forEach(function(k){s+='<g fill="'+(red.indexOf(k)>-1?'var(--red)':'var(--body)')+'">'+SH[k]+'</g>'});if(back)s+='<line x1="40" y1="35" x2="40" y2="92" stroke="#fff" stroke-width="3" stroke-dasharray="4 3"/>';return s+'</svg>'}
 var Z=[['head','Κεφάλι','Head',['head']],['neck','Λαιμός','Neck',['neck']],['chest','Στήθος','Chest',['chest']],['abdomen','Κοιλιά','Abdomen',['abdomen']],['pelvis','Λεκάνη','Pelvis / hips',['pelvis']],['arms','Χέρια','Arms',['arms']],['legs','Πόδια','Legs',['legs']],['back','Πλάτη','Back',['chest','abdomen'],1],['all','Πονάω παντού','Pain everywhere',ALL,0,1]];
 var F=[['Δεν μου φτάνει ο αέρας','I can\u2019t get enough air'],['Δεν νιώθω τα πόδια μου','I can\u2019t feel my legs'],['Θα λιποθυμήσω','I feel faint'],['Ζάλη','Dizzy'],['Έντονη αδυναμία','Severe weakness'],['Μπερδεύομαι','I feel confused'],['Μούδιασμα','Numbness'],['Θολή όραση','Blurry vision'],['Ναυτία','Nausea'],['Κρυώνω πολύ','Very cold']];
-var M=[['Είμαι εδώ μαζί σου.','I am here with you.'],['Θα σε βοηθήσω.','I will help you.'],['Δεν χρειάζεται να μιλήσεις.','You do not need to speak.'],['Πάτα με το δάχτυλο αν με καταλαβαίνεις.','Tap with your finger if you understand me.']];
+var M=[['Είμαι εδώ μαζί σου.','I am here with you.'],['Δεν χρειάζεται να μιλήσεις.','You do not need to speak.'],['Πάτα με το δάχτυλο αν με καταλαβαίνεις.','Tap with your finger if you understand me.']];
 
 var st,hist,cur,nrT,mi=0,wl=null,AC=null,rt;
 function reset(){st={pain:[],painAll:false,painNone:false,feel:[],feelNone:false,noAns:false,stop:0,last:null};hist=[];cur=null}
@@ -238,7 +286,16 @@ $('mx').onclick=function(){$('msg').style.display='none'};
 [].forEach.call(document.querySelectorAll('[data-msg]'),function(b){b.onclick=openM});
 [].forEach.call(document.querySelectorAll('[data-back]'),function(b){b.onclick=back});
 
-reset();go('s1');lock();
+/* ΝΑΙ / ΟΧΙ: μένει ανοιχτό μέχρι το ✕, δεν καταγράφει τίποτα */
+$('yx').onclick=function(){$('yn').style.display='none'};
+[].forEach.call(document.querySelectorAll('[data-yn]'),function(b){b.onclick=function(){$('yn').style.display='flex'}});
+['yes','no'].forEach(function(id){var b=$(id);b.onclick=function(){tap();b.classList.add('hit');clearTimeout(b._t);b._t=setTimeout(function(){b.classList.remove('hit')},2000)}});
+
+/* Πριν ξεκινήσεις: μόνο την πρώτη φορά (η ένδειξη δεν περιέχει δεδομένα περιστατικού) */
+reset();lock();
+var seen=false;try{seen=localStorage.getItem('diavlos-responder-intro')==='1'}catch(e){}
+if(seen)go('s1');else $('intro').style.display='flex';
+$('introok').onclick=function(){try{localStorage.setItem('diavlos-responder-intro','1')}catch(e){}$('intro').style.display='none';go('s1')};
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(function(){})}catch(e){}
 })();
 </script>
