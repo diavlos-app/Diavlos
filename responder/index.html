@@ -58,7 +58,6 @@
     box-shadow:0 12px 40px rgba(255,59,48,.35);
     animation:pulse 2s ease-in-out infinite;cursor:pointer;
   }
-  .tap-btn.done{animation:none;background:var(--success);box-shadow:0 12px 40px rgba(52,199,89,.35)}
   @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
   @keyframes pulse-red{0%,100%{opacity:1}50%{opacity:.6}}
   .hint{font-size:13px;color:var(--muted);text-align:center;margin:0}
@@ -311,10 +310,11 @@ const STRINGS = {
       'ΝΙΩΘΕΙΣ ΤΑ ΠΟΔΙΑ ΣΟΥ;'
     ],
     sum:{
-      pain:'ΠΟΝΟΣ', air:'ΑΕΡΑΣ', weak:'ΑΔΥΝΑΜΙΑ', faint:'ΛΙΠΟΘΥΜΙΑ', legs:'ΠΟΔΙΑ',
+      pain:'ΠΟΝΟΣ', air:'ΑΝΑΠΝΟΗ', weak:'ΕΝΤΟΝΗ ΑΔΥΝΑΜΙΑ', faint:'ΤΑΣΗ ΛΙΠΟΘΥΜΙΑΣ', legs:'ΑΙΣΘΗΣΗ ΠΟΔΙΩΝ',
       head:'ΚΕΦΑΛΙ', chest:'ΣΤΗΘΟΣ', belly:'ΚΟΙΛΙΑ',
       everywhere:'ΠΑΝΤΟΥ', none:'ΚΑΝΕΝΑΣ',
-      yes:'ΝΑΙ', no:'ΟΧΙ', skip:'—'
+      yes:'ΝΑΙ', no:'ΟΧΙ', skip:'—',
+      suff:'ΕΠΑΡΚΗΣ', insuff:'ΑΝΕΠΑΡΚΗΣ'
     }
   },
   en: {
@@ -349,10 +349,11 @@ const STRINGS = {
       'DO YOU FEEL YOUR LEGS?'
     ],
     sum:{
-      pain:'PAIN', air:'AIR', weak:'WEAKNESS', faint:'FAINTING', legs:'LEGS',
+      pain:'PAIN', air:'BREATHING', weak:'INTENSE WEAKNESS', faint:'FEELING FAINT', legs:'SENSATION IN LEGS',
       head:'HEAD', chest:'CHEST', belly:'BELLY',
       everywhere:'EVERYWHERE', none:'NONE',
-      yes:'YES', no:'NO', skip:'—'
+      yes:'YES', no:'NO', skip:'—',
+      suff:'SUFFICIENT', insuff:'INSUFFICIENT'
     }
   }
 };
@@ -444,7 +445,6 @@ function showIntroIfFirst(){
 function enterTap(){
   $('tapNext').classList.add('hidden');
   $('timeoutBanner').classList.add('hidden');
-  $('tapBtn').classList.remove('done');
   state.tapDone = false;
   clearTimeout(state.timeoutId);
   state.timeoutId = setTimeout(()=>{
@@ -452,12 +452,11 @@ function enterTap(){
   }, 10000);
 }
 $('tapBtn').addEventListener('click', ()=>{
-  if (state.tapDone) return;
   feedback();
+  if (state.tapDone) return;
   state.tapDone = true;
   clearTimeout(state.timeoutId);
-  $('tapBtn').classList.add('done');
-  setTimeout(()=>$('tapNext').classList.remove('hidden'), 250);
+  $('tapNext').classList.remove('hidden');
 });
 $('tapNext').addEventListener('click', ()=>{ enterPain(); goTo('screen-pain'); });
 
@@ -554,9 +553,12 @@ function yn(v){
 function renderSummary(){
   if (!$('summaryList')) return;
   const s = STRINGS[state.lang].sum;
+  const airVal = state.answers.air === true ? s.suff
+                : state.answers.air === false ? s.insuff
+                : s.skip;
   const rows = [
     [s.pain, painValue()],
-    [s.air, yn(state.answers.air)],
+    [s.air, airVal],
     [s.weak, yn(state.answers.weak)],
     [s.faint, yn(state.answers.faint)],
     [s.legs, yn(state.answers.legs)]
