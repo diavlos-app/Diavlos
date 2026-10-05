@@ -1,303 +1,652 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#d62828">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
 <title>Δίαυλος Responder</title>
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <style>
-:root{--bg:#f4f4f2;--fg:#111;--card:#fff;--line:#222;--mut:#555;--red:#d62828;--body:#c9c9c4;--flash:#000;--ok:#111;--okfg:#fff;--warn:#fff3c4;--warnfg:#4a3b00}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e0e0e;--fg:#f2f2f2;--card:#1b1b1b;--line:#eee;--mut:#aaa;--body:#555;--flash:#fff;--ok:#f2f2f2;--okfg:#111;--warn:#3a3000;--warnfg:#ffe98a}}
-:root[data-theme="dark"]{--bg:#0e0e0e;--fg:#f2f2f2;--card:#1b1b1b;--line:#eee;--mut:#aaa;--body:#555;--flash:#fff;--ok:#f2f2f2;--okfg:#111;--warn:#3a3000;--warnfg:#ffe98a}
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*,*:before,*:after{box-sizing:inherit}
-html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
-.scr{display:none;height:100%;flex-direction:column;min-height:0}
-.scr.on{display:flex}
-.top{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;gap:8px;flex:none}
-.cb{min-width:68px;min-height:48px;padding:0 12px;border:2px solid var(--line);border-radius:12px;background:var(--card);font-size:15px;font-weight:700}
-#wl{width:12px;height:12px;border-radius:50%;background:#f5a623}
-#wl.ok{background:#1db954}
-.inst{padding:0 12px;font-size:21px;font-weight:800;color:var(--fg);text-align:center;flex:none;line-height:1.25}.inst small{display:block;font-size:15px;font-weight:500;color:var(--mut)}
-#nr{display:none;margin:8px 12px 0;padding:10px;border-radius:12px;background:var(--red);color:#fff;font-weight:800;font-size:20px;text-align:center;flex:none}
-#nr small{display:block;font-weight:500;font-size:14px}
-#big{flex:1;min-height:0;margin:10px 12px 12px;border:4px solid var(--line);border-radius:28px;background:var(--ok);color:var(--okfg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center}
-#big .el{font-size:44px;font-weight:900;line-height:1.1}
-#big .en{font-size:22px;opacity:.85}
-#big:active{filter:brightness(1.4)}
-h1{font-size:26px;line-height:1.15;margin:4px 4px 2px}
-h1 small{display:block;font-size:16px;font-weight:500;color:var(--mut);margin-top:2px}
-.sc{flex:1;min-height:0;overflow-y:auto;padding:0 12px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
-.z{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:112px;padding:10px 6px;background:var(--card);border:3px solid var(--line);border-radius:16px;text-align:center}
-.z.fig{min-height:150px}
-.z svg{width:46px;height:92px}
-.z.wide{grid-column:1/3;flex-direction:row;gap:14px;min-height:100px}
-.z.wide svg{width:38px;height:76px}
-.el{font-size:21px;font-weight:800;line-height:1.1}
-.en{font-size:16px;font-weight:500;color:var(--mut);line-height:1.1}
-.z.sel{border-color:var(--red);background:color-mix(in srgb,var(--red) 14%,var(--card));box-shadow:0 0 0 3px var(--red)}
-.z.sel:after{content:"✓";position:absolute;top:4px;right:8px;font-size:22px;font-weight:900;color:var(--red)}
-.bar{flex:none;display:grid;gap:8px;padding:10px 12px;border-top:2px solid var(--line);background:var(--bg)}
-.bar.c2{grid-template-columns:1fr 1fr}.bar.c3{grid-template-columns:1fr 1fr 1fr}
-.act{min-height:100px;padding:6px 4px;border-radius:16px;border:3px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
-.act.main{background:var(--ok);color:var(--okfg)}
-.act .el{font-size:19px}.act .en{font-size:14px;color:inherit;opacity:.8}
-.card{background:var(--card);border:3px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px}
-.card h2{margin:0 0 6px;font-size:15px;letter-spacing:.06em;color:var(--mut)}
-.card h2 span{font-weight:500;letter-spacing:0}
-.items{font-size:24px;font-weight:700;line-height:1.2}
-.items.pain{font-size:32px;font-weight:800;color:var(--red)}
-.items div+div{margin-top:4px}
-.time{font-size:16px;color:var(--mut);margin:4px 4px 12px}
-.warn{background:var(--warn);color:var(--warnfg);border-radius:12px;padding:10px 12px;font-size:16px;font-weight:700;line-height:1.25;margin:12px 0}
-.warn small{display:block;font-weight:500;opacity:.85;font-size:13px}
-#reset{display:block;margin:14px auto 24px;min-height:56px;padding:0 20px;border-radius:14px;border:2px solid var(--line);background:var(--card);font-size:15px}
-#reset.arm{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
-#msg{display:none;position:fixed;inset:0;z-index:10;background:var(--bg);flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-#mc{flex:1;min-height:0;margin:6px 12px;border:4px solid var(--line);border-radius:28px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;text-align:center}
-#mc .el{font-size:44px;font-weight:900;line-height:1.15}
-#mc .en{font-size:24px}
-#msg .nx{margin:0 12px 12px;min-height:84px;border-radius:16px;border:3px solid var(--line);background:var(--ok);color:var(--okfg);font-size:20px;font-weight:800}
-.rg{display:flex;gap:8px}
-#yn{display:none;position:fixed;inset:0;z-index:10;background:var(--bg);flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-.yb{flex:1;min-height:0;margin:6px 12px 8px;border:4px solid var(--line);border-radius:28px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}
-.yb .el{font-size:64px;font-weight:900}.yb .en{font-size:26px}
-#yes.hit{background:#1a7f37;border-color:#1a7f37;color:#fff}
-#no.hit{background:var(--red);border-color:var(--red);color:#fff}
-.yb.hit .en{color:#fff}
-#intro{display:none;position:fixed;inset:0;z-index:30;background:var(--bg);flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-#intro .ib{flex:1;min-height:0;overflow-y:auto;padding:16px}
-#intro p,#intro li{font-size:18px;line-height:1.35}
-#intro li{margin-bottom:10px}
-#intro ul{padding-left:20px}
-.en2{color:var(--mut);font-size:15px;line-height:1.4;border-top:2px solid var(--line);padding-top:12px;margin-top:8px}
-.en2 li{font-size:15px;margin-bottom:6px}
-.okb{flex:none;margin:8px 12px 12px;min-height:84px;border-radius:16px;border:3px solid var(--line);background:var(--ok);color:var(--okfg);font-size:20px;font-weight:800}
-#flash{position:fixed;inset:0;z-index:20;background:var(--flash);opacity:0;pointer-events:none}
-#flash.on{opacity:.85}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+  :root{
+    --bg:#0a0a0a; --fg:#f5f5f5; --muted:#888; --surface:#1a1a1a;
+    --border:#2a2a2a; --accent:#ff3b30; --success:#34c759; --zone:#2a2a2a;
+  }
+  body.light{
+    --bg:#f4f4f5; --fg:#0a0a0a; --muted:#666; --surface:#ffffff;
+    --border:#e2e2e5; --accent:#e11d1d; --success:#1f9d3a; --zone:#dcdce0;
+  }
+  body{background:var(--bg);color:var(--fg);display:flex;flex-direction:column;height:100%}
+
+  /* ---------- TOPBAR ---------- */
+  #topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));
+    border-bottom:1px solid var(--border);background:var(--bg);
+    position:relative;z-index:20;flex:0 0 auto;
+  }
+  .brand{font-weight:700;font-size:15px;letter-spacing:.3px}
+  .top-actions{display:flex;gap:8px}
+  .top-btn{
+    background:var(--surface);color:var(--fg);border:1px solid var(--border);
+    border-radius:10px;padding:8px 12px;font-size:14px;font-weight:600;
+    min-width:44px;min-height:40px;cursor:pointer;
+  }
+  .top-btn.danger{color:var(--accent)}
+  .top-btn.armed{background:var(--accent);color:#fff;border-color:var(--accent);animation:pulse-red .6s infinite}
+
+  /* ---------- SCREENS ---------- */
+  #app{flex:1 1 auto;position:relative;overflow:hidden}
+  .screen{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    padding:20px 16px 110px;gap:14px;overflow-y:auto;
+  }
+  .screen.hidden{display:none}
+  .q{font-size:22px;font-weight:700;margin:0 0 4px;text-align:center}
+  .q.big{font-size:26px;line-height:1.25;margin-top:8px}
+
+  /* ---------- SCREEN 1: TAP ---------- */
+  .tap-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px}
+  .tap-btn{
+    width:min(80vw,80vh);aspect-ratio:1/1;max-width:420px;
+    border-radius:50%;background:var(--accent);color:#fff;border:none;
+    font-size:clamp(22px,6vw,34px);font-weight:800;letter-spacing:1px;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 12px 40px rgba(255,59,48,.35);
+    animation:pulse 2s ease-in-out infinite;cursor:pointer;
+  }
+  .tap-btn.done{animation:none;background:var(--success);box-shadow:0 12px 40px rgba(52,199,89,.35)}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  @keyframes pulse-red{0%,100%{opacity:1}50%{opacity:.6}}
+  .hint{font-size:13px;color:var(--muted);text-align:center;margin:0}
+  .banner{
+    background:var(--accent);color:#fff;border-radius:12px;padding:14px 16px;
+    font-weight:700;text-align:center;font-size:15px;
+  }
+  .banner.hidden{display:none}
+
+  /* ---------- NEXT / BIG BUTTONS ---------- */
+  .next-btn{
+    background:var(--fg);color:var(--bg);border:none;border-radius:14px;
+    padding:16px;font-size:16px;font-weight:800;letter-spacing:.5px;
+    width:100%;cursor:pointer;min-height:56px;
+  }
+  .next-btn.hidden{display:none}
+  .big-btn{
+    background:var(--surface);color:var(--fg);border:2px solid var(--border);
+    border-radius:14px;padding:16px;font-size:16px;font-weight:700;
+    flex:1;min-height:60px;cursor:pointer;
+  }
+  .big-btn.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .big-btn.yes.selected{background:var(--success);border-color:var(--success);color:#fff}
+  .big-btn.no.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  /* ---------- SCREEN 2: PAIN ---------- */
+  .svg-wrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+  #bodySvg{height:100%;max-height:52vh;width:auto;display:block}
+  .zone{
+    fill:var(--zone);stroke:var(--border);stroke-width:2;cursor:pointer;
+    transition:fill .15s;
+  }
+  .zone.selected{fill:var(--accent);stroke:var(--accent)}
+  .limbs rect{fill:var(--zone);stroke:var(--border);stroke-width:1.5;opacity:.35}
+  .pain-actions{display:flex;gap:10px}
+
+  /* ---------- SCREEN 3: SENSES ---------- */
+  .sense-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;gap:26px}
+  .sense-actions{display:flex;gap:12px}
+  .sense-actions .big-btn{font-size:20px;padding:22px;min-height:80px}
+  .stop-btn{
+    background:transparent;color:var(--muted);border:none;
+    padding:14px;font-size:14px;text-decoration:underline;cursor:pointer;
+    align-self:center;
+  }
+
+  /* ---------- SCREEN 4: SUMMARY ---------- */
+  .summary-list{
+    flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:20px 18px;
+  }
+  .sum-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    padding:8px 0;border-bottom:1px dashed var(--border)}
+  .sum-row:last-child{border-bottom:none}
+  .sum-k{font-size:13px;letter-spacing:.8px;color:var(--muted);font-weight:700}
+  .sum-v{font-size:20px;font-weight:800;letter-spacing:.5px;text-align:right}
+  .disclaimer{font-size:12px;color:var(--muted);text-align:center;margin:0;line-height:1.4}
+
+  /* ---------- INTRO ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.75);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:100;backdrop-filter:blur(6px);
+  }
+  .overlay.hidden{display:none}
+  .overlay.full{background:var(--bg)}
+  .intro-card,.msg-card,.yn-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:18px;
+    padding:22px;max-width:420px;width:100%;
+  }
+  .intro-card h1{font-size:20px;margin:0 0 14px;text-align:center}
+  .intro-card ul{margin:0 0 18px;padding-left:20px;line-height:1.6;font-size:15px}
+  .intro-card button,.close-btn{
+    width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;
+    padding:15px;font-size:16px;font-weight:800;cursor:pointer;min-height:54px;
+  }
+  .msg-card{display:flex;flex-direction:column;gap:14px}
+  .msg{font-size:20px;font-weight:700;text-align:center;margin:0;line-height:1.4}
+  .yn-card{display:flex;flex-direction:column;gap:12px}
+  .yn-btn{
+    border:none;border-radius:14px;padding:22px;font-size:22px;font-weight:800;
+    cursor:pointer;min-height:90px;
+  }
+  .yn-btn.yes{background:var(--success);color:#fff}
+  .yn-btn.no{background:var(--accent);color:#fff}
+  .close-btn{background:var(--surface);color:var(--fg);border:1px solid var(--border);margin-top:4px}
+
+  /* ---------- FABs ---------- */
+  .fab{
+    position:fixed;right:16px;width:60px;height:60px;border-radius:50%;
+    border:none;font-size:22px;cursor:pointer;z-index:30;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .fab-msg{bottom:calc(92px + env(safe-area-inset-bottom));background:var(--surface);color:var(--fg);border:1px solid var(--border)}
+  .fab-yn{bottom:calc(20px + env(safe-area-inset-bottom));background:var(--accent);color:#fff}
+
+  /* ---------- FLASH ---------- */
+  #flash{
+    position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;
+    z-index:200;transition:opacity .02s;
+  }
+  #flash.on{opacity:.85;transition:none}
 </style>
 </head>
 <body>
+
+<!-- INTRO -->
+<div id="intro" class="overlay full hidden">
+  <div class="intro-card">
+    <h1 data-i18n="introTitle">Πριν ξεκινήσεις</h1>
+    <ul>
+      <li data-i18n="introL1">Η εφαρμογή ΔΕΝ κάνει διάγνωση.</li>
+      <li data-i18n="introL2">ΔΕΝ αξιολογεί συνείδηση ή αναπνοή.</li>
+      <li data-i18n="introL3">ΔΕΝ δίνει ιατρικές οδηγίες.</li>
+      <li data-i18n="introL4">Είναι κανάλι επικοινωνίας.</li>
+    </ul>
+    <button id="introStart" data-i18n="introStart">Κατάλαβα — Ξεκίνα</button>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<header id="topbar">
+  <div class="brand">Δίαυλος Responder</div>
+  <div class="top-actions">
+    <button id="btnLang" class="top-btn">EN</button>
+    <button id="btnTheme" class="top-btn">◐</button>
+    <button id="btnReset" class="top-btn danger">↺</button>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- SCREEN 1: TAP -->
+  <section id="screen-tap" class="screen">
+    <div class="tap-wrap">
+      <button id="tapBtn" class="tap-btn"><span data-i18n="tapLabel">ΠΑΤΑ ΕΔΩ</span></button>
+      <p class="hint" data-i18n="tapHint">Δεν αξιολογεί συνείδηση/αναπνοή</p>
+      <button id="tapNext" class="next-btn hidden" data-i18n="continue">ΣΥΝΕΧΕΙΑ →</button>
+    </div>
+    <div id="timeoutBanner" class="banner hidden" data-i18n="timeoutMsg">Καμία απάντηση. Έλεγξε το άτομο.</div>
+  </section>
+
+  <!-- SCREEN 2: PAIN -->
+  <section id="screen-pain" class="screen hidden">
+    <h2 class="q" data-i18n="painQ">Πού πονάς;</h2>
+    <div class="svg-wrap">
+      <svg id="bodySvg" viewBox="0 0 200 400" preserveAspectRatio="xMidYMid meet">
+        <g class="limbs">
+          <rect x="30" y="95" width="20" height="110" rx="10"/>
+          <rect x="150" y="95" width="20" height="110" rx="10"/>
+          <rect x="70" y="268" width="22" height="115" rx="11"/>
+          <rect x="108" y="268" width="22" height="115" rx="11"/>
+        </g>
+        <circle class="zone" data-zone="head" cx="100" cy="48" r="30"/>
+        <path class="zone" data-zone="chest" d="M60 90 L140 90 L142 178 L58 178 Z"/>
+        <path class="zone" data-zone="belly" d="M58 178 L142 178 L138 268 Q100 278 62 268 Z"/>
+      </svg>
+    </div>
+    <div class="pain-actions">
+      <button id="painAll" class="big-btn" data-i18n="painAll">ΠΟΝΑΩ ΠΑΝΤΟΥ</button>
+      <button id="painNone" class="big-btn" data-i18n="painNone">ΔΕΝ ΠΟΝΑΩ</button>
+    </div>
+    <button id="painNext" class="next-btn" data-i18n="continue">ΣΥΝΕΧΕΙΑ →</button>
+  </section>
+
+  <!-- SCREEN 3: SENSES -->
+  <section id="screen-senses" class="screen hidden">
+    <div class="sense-wrap">
+      <h2 id="senseQ" class="q big"></h2>
+      <div class="sense-actions">
+        <button id="senseYes" class="big-btn yes" data-i18n="yes">ΝΑΙ</button>
+        <button id="senseNo" class="big-btn no" data-i18n="no">ΟΧΙ</button>
+      </div>
+      <button id="senseStop" class="stop-btn" data-i18n="stopHere">Σταματάμε εδώ</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: SUMMARY -->
+  <section id="screen-summary" class="screen hidden">
+    <h2 class="q" data-i18n="summaryQ">ΣΥΝΟΨΗ</h2>
+    <div class="summary-list" id="summaryList"></div>
+    <p class="disclaimer" data-i18n="disclaimer">Δεν αποκλείει τραυματισμό. Not a diagnosis.</p>
+    <button id="summaryBack" class="next-btn" data-i18n="back">ΠΙΣΩ</button>
+  </section>
+
+</main>
+
+<!-- FABs -->
+<button id="fabMsg" class="fab fab-msg" aria-label="Messages">💬</button>
+<button id="fabYN" class="fab fab-yn" aria-label="Yes/No">✓✗</button>
+
+<!-- MESSAGES OVERLAY -->
+<div id="msgOverlay" class="overlay hidden">
+  <div class="msg-card">
+    <p class="msg" data-i18n="msg1">Είμαι εδώ μαζί σου.</p>
+    <p class="msg" data-i18n="msg2">Δεν χρειάζεται να μιλήσεις.</p>
+    <button class="close-btn" data-close="msgOverlay" data-i18n="close">ΚΛΕΙΣΕ</button>
+  </div>
+</div>
+
+<!-- YES/NO OVERLAY -->
+<div id="ynOverlay" class="overlay hidden">
+  <div class="yn-card">
+    <button class="yn-btn yes" data-i18n="yes">ΝΑΙ</button>
+    <button class="yn-btn no" data-i18n="no">ΟΧΙ</button>
+    <button class="close-btn" data-close="ynOverlay" data-i18n="close">ΚΛΕΙΣΕ</button>
+  </div>
+</div>
+
 <div id="flash"></div>
 
-<!-- Οθόνη 1 -->
-<section class="scr" id="s1">
-  <div class="top"><button class="cb" data-back>← Πίσω</button><span id="wl" title="Οθόνη ενεργή"></span><span class="rg"><button class="cb" data-yn>ΝΑΙ / ΟΧΙ</button><button class="cb" data-msg>Μήνυμα</button></span></div>
-  <div class="inst">Γύρνα την οθόνη προς το άτομο<small>Turn the screen toward the person</small></div>
-  <div id="nr">Καμία απάντηση. Έλεγξε το άτομο.<small>No response. Check the person.</small></div>
-  <button id="big"><span class="el">Πάτα εδώ αν με καταλαβαίνεις</span><span class="en">Tap here if you understand me</span></button>
-</section>
-
-<!-- Οθόνη 2 -->
-<section class="scr" id="s2">
-  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><span class="rg"><button class="cb" data-yn>ΝΑΙ / ΟΧΙ</button><button class="cb" data-msg>Μήνυμα</button></span></div>
-  <div class="sc"><h1>Πού νιώθεις πόνο;<small>Where do you feel pain?</small></h1><div class="grid" id="g2"></div></div>
-  <div class="bar c2">
-    <button class="act main" id="m2"></button>
-    <button class="act" id="x2"><span class="el">Σταματάμε εδώ</span><span class="en">We stop here</span></button>
-  </div>
-</section>
-
-<!-- Οθόνη 3 -->
-<section class="scr" id="s3">
-  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><span class="rg"><button class="cb" data-yn>ΝΑΙ / ΟΧΙ</button><button class="cb" data-msg>Μήνυμα</button></span></div>
-  <div class="sc"><h1>Νιώθεις κάτι άλλο;<small>Do you feel anything else?</small></h1><div class="grid" id="g3"></div></div>
-  <div class="bar c3">
-    <button class="act" id="n3"><span class="el">Δεν μπορώ να απαντήσω</span><span class="en">I can't answer</span></button>
-    <button class="act main" id="m3"></button>
-    <button class="act" id="x3"><span class="el">Σταματάμε εδώ</span><span class="en">We stop here</span></button>
-  </div>
-</section>
-
-<!-- Σύνοψη -->
-<section class="scr" id="s4">
-  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><span class="rg"><button class="cb" data-yn>ΝΑΙ / ΟΧΙ</button><button class="cb" data-msg>Μήνυμα</button></span></div>
-  <div class="sc">
-    <h1>Τι έδειξε το άτομο<small>What the person indicated</small></h1>
-    <div class="time" id="tm"></div>
-    <div class="card"><h2>ΠΟΝΟΣ <span>· Pain</span></h2><div id="o-pain"></div></div>
-    <div class="card"><h2>ΑΙΣΘΗΣΕΙΣ <span>· Feelings</span></h2><div id="o-feel"></div></div>
-    <div class="card" id="c-oth"><h2>ΆΛΛΟ <span>· Other</span></h2><div id="o-oth"></div></div>
-    <div class="warn">Δεν αποκλείει τραυματισμό.<small>This does not rule out injury. Not a diagnosis.</small></div>
-    <button id="reset">Νέα αξιολόγηση</button>
-  </div>
-</section>
-
-<!-- Μηνύματα -->
-<div id="msg">
-  <div class="top"><button class="cb" id="mx">✕ Κλείσε</button><span id="mn" style="font-size:15px;color:var(--mut)"></span><span style="min-width:68px"></span></div>
-  <div id="mc"></div>
-  <button class="nx" id="mnext">Επόμενο →</button>
-</div>
-
-<!-- ΝΑΙ / ΟΧΙ -->
-<div id="yn">
-  <div class="top"><button class="cb" id="yx">✕ Κλείσε</button><span></span><span style="min-width:68px"></span></div>
-  <button class="yb" id="yes"><span class="el">ΝΑΙ</span><span class="en">YES</span></button>
-  <button class="yb" id="no"><span class="el">ΟΧΙ</span><span class="en">NO</span></button>
-</div>
-
-<!-- Πριν ξεκινήσεις (μία φορά) -->
-<div id="intro">
-  <div class="ib">
-    <h1>Πριν ξεκινήσεις<small>Before you start</small></h1>
-    <p>Ο Δίαυλος Responder είναι βοηθητικό εργαλείο επικοινωνίας με άτομο που δεν μπορεί να μιλήσει.</p>
-    <ul>
-      <li>Δεν είναι ιατρική εφαρμογή και δεν κάνει διάγνωση.</li>
-      <li>Δεν αξιολογεί συνείδηση ή αναπνοή και δεν αντικαθιστά τις διαδικασίες πρώτων βοηθειών, το ΕΚΑΒ ή τον γιατρό.</li>
-      <li>Δείχνει μόνο ό,τι επιλέγει το άτομο. Αν δεν επιλέξει κάτι, αυτό δεν σημαίνει ότι δεν υπάρχει πρόβλημα.</li>
-      <li>Δεν αποθηκεύει δεδομένα. Ό,τι καταγράφεται σβήνει όταν κλείσει η εφαρμογή.</li>
-      <li>Μπορείς να την αφήσεις ανά πάσα στιγμή και να συνεχίσεις κανονικά.</li>
-    </ul>
-    <div class="en2">
-      <p>Diavlos Responder is a supporting communication tool for a person who cannot speak.</p>
-      <ul>
-        <li>It is not a medical app and does not diagnose.</li>
-        <li>It does not assess consciousness or breathing, and does not replace first-aid procedures, the ambulance service, or a doctor.</li>
-        <li>It shows only what the person selects. If they select nothing, that does not mean there is no problem.</li>
-        <li>It stores no data. Everything is erased when the app is closed.</li>
-        <li>You can leave it at any moment and continue as normal.</li>
-      </ul>
-    </div>
-  </div>
-  <button class="okb" id="introok">Κατάλαβα · I understand</button>
-</div>
-
 <script>
-(function(){
-var $=function(i){return document.getElementById(i)};
-var SH={head:'<circle cx="40" cy="14" r="11"/>',neck:'<rect x="35" y="25" width="10" height="8" rx="2"/>',chest:'<rect x="22" y="33" width="36" height="24" rx="6"/>',abdomen:'<rect x="24" y="58" width="32" height="20" rx="5"/>',pelvis:'<rect x="24" y="79" width="32" height="14" rx="5"/>',arms:'<rect x="8" y="34" width="11" height="50" rx="5"/><rect x="61" y="34" width="11" height="50" rx="5"/>',legs:'<rect x="25" y="95" width="13" height="60" rx="5"/><rect x="42" y="95" width="13" height="60" rx="5"/>'};
-var ALL=['head','neck','chest','abdomen','pelvis','arms','legs'];
-function fig(red,back){var s='<svg viewBox="0 0 80 160" aria-hidden="true">';ALL.forEach(function(k){s+='<g fill="'+(red.indexOf(k)>-1?'var(--red)':'var(--body)')+'">'+SH[k]+'</g>'});if(back)s+='<line x1="40" y1="35" x2="40" y2="92" stroke="#fff" stroke-width="3" stroke-dasharray="4 3"/>';return s+'</svg>'}
-var Z=[['head','Κεφάλι','Head',['head']],['neck','Λαιμός','Neck',['neck']],['chest','Στήθος','Chest',['chest']],['abdomen','Κοιλιά','Abdomen',['abdomen']],['pelvis','Λεκάνη','Pelvis / hips',['pelvis']],['arms','Χέρια','Arms',['arms']],['legs','Πόδια','Legs',['legs']],['back','Πλάτη','Back',['chest','abdomen'],1],['all','Πονάω παντού','Pain everywhere',ALL,0,1]];
-var F=[['Δεν μου φτάνει ο αέρας','I can\u2019t get enough air'],['Δεν νιώθω τα πόδια μου','I can\u2019t feel my legs'],['Θα λιποθυμήσω','I feel faint'],['Ζάλη','Dizzy'],['Έντονη αδυναμία','Severe weakness'],['Μπερδεύομαι','I feel confused'],['Μούδιασμα','Numbness'],['Θολή όραση','Blurry vision'],['Ναυτία','Nausea'],['Κρυώνω πολύ','Very cold']];
-var M=[['Είμαι εδώ μαζί σου.','I am here with you.'],['Δεν χρειάζεται να μιλήσεις.','You do not need to speak.'],['Πάτα με το δάχτυλο αν με καταλαβαίνεις.','Tap with your finger if you understand me.']];
+/* ============================================================
+   Δίαυλος Responder — μία σελίδα, χωρίς εξωτερικά αρχεία.
+   Καμία καταγραφή. Μόνο runtime memory.
+   ============================================================ */
 
-var st,hist,cur,nrT,mi=0,wl=null,AC=null,rt;
-function reset(){st={pain:[],painAll:false,painNone:false,feel:[],feelNone:false,noAns:false,stop:0,last:null};hist=[];cur=null}
-
-/* Σήμα: flash πρώτα, ήχος και δόνηση συμπληρωματικά */
-function vib(p){try{if(navigator.vibrate)navigator.vibrate(p)}catch(e){}}
-function beep(){try{var C=window.AudioContext||window.webkitAudioContext;if(!C)return;AC=AC||new C();if(AC.state==='suspended')AC.resume();var o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;g.gain.value=.2;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.09)}catch(e){}}
-function flash(){var f=$('flash');f.classList.add('on');setTimeout(function(){f.classList.remove('on')},150)}
-function tap(){st.last=Date.now();flash();vib(80);beep();if(!wl||wl.released)lock()}
-
-/* Wake Lock: ξαναζητιέται όταν η εφαρμογή επιστρέφει στο προσκήνιο */
-function lock(){try{if('wakeLock' in navigator){navigator.wakeLock.request('screen').then(function(l){wl=l;setDot(true);l.addEventListener('release',function(){setDot(false)})}).catch(function(){setDot(false)})}}catch(e){}}
-function setDot(on){var d=$('wl');if(d)d.classList.toggle('ok',on)}
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')lock()});
-
-function go(n,back){
-  if(!back&&cur&&cur!==n)hist.push(cur);
-  cur=n;
-  ['s1','s2','s3','s4'].forEach(function(s){$(s).classList.toggle('on',s===n)});
-  clearTimeout(nrT);$('nr').style.display='none';
-  if(n==='s1')nrT=setTimeout(function(){if(cur==='s1'){$('nr').style.display='block';vib(500)}},10000);
-  if(n==='s2')r2();if(n==='s3')r3();if(n==='s4')r4();
-  if(!back&&n!=='s1')vib([80,60,80]);
-  [].forEach.call(document.querySelectorAll('[data-back]'),function(b){b.style.visibility=(n==='s1')?'hidden':'visible'});
-}
-function back(){if(hist.length)go(hist.pop(),true)}
-
-/* Οθόνη 1 */
-$('big').onclick=function(){tap();$('nr').style.display='none';go('s2')};
-
-/* Οθόνη 2 */
-Z.forEach(function(z){
-  var b=document.createElement('button');
-  b.className='z fig'+(z[5]?' wide':'');b.dataset.k=z[0];
-  b.innerHTML=fig(z[3],z[4])+'<span><span class="el">'+z[1]+'</span><br><span class="en">'+z[2]+'</span></span>';
-  b.onclick=function(){
-    tap();var k=z[0];
-    if(k==='all'){st.painAll=!st.painAll;if(st.painAll)st.pain=[]}
-    else{var i=st.pain.indexOf(k);if(i>-1)st.pain.splice(i,1);else st.pain.push(k);st.painAll=false}
-    r2();
-  };
-  $('g2').appendChild(b);
-});
-function r2(){
-  [].forEach.call($('g2').children,function(b){var k=b.dataset.k,on=k==='all'?st.painAll:st.pain.indexOf(k)>-1;b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on)});
-  var has=st.pain.length||st.painAll;
-  $('m2').innerHTML=has?'<span class="el">Συνέχεια</span><span class="en">Next</span>':'<span class="el">Δεν πονάω</span><span class="en">No pain</span>';
-}
-$('m2').onclick=function(){tap();st.painNone=!(st.pain.length||st.painAll);st.stop=0;st.noAns=false;go('s3')};
-$('x2').onclick=function(){tap();st.stop=2;st.noAns=false;st.painNone=false;go('s4')};
-
-/* Οθόνη 3 */
-F.forEach(function(f,i){
-  var b=document.createElement('button');
-  b.className='z';b.dataset.k=i;
-  b.innerHTML='<span class="el">'+f[0]+'</span><span class="en">'+f[1]+'</span>';
-  b.onclick=function(){tap();var j=st.feel.indexOf(i);if(j>-1)st.feel.splice(j,1);else st.feel.push(i);r3()};
-  $('g3').appendChild(b);
-});
-function r3(){
-  [].forEach.call($('g3').children,function(b){var on=st.feel.indexOf(+b.dataset.k)>-1;b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on)});
-  $('m3').innerHTML=st.feel.length?'<span class="el">Συνέχεια</span><span class="en">Done</span>':'<span class="el">Τίποτα άλλο</span><span class="en">Nothing else</span>';
-}
-$('m3').onclick=function(){tap();st.feelNone=!st.feel.length;st.stop=0;st.noAns=false;go('s4')};
-$('n3').onclick=function(){tap();st.noAns=true;st.stop=0;st.feelNone=false;go('s4')};
-$('x3').onclick=function(){tap();st.stop=3;st.noAns=false;st.feelNone=false;go('s4')};
-
-/* Σύνοψη */
-function list(id,arr,cls){$(id).innerHTML='<div class="items '+(cls||'')+'">'+arr.map(function(x){return '<div>'+x+'</div>'}).join('')+'</div>'}
-function tm(){
-  if(!st.last){$('tm').textContent='Καμία απάντηση από το άτομο.';return}
-  var m=Math.floor((Date.now()-st.last)/60000);
-  $('tm').textContent='Τελευταία απάντηση: '+(m<1?'πριν από λιγότερο από 1 λεπτό':'πριν από '+m+(m===1?' λεπτό':' λεπτά'));
-}
-function r4(){
-  var pn=Z.filter(function(z){return st.pain.indexOf(z[0])>-1&&z[0]!=='all'}).map(function(z){return z[1]});
-  if(st.painAll)list('o-pain',['Πονάει παντού'],'pain');
-  else if(pn.length)list('o-pain',pn,'pain');
-  else if(st.painNone)list('o-pain',['Το άτομο δεν έδειξε πόνο']);
-  else list('o-pain',['Δεν καταγράφηκε απάντηση']);
-  var fn=st.feel.slice().sort(function(a,b){return a-b}).map(function(i){return F[i][0]});
-  if(fn.length)list('o-feel',fn);
-  else if(st.feelNone)list('o-feel',['Το άτομο δεν έδειξε άλλο σύμπτωμα']);
-  else if(st.stop===2)list('o-feel',['Δεν ρωτήθηκε']);
-  else list('o-feel',['Δεν καταγράφηκε απάντηση']);
-  var o=[];if(st.stop)o.push('Η αξιολόγηση σταμάτησε εδώ.');if(st.noAns)o.push('Το άτομο δεν μπόρεσε να απαντήσει.');
-  $('c-oth').style.display=o.length?'':'none';if(o.length)list('o-oth',o);
-  tm();
-}
-setInterval(function(){if(cur==='s4')tm()},15000);
-$('reset').onclick=function(){
-  var r=$('reset');
-  if(!r.classList.contains('arm')){r.classList.add('arm');r.textContent='Σίγουρα; Πάτα ξανά για διαγραφή';rt=setTimeout(function(){r.classList.remove('arm');r.textContent='Νέα αξιολόγηση'},4000)}
-  else{clearTimeout(rt);r.classList.remove('arm');r.textContent='Νέα αξιολόγηση';reset();go('s1')}
+const STRINGS = {
+  el: {
+    introTitle:'Πριν ξεκινήσεις',
+    introL1:'Η εφαρμογή ΔΕΝ κάνει διάγνωση.',
+    introL2:'ΔΕΝ αξιολογεί συνείδηση ή αναπνοή.',
+    introL3:'ΔΕΝ δίνει ιατρικές οδηγίες.',
+    introL4:'Είναι κανάλι επικοινωνίας.',
+    introStart:'Κατάλαβα — Ξεκίνα',
+    tapLabel:'ΠΑΤΑ ΕΔΩ',
+    tapHint:'Δεν αξιολογεί συνείδηση/αναπνοή',
+    timeoutMsg:'Καμία απάντηση. Έλεγξε το άτομο.',
+    continue:'ΣΥΝΕΧΕΙΑ →',
+    painQ:'Πού πονάς;',
+    painAll:'ΠΟΝΑΩ ΠΑΝΤΟΥ',
+    painNone:'ΔΕΝ ΠΟΝΑΩ',
+    yes:'ΝΑΙ',
+    no:'ΟΧΙ',
+    stopHere:'Σταματάμε εδώ',
+    summaryQ:'ΣΥΝΟΨΗ',
+    disclaimer:'Δεν αποκλείει τραυματισμό. Not a diagnosis.',
+    back:'ΠΙΣΩ',
+    msg1:'Είμαι εδώ μαζί σου.',
+    msg2:'Δεν χρειάζεται να μιλήσεις.',
+    close:'ΚΛΕΙΣΕ',
+    resetArm:'ΞΑΝΑ',
+    reset:'↺',
+    questions:[
+      'ΣΟΥ ΦΤΑΝΕΙ Ο ΑΕΡΑΣ;',
+      'ΝΙΩΘΕΙΣ ΕΝΤΟΝΗ ΑΔΥΝΑΜΙΑ;',
+      'ΝΙΩΘΕΙΣ ΝΑ ΛΙΠΟΘΥΜΑΣ;',
+      'ΝΙΩΘΕΙΣ ΤΑ ΠΟΔΙΑ ΣΟΥ;'
+    ],
+    sum:{
+      pain:'ΠΟΝΟΣ', air:'ΑΕΡΑΣ', weak:'ΑΔΥΝΑΜΙΑ', faint:'ΛΙΠΟΘΥΜΙΑ', legs:'ΠΟΔΙΑ',
+      head:'ΚΕΦΑΛΙ', chest:'ΣΤΗΘΟΣ', belly:'ΚΟΙΛΙΑ',
+      everywhere:'ΠΑΝΤΟΥ', none:'ΚΑΝΕΝΑΣ',
+      yes:'ΝΑΙ', no:'ΟΧΙ', skip:'—'
+    }
+  },
+  en: {
+    introTitle:'Before you start',
+    introL1:'This app does NOT diagnose.',
+    introL2:'It does NOT assess consciousness or breathing.',
+    introL3:'It does NOT give medical instructions.',
+    introL4:'It is a communication channel.',
+    introStart:'Understood — Start',
+    tapLabel:'TAP HERE',
+    tapHint:'Does not assess consciousness/breathing',
+    timeoutMsg:'No response. Check the person.',
+    continue:'CONTINUE →',
+    painQ:'Where does it hurt?',
+    painAll:'I HURT EVERYWHERE',
+    painNone:'I DON\'T HURT',
+    yes:'YES',
+    no:'NO',
+    stopHere:'We stop here',
+    summaryQ:'SUMMARY',
+    disclaimer:'Does not rule out injury. Not a diagnosis.',
+    back:'BACK',
+    msg1:'I am here with you.',
+    msg2:'You don\'t need to speak.',
+    close:'CLOSE',
+    resetArm:'AGAIN',
+    reset:'↺',
+    questions:[
+      'ARE YOU GETTING ENOUGH AIR?',
+      'DO YOU FEEL INTENSE WEAKNESS?',
+      'DO YOU FEEL LIKE FAINTING?',
+      'DO YOU FEEL YOUR LEGS?'
+    ],
+    sum:{
+      pain:'PAIN', air:'AIR', weak:'WEAKNESS', faint:'FAINTING', legs:'LEGS',
+      head:'HEAD', chest:'CHEST', belly:'BELLY',
+      everywhere:'EVERYWHERE', none:'NONE',
+      yes:'YES', no:'NO', skip:'—'
+    }
+  }
 };
 
-/* Μηνύματα προς το άτομο */
-function rm(){$('mc').innerHTML='<span class="el">'+M[mi][0]+'</span><span class="en">'+M[mi][1]+'</span>';$('mn').textContent=(mi+1)+' / '+M.length}
-function openM(){mi=0;rm();$('msg').style.display='flex'}
-$('mnext').onclick=function(){mi=(mi+1)%M.length;rm()};
-$('mc').onclick=function(){tap()};
-$('mx').onclick=function(){$('msg').style.display='none'};
-[].forEach.call(document.querySelectorAll('[data-msg]'),function(b){b.onclick=openM});
-[].forEach.call(document.querySelectorAll('[data-back]'),function(b){b.onclick=back});
+const state = {
+  lang: localStorage.getItem('diavlos_resp_lang') || 'el',
+  theme: localStorage.getItem('diavlos_resp_theme') || 'dark',
+  pain: { head:false, chest:false, belly:false, everywhere:false, none:false },
+  answers: { air:null, weak:null, faint:null, legs:null },
+  currentQ: 0,
+  tapDone: false,
+  timeoutId: null
+};
 
-/* ΝΑΙ / ΟΧΙ: μένει ανοιχτό μέχρι το ✕, δεν καταγράφει τίποτα */
-$('yx').onclick=function(){$('yn').style.display='none'};
-[].forEach.call(document.querySelectorAll('[data-yn]'),function(b){b.onclick=function(){$('yn').style.display='flex'}});
-['yes','no'].forEach(function(id){var b=$(id);b.onclick=function(){tap();b.classList.add('hit');clearTimeout(b._t);b._t=setTimeout(function(){b.classList.remove('hit')},2000)}});
+const $ = id => document.getElementById(id);
+const qKeys = ['air','weak','faint','legs'];
 
-/* Πριν ξεκινήσεις: μόνο την πρώτη φορά (η ένδειξη δεν περιέχει δεδομένα περιστατικού) */
-reset();lock();
-var seen=false;try{seen=localStorage.getItem('diavlos-responder-intro')==='1'}catch(e){}
-if(seen)go('s1');else $('intro').style.display='flex';
-$('introok').onclick=function(){try{localStorage.setItem('diavlos-responder-intro','1')}catch(e){}$('intro').style.display='none';go('s1')};
-try{if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(function(){})}catch(e){}
-})();
+/* ---------- i18n ---------- */
+function t(key){ return STRINGS[state.lang][key]; }
+function tSum(key){ return STRINGS[state.lang].sum[key]; }
+
+function applyLang(){
+  document.documentElement.lang = state.lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k = el.dataset.i18n;
+    const v = STRINGS[state.lang][k];
+    if (typeof v === 'string') el.textContent = v;
+  });
+  $('btnLang').textContent = state.lang === 'el' ? 'EN' : 'EL';
+  renderQuestion();
+  renderSummary();
+}
+
+/* ---------- THEME ---------- */
+function applyTheme(){
+  document.body.classList.toggle('light', state.theme === 'light');
+  document.querySelector('meta[name="theme-color"]')
+    .setAttribute('content', state.theme === 'light' ? '#f4f4f5' : '#0a0a0a');
+}
+
+/* ---------- FEEDBACK ---------- */
+let audioCtx = null;
+function beep(){
+  try{
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = 880;
+    g.gain.value = 0.12;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    o.stop(audioCtx.currentTime + 0.09);
+  }catch(e){}
+}
+function flash(){
+  const f = $('flash');
+  f.classList.add('on');
+  setTimeout(()=>f.classList.remove('on'), 150);
+}
+function vibrate(){ if (navigator.vibrate) navigator.vibrate(80); }
+function feedback(){ flash(); beep(); vibrate(); }
+
+/* ---------- WAKE LOCK ---------- */
+let wakeLock = null;
+async function acquireWakeLock(){
+  try{
+    if ('wakeLock' in navigator && document.visibilityState === 'visible'){
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  }catch(e){}
+}
+document.addEventListener('visibilitychange', ()=>{
+  if (document.visibilityState === 'visible') acquireWakeLock();
+});
+
+/* ---------- NAVIGATION ---------- */
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  $(id).classList.remove('hidden');
+}
+function showIntroIfFirst(){
+  if (!localStorage.getItem('diavlos_resp_intro_seen')){
+    $('intro').classList.remove('hidden');
+  }
+}
+
+/* ---------- SCREEN 1: TAP ---------- */
+function enterTap(){
+  $('tapNext').classList.add('hidden');
+  $('timeoutBanner').classList.add('hidden');
+  $('tapBtn').classList.remove('done');
+  state.tapDone = false;
+  clearTimeout(state.timeoutId);
+  state.timeoutId = setTimeout(()=>{
+    if (!state.tapDone) $('timeoutBanner').classList.remove('hidden');
+  }, 10000);
+}
+$('tapBtn').addEventListener('click', ()=>{
+  if (state.tapDone) return;
+  feedback();
+  state.tapDone = true;
+  clearTimeout(state.timeoutId);
+  $('tapBtn').classList.add('done');
+  setTimeout(()=>$('tapNext').classList.remove('hidden'), 250);
+});
+$('tapNext').addEventListener('click', ()=>{ enterPain(); goTo('screen-pain'); });
+
+/* ---------- SCREEN 2: PAIN ---------- */
+function enterPain(){
+  // reset only on first entry per incident handled by hardReset
+}
+function updatePainUI(){
+  document.querySelectorAll('.zone').forEach(el=>{
+    const z = el.dataset.zone;
+    el.classList.toggle('selected', state.pain.everywhere || state.pain[z]);
+  });
+  $('painAll').classList.toggle('selected', state.pain.everywhere);
+  $('painNone').classList.toggle('selected', state.pain.none);
+}
+document.querySelectorAll('.zone').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    feedback();
+    const z = el.dataset.zone;
+    if (state.pain.everywhere || state.pain.none){
+      state.pain.everywhere = false;
+      state.pain.none = false;
+      state.pain.head = state.pain.chest = state.pain.belly = false;
+    }
+    state.pain[z] = !state.pain[z];
+    updatePainUI();
+  });
+});
+$('painAll').addEventListener('click', ()=>{
+  feedback();
+  const on = !state.pain.everywhere;
+  state.pain = { head:false, chest:false, belly:false, everywhere:on, none:false };
+  updatePainUI();
+});
+$('painNone').addEventListener('click', ()=>{
+  feedback();
+  const on = !state.pain.none;
+  state.pain = { head:false, chest:false, belly:false, everywhere:false, none:on };
+  updatePainUI();
+});
+$('painNext').addEventListener('click', ()=>{ state.currentQ = 0; enterSense(); goTo('screen-senses'); });
+
+/* ---------- SCREEN 3: SENSES ---------- */
+function enterSense(){
+  renderQuestion();
+}
+function renderQuestion(){
+  const qs = STRINGS[state.lang].questions;
+  const idx = Math.min(state.currentQ, qs.length - 1);
+  $('senseQ').textContent = qs[idx];
+  const cur = state.answers[qKeys[idx]];
+  $('senseYes').classList.toggle('selected', cur === true);
+  $('senseNo').classList.toggle('selected', cur === false);
+}
+function answerSense(val){
+  feedback();
+  state.answers[qKeys[state.currentQ]] = val;
+  renderQuestion();
+  setTimeout(()=>{
+    if (state.currentQ < 3){
+      state.currentQ++;
+      renderQuestion();
+    } else {
+      renderSummary();
+      goTo('screen-summary');
+    }
+  }, 320);
+}
+$('senseYes').addEventListener('click', ()=>answerSense(true));
+$('senseNo').addEventListener('click', ()=>answerSense(false));
+$('senseStop').addEventListener('click', ()=>{
+  feedback();
+  renderSummary();
+  goTo('screen-summary');
+});
+
+/* ---------- SCREEN 4: SUMMARY ---------- */
+function painValue(){
+  const s = STRINGS[state.lang].sum;
+  if (state.pain.everywhere) return s.everywhere;
+  if (state.pain.none) return s.none;
+  const parts = [];
+  if (state.pain.head) parts.push(s.head);
+  if (state.pain.chest) parts.push(s.chest);
+  if (state.pain.belly) parts.push(s.belly);
+  return parts.length ? parts.join(', ') : s.none;
+}
+function yn(v){
+  const s = STRINGS[state.lang].sum;
+  if (v === true) return s.yes;
+  if (v === false) return s.no;
+  return s.skip;
+}
+function renderSummary(){
+  if (!$('summaryList')) return;
+  const s = STRINGS[state.lang].sum;
+  const rows = [
+    [s.pain, painValue()],
+    [s.air, yn(state.answers.air)],
+    [s.weak, yn(state.answers.weak)],
+    [s.faint, yn(state.answers.faint)],
+    [s.legs, yn(state.answers.legs)]
+  ];
+  $('summaryList').innerHTML = rows.map(([k,v])=>
+    `<div class="sum-row"><span class="sum-k">${k}</span><span class="sum-v">${v}</span></div>`
+  ).join('');
+}
+$('summaryBack').addEventListener('click', ()=>{
+  feedback();
+  goTo('screen-senses');
+  renderQuestion();
+});
+
+/* ---------- FABs / OVERLAYS ---------- */
+function openOverlay(id){ $(id).classList.remove('hidden'); }
+function closeOverlay(id){ $(id).classList.add('hidden'); }
+$('fabMsg').addEventListener('click', ()=>{ feedback(); openOverlay('msgOverlay'); });
+$('fabYN').addEventListener('click', ()=>{ feedback(); openOverlay('ynOverlay'); });
+document.querySelectorAll('[data-close]').forEach(el=>{
+  el.addEventListener('click', ()=>closeOverlay(el.dataset.close));
+});
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click', e=>{ if (e.target === ov) ov.classList.add('hidden'); });
+});
+
+/* ---------- INTRO ---------- */
+$('introStart').addEventListener('click', ()=>{
+  localStorage.setItem('diavlos_resp_intro_seen','1');
+  $('intro').classList.add('hidden');
+  acquireWakeLock();
+});
+
+/* ---------- RESET (2 taps, 4s window) ---------- */
+let resetArmed = false;
+let resetTimer = null;
+$('btnReset').addEventListener('click', ()=>{
+  if (!resetArmed){
+    resetArmed = true;
+    $('btnReset').classList.add('armed');
+    $('btnReset').textContent = t('resetArm');
+    resetTimer = setTimeout(()=>{
+      resetArmed = false;
+      $('btnReset').classList.remove('armed');
+      $('btnReset').textContent = t('reset');
+    }, 4000);
+  } else {
+    clearTimeout(resetTimer);
+    resetArmed = false;
+    $('btnReset').classList.remove('armed');
+    $('btnReset').textContent = t('reset');
+    hardReset();
+  }
+});
+function hardReset(){
+  state.pain = { head:false, chest:false, belly:false, everywhere:false, none:false };
+  state.answers = { air:null, weak:null, faint:null, legs:null };
+  state.currentQ = 0;
+  state.tapDone = false;
+  clearTimeout(state.timeoutId);
+  updatePainUI();
+  renderQuestion();
+  renderSummary();
+  goTo('screen-tap');
+  enterTap();
+}
+
+/* ---------- TOPBAR BUTTONS ---------- */
+$('btnLang').addEventListener('click', ()=>{
+  state.lang = state.lang === 'el' ? 'en' : 'el';
+  localStorage.setItem('diavlos_resp_lang', state.lang);
+  applyLang();
+});
+$('btnTheme').addEventListener('click', ()=>{
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('diavlos_resp_theme', state.theme);
+  applyTheme();
+});
+
+/* ---------- BOOT ---------- */
+applyTheme();
+applyLang();
+updatePainUI();
+enterTap();
+showIntroIfFirst();
+acquireWakeLock();
+
+if ('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
 </script>
 </body>
 </html>
