@@ -243,7 +243,7 @@ main {
 
 .emergency-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: var(--sp-2);
 }
 
@@ -2310,4 +2310,443 @@ dialog.consent-dialog { width: min(94vw, 520px); }
   cursor: pointer;
   min-height: 76px;
   margin-top: var(--sp-3);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Follow-up μετά την εμφάνιση
+   ═══════════════════════════════════════════════════════════════ */
+
+.followup-strip {
+  position: absolute;
+  bottom: calc(var(--sp-6) + env(safe-area-inset-bottom, 0px));
+  left: var(--sp-4);
+  right: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  max-width: 520px;
+  margin: 0 auto;
+  z-index: 5;
+}
+
+.followup-question {
+  margin: 0 0 var(--sp-2) 0;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #555555;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.followup-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2);
+}
+
+.followup-btn {
+  min-height: 60px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 2px solid var(--border);
+  border-radius: var(--r-md);
+  background: #f0f0f0;
+  color: #000000;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.followup-btn-primary {
+  background: #2d6a4f;
+  color: #ffffff;
+  border-color: #2d6a4f;
+}
+
+.followup-btn-primary:active {
+  background: #1b4332;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Τα στοιχεία μου
+   ═══════════════════════════════════════════════════════════════ */
+
+.personal-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  margin-top: var(--sp-4);
+}
+
+.personal-note {
+  margin: 0 0 var(--sp-4) 0;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--r-md);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.personal-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.personal-group-title {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.personal-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.personal-field-label {
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.personal-field-input {
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  font-family: var(--font);
+  font-size: 1.1rem;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  min-height: 56px;
+}
+
+.personal-field-input:focus {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-color: var(--accent);
+}
+
+.personal-saved {
+  margin-top: var(--sp-1);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   + Στοιχεία μου (Composer)
+   ═══════════════════════════════════════════════════════════════ */
+
+.composer-personal-toggle {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+  background: var(--surface);
+  color: var(--accent);
+  border: 2px dashed var(--accent);
+  border-radius: var(--r-md);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 56px;
+}
+
+.composer-personal-toggle:active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.composer-personal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+}
+
+.composer-personal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 2px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.composer-personal-chip:active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.composer-personal-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: inherit;
+  font-family: var(--font);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Οθόνη ακούοντος — καθαρή κάρτα για τον υπάλληλο
+   ═══════════════════════════════════════════════════════════════ */
+
+.listener-header {
+  margin: 0 0 var(--sp-4) 0;
+  padding: var(--sp-3) var(--sp-4);
+  background: #fff3cd;
+  border-left: 5px solid #ff9800;
+  border-radius: var(--r-md);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  color: #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  .listener-header {
+    background: #3a2f00;
+    border-left-color: #ffb74d;
+    color: #ffe9a8;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Onboarding banner (πρώτη χρήση)
+   ═══════════════════════════════════════════════════════════════ */
+
+.onboarding-banner {
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-4);
+  background: var(--surface);
+  border-left: 5px solid var(--accent);
+  border-radius: var(--r-lg);
+}
+
+.onboarding-title {
+  margin: 0 0 var(--sp-3) 0;
+  font-family: var(--font);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.onboarding-text {
+  margin: 0 0 var(--sp-3) 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.onboarding-text:last-of-type {
+  margin-bottom: var(--sp-4);
+}
+
+.onboarding-btn {
+  width: 100%;
+  padding: var(--sp-4);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+  border-radius: var(--r-md);
+  font-family: var(--font);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 56px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Δομημένη συνομιλία — Πλακίδια στην αρχική
+   ═══════════════════════════════════════════════════════════════ */
+
+.protocol-grid-section {
+  margin-top: var(--sp-6);
+}
+
+.protocol-grid-title {
+  margin: 0 0 var(--sp-2) 0;
+  font-family: var(--font);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.protocol-grid-intro {
+  margin: 0 0 var(--sp-4) 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.protocol-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-3);
+}
+
+.protocol-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-3);
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+  min-height: 130px;
+  transition: background 150ms, color 150ms;
+}
+
+.protocol-tile:active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.protocol-tile-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.protocol-tile-label {
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Urgent warning (Πόνος στο στήθος)
+   ═══════════════════════════════════════════════════════════════ */
+
+.urgent-warning {
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-4);
+  background: #fff3cd;
+  border-left: 5px solid #ff9800;
+  border-radius: var(--r-md);
+}
+
+@media (prefers-color-scheme: dark) {
+  .urgent-warning {
+    background: #3a2f00;
+    border-left-color: #ffb74d;
+  }
+}
+
+.urgent-text {
+  margin: 0 0 var(--sp-3) 0;
+  font-family: var(--font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  .urgent-text {
+    color: #ffe9a8;
+  }
+}
+
+.urgent-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2);
+}
+
+.urgent-btn {
+  min-height: 52px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 2px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.urgent-btn-sms {
+  background: var(--danger);
+  color: var(--danger-contrast);
+  border-color: var(--danger);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SMS preview dialog
+   ═══════════════════════════════════════════════════════════════ */
+
+.sms-preview-text {
+  margin: 0 0 var(--sp-3) 0;
+  padding: var(--sp-4);
+  background: var(--bg);
+  border-radius: var(--r-md);
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: var(--text);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Composer personal chip active state
+   ═══════════════════════════════════════════════════════════════ */
+
+.composer-personal-chip-active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
 }

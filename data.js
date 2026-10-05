@@ -236,6 +236,7 @@ const CARD_CATEGORIES = [
         prompt: "Πότε ξεκίνησε; Πώς είναι ο πόνος;",
         placeholder: "π.χ. πριν 1 ώρα, σφίξιμο",
         prefixes: [],
+        urgent: true,
         finalPrefix: "⚠ Επείγον. Έχω πόνο στο στήθος:"
       },
       {
@@ -283,7 +284,16 @@ const CARD_CATEGORIES = [
         label: "Παραγγελία",
         prompt: "Τι θέλεις να παραγγείλεις;",
         placeholder: "π.χ. έναν καφέ και ένα κρουασάν",
-        prefixes: [],
+        prefixes: [
+          "Freddo espresso",
+          "Freddo cappuccino",
+          "Frappé",
+          "Ελληνικός",
+          "Νερό",
+          "Χυμός",
+          "Χωρίς ζάχαρη",
+          "Με γάλα"
+        ],
         finalPrefix: "Καλησπέρα σας.\nΕίμαι κωφός/κωφή και επικοινωνούμε γραπτώς.\nΘα ήθελα να παραγγείλω:"
       },
       {
@@ -301,6 +311,14 @@ const CARD_CATEGORIES = [
         placeholder: "π.χ. ήρθε λάθος πιάτο",
         prefixes: [],
         finalPrefix: "Καλησπέρα σας.\nΕίμαι κωφός/κωφή και επικοινωνούμε γραπτώς.\nΘα ήθελα να διορθωθεί η παραγγελία μου:"
+      },
+      {
+        id: "caf-p-bill",
+        label: "Τον λογαριασμό",
+        prompt: "Θέλεις να προσθέσεις κάτι;",
+        placeholder: "",
+        prefixes: [],
+        finalPrefix: "Καλησπέρα σας.\nΕίμαι κωφός/κωφή και επικοινωνούμε γραπτώς.\nΤον λογαριασμό, παρακαλώ:"
       },
       {
         id: "caf-p-other",
@@ -338,7 +356,14 @@ const CARD_CATEGORIES = [
         label: "Ψάχνω κάτι συγκεκριμένο",
         prompt: "Τι ψάχνεις;",
         placeholder: "π.χ. παπούτσια νούμερο 42",
-        prefixes: [],
+        prefixes: [
+          "Παπούτσια",
+          "Ρούχα",
+          "Παντελόνι",
+          "Μπλούζα",
+          "Ηλεκτρονικό",
+          "Δώρο"
+        ],
         finalPrefix: "Καλημέρα σας.\nΕίμαι κωφός/κωφή και επικοινωνούμε γραπτώς.\nΨάχνω:"
       },
       {
@@ -402,6 +427,39 @@ const TAGS = [
   { id: "other",       label: "Άλλα",        iconId: "icon-tag-other" }
 ];
 
+// ─── Προσωπικά στοιχεία χρήστη ────────────────────────────────────
+//
+// Ομαδοποίηση πεδίων για την καρτέλα «Τα στοιχεία μου».
+// Όλα αποθηκεύονται ΜΟΝΟ τοπικά στη συσκευή (localStorage).
+// Δεν αποστέλλονται σε server.
+
+const PERSONAL_FIELDS = [
+  { id: "fullname",  label: "Ονοματεπώνυμο",  group: "basic"  },
+  { id: "phone",     label: "Τηλέφωνο",       group: "basic"  },
+  { id: "address",   label: "Διεύθυνση",      group: "basic"  },
+  { id: "postcode",  label: "Τ.Κ.",           group: "basic"  },
+
+  { id: "afm",       label: "ΑΦΜ",            group: "public" },
+  { id: "amka",      label: "ΑΜΚΑ",           group: "public" },
+  { id: "idcard",    label: "Αριθμός ταυτότητας", group: "public" },
+
+  { id: "allergies", label: "Αλλεργίες",      group: "health" },
+  { id: "meds",      label: "Φάρμακα που παίρνω", group: "health" },
+  { id: "bloodtype", label: "Ομάδα αίματος",  group: "health" },
+
+  { id: "email",     label: "Email",          group: "other"  },
+  { id: "other",     label: "Άλλο",           group: "other"  }
+];
+
+const PERSONAL_GROUPS = [
+  { id: "basic",  label: "Βασικά στοιχεία" },
+  { id: "public", label: "Δημόσιες υπηρεσίες" },
+  { id: "health", label: "Υγεία" },
+  { id: "other",  label: "Άλλα" }
+];
+
+const PERSONAL_KEY = "diavlos_v1_personal";
+
 // ─── Keys & Limits ────────────────────────────────────────────────
 
 const CUSTOM_CARDS_KEY = "diavlos_v1_custom_cards";
@@ -460,6 +518,57 @@ function saveCustomCard(text) {
 function deleteCustomCard(id) {
   const cards = getCustomCards().filter((c) => c.id !== id);
   return writeJSON(CUSTOM_CARDS_KEY, cards);
+}
+
+// ─── Προσωπικά στοιχεία ───────────────────────────────────────────
+
+function getPersonalData() {
+  try {
+    const raw = localStorage.getItem(PERSONAL_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+      ? parsed
+      : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function getPersonalField(fieldId) {
+  const data = getPersonalData();
+  return data[fieldId] || "";
+}
+
+function savePersonalField(fieldId, value) {
+  const valid = PERSONAL_FIELDS.some((f) => f.id === fieldId);
+  if (!valid) return { ok: false, reason: "unknown-field" };
+
+  const clean = String(value || "").trim();
+  if (clean.length > 200) return { ok: false, reason: "too-long" };
+
+  const data = getPersonalData();
+
+  if (clean) {
+    data[fieldId] = clean;
+  } else {
+    delete data[fieldId];
+  }
+
+  try {
+    localStorage.setItem(PERSONAL_KEY, JSON.stringify(data));
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: "storage" };
+  }
+}
+
+function hasAnyPersonalData() {
+  return Object.keys(getPersonalData()).length > 0;
+}
+
+function getPersonalFieldsByGroup(groupId) {
+  return PERSONAL_FIELDS.filter((f) => f.group === groupId);
 }
 
 // ─── Αγαπημένα ────────────────────────────────────────────────────
