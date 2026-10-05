@@ -1,6 +1,6 @@
 // Δίαυλος Responder — service worker (scope: /responder/)
-// Αλλάζει ΜΟΝΟ τα caches με πρόθεμα "diavlos-responder-". Δεν αγγίζει τα caches του Δίαυλου πολίτη.
-var CACHE = 'diavlos-responder-v2';
+// Αλλάζει ΜΟΝΟ τα caches με πρόθεμα "responder-cache-" (ΟΧΙ "diavlos-": ο SW της ρίζας σβήνει κάθε cache που ξεκινά με "diavlos-"). Δεν αγγίζει τα caches του Δίαυλου πολίτη.
+var CACHE = 'responder-cache-v3';
 var FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function (e) {
@@ -10,7 +10,7 @@ self.addEventListener('install', function (e) {
 self.addEventListener('activate', function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(keys.filter(function (k) { return k.indexOf('diavlos-responder-') === 0 && k !== CACHE; }).map(function (k) { return caches.delete(k); }));
+      return Promise.all(keys.filter(function (k) { return k.indexOf('responder-cache-') === 0 && k !== CACHE; }).map(function (k) { return caches.delete(k); }));
     }).then(function () { return self.clients.claim(); })
   );
 });
