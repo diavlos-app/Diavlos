@@ -1,1 +1,246 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d62828">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Δίαυλος Responder</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f4f4f2;--fg:#111;--card:#fff;--line:#222;--mut:#555;--red:#d62828;--body:#c9c9c4;--flash:#1db954;--ok:#111;--okfg:#fff;--warn:#fff3c4;--warnfg:#4a3b00}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e0e0e;--fg:#f2f2f2;--card:#1b1b1b;--line:#eee;--mut:#aaa;--body:#555;--ok:#f2f2f2;--okfg:#111;--warn:#3a3000;--warnfg:#ffe98a}}
+:root[data-theme="dark"]{--bg:#0e0e0e;--fg:#f2f2f2;--card:#1b1b1b;--line:#eee;--mut:#aaa;--body:#555;--ok:#f2f2f2;--okfg:#111;--warn:#3a3000;--warnfg:#ffe98a}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*:before,*:after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+.scr{display:none;height:100%;flex-direction:column;min-height:0}
+.scr.on{display:flex}
+.top{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;gap:8px;flex:none}
+.cb{min-width:68px;min-height:48px;padding:0 12px;border:2px solid var(--line);border-radius:12px;background:var(--card);font-size:15px;font-weight:700}
+#wl{width:12px;height:12px;border-radius:50%;background:#f5a623}
+#wl.ok{background:#1db954}
+.inst{padding:0 12px;font-size:15px;color:var(--mut);text-align:center;flex:none}
+#nr{display:none;margin:8px 12px 0;padding:10px;border-radius:12px;background:var(--red);color:#fff;font-weight:800;font-size:20px;text-align:center;flex:none}
+#nr small{display:block;font-weight:500;font-size:14px}
+#big{flex:1;min-height:0;margin:10px 12px 12px;border:4px solid var(--line);border-radius:28px;background:var(--ok);color:var(--okfg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center}
+#big .el{font-size:38px;font-weight:900;line-height:1.1}
+#big .en{font-size:22px;opacity:.85}
+#big:active{filter:brightness(1.4)}
+h1{font-size:26px;line-height:1.15;margin:4px 4px 2px}
+h1 small{display:block;font-size:16px;font-weight:500;color:var(--mut);margin-top:2px}
+.sc{flex:1;min-height:0;overflow-y:auto;padding:0 12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.z{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:112px;padding:10px 6px;background:var(--card);border:3px solid var(--line);border-radius:16px;text-align:center}
+.z.fig{min-height:150px}
+.z svg{width:46px;height:92px}
+.z.wide{grid-column:1/3;flex-direction:row;gap:14px;min-height:100px}
+.z.wide svg{width:38px;height:76px}
+.el{font-size:21px;font-weight:800;line-height:1.1}
+.en{font-size:16px;font-weight:500;color:var(--mut);line-height:1.1}
+.z.sel{border-color:var(--red);background:color-mix(in srgb,var(--red) 14%,var(--card));box-shadow:0 0 0 3px var(--red)}
+.z.sel:after{content:"✓";position:absolute;top:4px;right:8px;font-size:22px;font-weight:900;color:var(--red)}
+.bar{flex:none;display:grid;gap:8px;padding:10px 12px;border-top:2px solid var(--line);background:var(--bg)}
+.bar.c2{grid-template-columns:1fr 1fr}.bar.c3{grid-template-columns:1fr 1fr 1fr}
+.act{min-height:100px;padding:6px 4px;border-radius:16px;border:3px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
+.act.main{background:var(--ok);color:var(--okfg)}
+.act .el{font-size:19px}.act .en{font-size:14px;color:inherit;opacity:.8}
+.card{background:var(--card);border:3px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.card h2{margin:0 0 6px;font-size:15px;letter-spacing:.06em;color:var(--mut)}
+.card h2 span{font-weight:500;letter-spacing:0}
+.items{font-size:24px;font-weight:700;line-height:1.2}
+.items.pain{font-size:32px;font-weight:800;color:var(--red)}
+.items div+div{margin-top:4px}
+.time{font-size:16px;color:var(--mut);margin:4px 4px 12px}
+.warn{background:var(--warn);color:var(--warnfg);border-radius:12px;padding:10px 12px;font-size:16px;font-weight:700;line-height:1.25;margin:12px 0}
+.warn small{display:block;font-weight:500;opacity:.85;font-size:13px}
+#reset{display:block;margin:14px auto 24px;min-height:56px;padding:0 20px;border-radius:14px;border:2px solid var(--line);background:var(--card);font-size:15px}
+#reset.arm{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+#msg{display:none;position:fixed;inset:0;z-index:10;background:var(--bg);flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+#mc{flex:1;min-height:0;margin:6px 12px;border:4px solid var(--line);border-radius:28px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;text-align:center}
+#mc .el{font-size:44px;font-weight:900;line-height:1.15}
+#mc .en{font-size:24px}
+#msg .nx{margin:0 12px 12px;min-height:84px;border-radius:16px;border:3px solid var(--line);background:var(--ok);color:var(--okfg);font-size:20px;font-weight:800}
+#flash{position:fixed;inset:0;z-index:20;background:var(--flash);opacity:0;pointer-events:none}
+#flash.on{opacity:.85}
+</style>
+</head>
+<body>
+<div id="flash"></div>
 
+<!-- Οθόνη 1 -->
+<section class="scr" id="s1">
+  <div class="top"><button class="cb" data-back>← Πίσω</button><span id="wl" title="Οθόνη ενεργή"></span><button class="cb" data-msg>Μήνυμα</button></div>
+  <div class="inst">Γύρνα την οθόνη προς το άτομο<br>Turn the screen toward the person</div>
+  <div id="nr">Καμία απάντηση. Έλεγξε το άτομο.<small>No response. Check the person.</small></div>
+  <button id="big"><span class="el">Πάτα εδώ αν με καταλαβαίνεις</span><span class="en">Tap here if you understand me</span></button>
+</section>
+
+<!-- Οθόνη 2 -->
+<section class="scr" id="s2">
+  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><button class="cb" data-msg>Μήνυμα</button></div>
+  <div class="sc"><h1>Πού νιώθεις πόνο;<small>Where do you feel pain?</small></h1><div class="grid" id="g2"></div></div>
+  <div class="bar c2">
+    <button class="act main" id="m2"></button>
+    <button class="act" id="x2"><span class="el">Σταματάμε εδώ</span><span class="en">We stop here</span></button>
+  </div>
+</section>
+
+<!-- Οθόνη 3 -->
+<section class="scr" id="s3">
+  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><button class="cb" data-msg>Μήνυμα</button></div>
+  <div class="sc"><h1>Νιώθεις κάτι άλλο;<small>Do you feel anything else?</small></h1><div class="grid" id="g3"></div></div>
+  <div class="bar c3">
+    <button class="act" id="n3"><span class="el">Δεν μπορώ να απαντήσω</span><span class="en">I can't answer</span></button>
+    <button class="act main" id="m3"></button>
+    <button class="act" id="x3"><span class="el">Σταματάμε εδώ</span><span class="en">We stop here</span></button>
+  </div>
+</section>
+
+<!-- Σύνοψη -->
+<section class="scr" id="s4">
+  <div class="top"><button class="cb" data-back>← Πίσω</button><span class="wlx"></span><button class="cb" data-msg>Μήνυμα</button></div>
+  <div class="sc">
+    <h1>Τι έδειξε το άτομο<small>What the person indicated</small></h1>
+    <div class="time" id="tm"></div>
+    <div class="card"><h2>ΠΟΝΟΣ <span>· Pain</span></h2><div id="o-pain"></div></div>
+    <div class="card"><h2>ΑΙΣΘΗΣΕΙΣ <span>· Feelings</span></h2><div id="o-feel"></div></div>
+    <div class="card" id="c-oth"><h2>ΆΛΛΟ <span>· Other</span></h2><div id="o-oth"></div></div>
+    <div class="warn">Δεν αποκλείει τραυματισμό.<small>This does not rule out injury. Not a diagnosis.</small></div>
+    <button id="reset">Νέα αξιολόγηση</button>
+  </div>
+</section>
+
+<!-- Μηνύματα -->
+<div id="msg">
+  <div class="top"><button class="cb" id="mx">✕ Κλείσε</button><span id="mn" style="font-size:15px;color:var(--mut)"></span><span style="min-width:68px"></span></div>
+  <div id="mc"></div>
+  <button class="nx" id="mnext">Επόμενο →</button>
+</div>
+
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var SH={head:'<circle cx="40" cy="14" r="11"/>',neck:'<rect x="35" y="25" width="10" height="8" rx="2"/>',chest:'<rect x="22" y="33" width="36" height="24" rx="6"/>',abdomen:'<rect x="24" y="58" width="32" height="20" rx="5"/>',pelvis:'<rect x="24" y="79" width="32" height="14" rx="5"/>',arms:'<rect x="8" y="34" width="11" height="50" rx="5"/><rect x="61" y="34" width="11" height="50" rx="5"/>',legs:'<rect x="25" y="95" width="13" height="60" rx="5"/><rect x="42" y="95" width="13" height="60" rx="5"/>'};
+var ALL=['head','neck','chest','abdomen','pelvis','arms','legs'];
+function fig(red,back){var s='<svg viewBox="0 0 80 160" aria-hidden="true">';ALL.forEach(function(k){s+='<g fill="'+(red.indexOf(k)>-1?'var(--red)':'var(--body)')+'">'+SH[k]+'</g>'});if(back)s+='<line x1="40" y1="35" x2="40" y2="92" stroke="#fff" stroke-width="3" stroke-dasharray="4 3"/>';return s+'</svg>'}
+var Z=[['head','Κεφάλι','Head',['head']],['neck','Λαιμός','Neck',['neck']],['chest','Στήθος','Chest',['chest']],['abdomen','Κοιλιά','Abdomen',['abdomen']],['pelvis','Λεκάνη','Pelvis / hips',['pelvis']],['arms','Χέρια','Arms',['arms']],['legs','Πόδια','Legs',['legs']],['back','Πλάτη','Back',['chest','abdomen'],1],['all','Πονάω παντού','Pain everywhere',ALL,0,1]];
+var F=[['Δεν μου φτάνει ο αέρας','I can\u2019t get enough air'],['Δεν νιώθω τα πόδια μου','I can\u2019t feel my legs'],['Θα λιποθυμήσω','I feel faint'],['Ζάλη','Dizzy'],['Έντονη αδυναμία','Severe weakness'],['Μπερδεύομαι','I feel confused'],['Μούδιασμα','Numbness'],['Θολή όραση','Blurry vision'],['Ναυτία','Nausea'],['Κρυώνω πολύ','Very cold']];
+var M=[['Είμαι εδώ μαζί σου.','I am here with you.'],['Θα σε βοηθήσω.','I will help you.'],['Δεν χρειάζεται να μιλήσεις.','You do not need to speak.'],['Πάτα με το δάχτυλο αν με καταλαβαίνεις.','Tap with your finger if you understand me.']];
+
+var st,hist,cur,nrT,mi=0,wl=null,AC=null,rt;
+function reset(){st={pain:[],painAll:false,painNone:false,feel:[],feelNone:false,noAns:false,stop:0,last:null};hist=[];cur=null}
+
+/* Σήμα: flash πρώτα, ήχος και δόνηση συμπληρωματικά */
+function vib(p){try{if(navigator.vibrate)navigator.vibrate(p)}catch(e){}}
+function beep(){try{var C=window.AudioContext||window.webkitAudioContext;if(!C)return;AC=AC||new C();if(AC.state==='suspended')AC.resume();var o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;g.gain.value=.2;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.09)}catch(e){}}
+function flash(){var f=$('flash');f.classList.add('on');setTimeout(function(){f.classList.remove('on')},150)}
+function tap(){st.last=Date.now();flash();vib(80);beep();if(!wl||wl.released)lock()}
+
+/* Wake Lock: ξαναζητιέται όταν η εφαρμογή επιστρέφει στο προσκήνιο */
+function lock(){try{if('wakeLock' in navigator){navigator.wakeLock.request('screen').then(function(l){wl=l;setDot(true);l.addEventListener('release',function(){setDot(false)})}).catch(function(){setDot(false)})}}catch(e){}}
+function setDot(on){var d=$('wl');if(d)d.classList.toggle('ok',on)}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')lock()});
+
+function go(n,back){
+  if(!back&&cur&&cur!==n)hist.push(cur);
+  cur=n;
+  ['s1','s2','s3','s4'].forEach(function(s){$(s).classList.toggle('on',s===n)});
+  clearTimeout(nrT);$('nr').style.display='none';
+  if(n==='s1')nrT=setTimeout(function(){if(cur==='s1'){$('nr').style.display='block';vib(500)}},10000);
+  if(n==='s2')r2();if(n==='s3')r3();if(n==='s4')r4();
+  if(!back&&n!=='s1')vib([80,60,80]);
+  [].forEach.call(document.querySelectorAll('[data-back]'),function(b){b.style.visibility=(n==='s1')?'hidden':'visible'});
+}
+function back(){if(hist.length)go(hist.pop(),true)}
+
+/* Οθόνη 1 */
+$('big').onclick=function(){tap();$('nr').style.display='none';go('s2')};
+
+/* Οθόνη 2 */
+Z.forEach(function(z){
+  var b=document.createElement('button');
+  b.className='z fig'+(z[5]?' wide':'');b.dataset.k=z[0];
+  b.innerHTML=fig(z[3],z[4])+'<span><span class="el">'+z[1]+'</span><br><span class="en">'+z[2]+'</span></span>';
+  b.onclick=function(){
+    tap();var k=z[0];
+    if(k==='all'){st.painAll=!st.painAll;if(st.painAll)st.pain=[]}
+    else{var i=st.pain.indexOf(k);if(i>-1)st.pain.splice(i,1);else st.pain.push(k);st.painAll=false}
+    r2();
+  };
+  $('g2').appendChild(b);
+});
+function r2(){
+  [].forEach.call($('g2').children,function(b){var k=b.dataset.k,on=k==='all'?st.painAll:st.pain.indexOf(k)>-1;b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on)});
+  var has=st.pain.length||st.painAll;
+  $('m2').innerHTML=has?'<span class="el">Συνέχεια</span><span class="en">Next</span>':'<span class="el">Δεν πονάω</span><span class="en">No pain</span>';
+}
+$('m2').onclick=function(){tap();st.painNone=!(st.pain.length||st.painAll);st.stop=0;st.noAns=false;go('s3')};
+$('x2').onclick=function(){tap();st.stop=2;st.noAns=false;st.painNone=false;go('s4')};
+
+/* Οθόνη 3 */
+F.forEach(function(f,i){
+  var b=document.createElement('button');
+  b.className='z';b.dataset.k=i;
+  b.innerHTML='<span class="el">'+f[0]+'</span><span class="en">'+f[1]+'</span>';
+  b.onclick=function(){tap();var j=st.feel.indexOf(i);if(j>-1)st.feel.splice(j,1);else st.feel.push(i);r3()};
+  $('g3').appendChild(b);
+});
+function r3(){
+  [].forEach.call($('g3').children,function(b){var on=st.feel.indexOf(+b.dataset.k)>-1;b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on)});
+  $('m3').innerHTML=st.feel.length?'<span class="el">Συνέχεια</span><span class="en">Done</span>':'<span class="el">Τίποτα άλλο</span><span class="en">Nothing else</span>';
+}
+$('m3').onclick=function(){tap();st.feelNone=!st.feel.length;st.stop=0;st.noAns=false;go('s4')};
+$('n3').onclick=function(){tap();st.noAns=true;st.stop=0;st.feelNone=false;go('s4')};
+$('x3').onclick=function(){tap();st.stop=3;st.noAns=false;st.feelNone=false;go('s4')};
+
+/* Σύνοψη */
+function list(id,arr,cls){$(id).innerHTML='<div class="items '+(cls||'')+'">'+arr.map(function(x){return '<div>'+x+'</div>'}).join('')+'</div>'}
+function tm(){
+  if(!st.last){$('tm').textContent='Καμία απάντηση από το άτομο.';return}
+  var m=Math.floor((Date.now()-st.last)/60000);
+  $('tm').textContent='Τελευταία απάντηση: '+(m<1?'πριν από λιγότερο από 1 λεπτό':'πριν από '+m+(m===1?' λεπτό':' λεπτά'));
+}
+function r4(){
+  var pn=Z.filter(function(z){return st.pain.indexOf(z[0])>-1&&z[0]!=='all'}).map(function(z){return z[1]});
+  if(st.painAll)list('o-pain',['Πονάει παντού'],'pain');
+  else if(pn.length)list('o-pain',pn,'pain');
+  else if(st.painNone)list('o-pain',['Το άτομο δεν έδειξε πόνο']);
+  else list('o-pain',['Δεν καταγράφηκε απάντηση']);
+  var fn=st.feel.slice().sort(function(a,b){return a-b}).map(function(i){return F[i][0]});
+  if(fn.length)list('o-feel',fn);
+  else if(st.feelNone)list('o-feel',['Το άτομο δεν έδειξε άλλο σύμπτωμα']);
+  else if(st.stop===2)list('o-feel',['Δεν ρωτήθηκε']);
+  else list('o-feel',['Δεν καταγράφηκε απάντηση']);
+  var o=[];if(st.stop)o.push('Η αξιολόγηση σταμάτησε εδώ.');if(st.noAns)o.push('Το άτομο δεν μπόρεσε να απαντήσει.');
+  $('c-oth').style.display=o.length?'':'none';if(o.length)list('o-oth',o);
+  tm();
+}
+setInterval(function(){if(cur==='s4')tm()},15000);
+$('reset').onclick=function(){
+  var r=$('reset');
+  if(!r.classList.contains('arm')){r.classList.add('arm');r.textContent='Σίγουρα; Πάτα ξανά για διαγραφή';rt=setTimeout(function(){r.classList.remove('arm');r.textContent='Νέα αξιολόγηση'},4000)}
+  else{clearTimeout(rt);r.classList.remove('arm');r.textContent='Νέα αξιολόγηση';reset();go('s1')}
+};
+
+/* Μηνύματα προς το άτομο */
+function rm(){$('mc').innerHTML='<span class="el">'+M[mi][0]+'</span><span class="en">'+M[mi][1]+'</span>';$('mn').textContent=(mi+1)+' / '+M.length}
+function openM(){mi=0;rm();$('msg').style.display='flex'}
+$('mnext').onclick=function(){mi=(mi+1)%M.length;rm()};
+$('mc').onclick=function(){tap()};
+$('mx').onclick=function(){$('msg').style.display='none'};
+[].forEach.call(document.querySelectorAll('[data-msg]'),function(b){b.onclick=openM});
+[].forEach.call(document.querySelectorAll('[data-back]'),function(b){b.onclick=back});
+
+reset();go('s1');lock();
+try{if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(function(){})}catch(e){}
+})();
+</script>
+</body>
+</html>
