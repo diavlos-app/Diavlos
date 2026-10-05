@@ -49,7 +49,8 @@
       "id": "step-3",
       "question": "Ποιο είναι το όνομα του φαρμάκου ή του προϊόντος;",
       "type": "text",
-      "placeholder": "Γράψτε το όνομα"
+      "placeholder": "Γράψτε το όνομα",
+      "skippable": true
     },
     {
       "id": "step-4",

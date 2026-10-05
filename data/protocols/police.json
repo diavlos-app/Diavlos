@@ -39,7 +39,8 @@
       "id": "step-3",
       "question": "Πού συνέβη το περιστατικό;",
       "type": "text",
-      "placeholder": "Γράψτε την τοποθεσία"
+      "placeholder": "Γράψτε την τοποθεσία",
+      "skippable": true
     },
     {
       "id": "step-4",

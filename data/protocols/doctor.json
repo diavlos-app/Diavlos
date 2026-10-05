@@ -65,7 +65,8 @@
       "id": "step-5",
       "question": "Γράψτε τα φάρμακα που παίρνετε (ή 'κανένα').",
       "type": "text",
-      "placeholder": "Ονόματα φαρμάκων ή 'κανένα'"
+      "placeholder": "Ονόματα φαρμάκων ή 'κανένα'",
+      "skippable": true
     },
     {
       "id": "step-6",
@@ -76,7 +77,8 @@
       "id": "step-7",
       "question": "Γράψτε την αλλεργία (ή 'καμία').",
       "type": "text",
-      "placeholder": "Η αλλεργία ή 'καμία'"
+      "placeholder": "Η αλλεργία ή 'καμία'",
+      "skippable": true
     }
   ]
 }
