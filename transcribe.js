@@ -466,10 +466,13 @@ async function txSend(job) {
       const data = await res.json();
       const text = (data && data.text ? data.text : "").trim();
       if (!text || txIsPhantom(text)) {
-        txItems = txItems.filter((it) => it.id !== item.id);   // σιωπή/θόρυβος — δεν δείχνουμε τίποτα
+        txItems = txItems.filter((it) => it.id !== item.id);
       } else {
         item.status = "done";
         item.text = text;
+        if ("vibrate" in navigator) {
+          try { navigator.vibrate(40); } catch (e) {}
+        }
       }
     }
   } catch (err) {
