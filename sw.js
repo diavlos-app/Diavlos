@@ -71,6 +71,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
+  if (url.pathname.startsWith("/responder/")) return;
   if (isExcludedHost(url.hostname)) return;
 
   event.respondWith(
