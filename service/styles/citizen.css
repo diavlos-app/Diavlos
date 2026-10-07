@@ -1,0 +1,34 @@
+/* /service/styles/citizen.css — οθόνη πολίτη */
+#app { height: 100%; display: flex; flex-direction: column; position: relative; }
+#top { display: flex; align-items: center; gap: .8em; padding: .5em .8em; border-bottom: 2px solid var(--border); min-height: 56px; }
+#bar { display: flex; gap: .4em; overflow-x: auto; flex: 1; align-items: center; }
+.tab { white-space: nowrap; padding: .15em .7em; border-radius: 999px; border: 3px solid; font-size: .8em; font-weight: 700; background: var(--bg); }
+.count { white-space: nowrap; font-size: .8em; color: var(--text2); font-weight: 700; }
+#screen { flex: 1; overflow-y: auto; padding: 1em 1.4em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .9em; text-align: center; }
+#screen.top { justify-content: flex-start; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .8em; width: 100%; max-width: 1000px; }
+.grid .btn { min-height: 92px; }
+.list { width: 100%; max-width: 900px; text-align: left; display: flex; flex-direction: column; gap: .4em; }
+.list .card { font-size: .9em; padding: .5em .9em; }
+#nav { display: flex; gap: .8em; padding: .6em .8em; border-top: 2px solid var(--border); }
+#nav:empty { display: none; }
+.spinner { width: 64px; height: 64px; border: 8px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+.ok-big { color: var(--ok); font-size: 1.8em; font-weight: 800; }
+
+/* Modal πεδίου: ημιδιαφανές φόντο, θολή προηγούμενη οθόνη */
+.overlay { position: fixed; inset: 0; z-index: 50; background: rgba(15, 23, 42, .45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 1em; }
+.overlay:empty { display: none; }
+.modal { background: var(--bg); border: 3px solid var(--text); border-radius: 24px; padding: 1em 1.4em; width: min(900px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: .6em; text-align: center; }
+.modal input { font: inherit; font-size: 1.8em; font-weight: 700; text-align: center; padding: .3em; border: 3px solid var(--text); border-radius: var(--radius); width: 100%; min-height: 64px; color: var(--text); background: var(--bg); user-select: text; -webkit-user-select: text; }
+.modal .row { display: flex; flex-wrap: wrap; gap: .6em; justify-content: center; }
+.modal .row .btn { flex: 1 1 180px; }
+.err { color: var(--err); font-weight: 800; min-height: 1.4em; }
+#okLayer { z-index: 60; background: rgba(255, 255, 255, .92); }
+#idleLayer, #connLayer { z-index: 90; background: rgba(255, 255, 255, .96); backdrop-filter: none; }
+
+/* Chat popup + εικονίδιο (κάτω δεξιά) */
+#popup { position: fixed; right: 16px; bottom: 84px; z-index: 70; max-width: min(420px, 80vw); }
+.bubble { background: var(--blue); color: #fff; border-radius: 24px 24px 4px 24px; padding: .7em 1em; font-weight: 700; text-align: left; border: 3px solid #1E3A8A; }
+#chatIcon { position: fixed; right: 16px; bottom: 16px; z-index: 70; width: 56px; height: 56px; min-height: 56px; padding: 0; border-radius: 50%; font-size: 1.2em; }

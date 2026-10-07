@@ -1,1 +1,46 @@
+/* /service/styles/base.css — χρώματα, τυπογραφία, κοινά στοιχεία (WCAG 2.1 AAA παλέτα) */
+:root {
+  --bg: #FFFFFF; --card: #F8FAFC; --border: #CBD5E1;
+  --text: #0F172A; --text2: #475569;
+  --blue: #1D4ED8; --ok: #047857; --err: #B91C1C; --warn: #B45309;
+  --radius: 16px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: clamp(18px, 2.6vmin, 28px); line-height: 1.35;
+  user-select: none; -webkit-user-select: none; overflow: hidden;
+}
+h1 { font-size: 1.6em; margin: 0 0 .4em; }
+h2 { font-size: 1.3em; margin: 0 0 .4em; }
+.center { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1em; text-align: center; padding: 1em; }
 
+/* Κουμπιά: ≥44px, feedback ΜΟΝΟ με αλλαγή χρώματος */
+.btn {
+  min-height: 64px; min-width: 44px; padding: .5em 1.4em; border-radius: var(--radius);
+  border: 3px solid var(--blue); background: var(--bg); color: var(--blue);
+  font: inherit; font-weight: 700; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: .5em; text-align: center;
+}
+.btn:active { background: #DBEAFE; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:active { background: #1E3A8A; }
+.btn-danger { border-color: var(--err); color: var(--err); }
+.btn-danger:active { background: #FEE2E2; }
+.btn-secondary { border-color: var(--text2); color: var(--text2); }
+.btn[disabled] { opacity: .5; }
+
+/* Κάρτες και κουκκίδα σύνδεσης */
+.card { background: var(--card); border: 2px solid var(--border); border-radius: var(--radius); padding: .8em 1em; }
+.dot { width: 18px; height: 18px; border-radius: 50%; display: inline-block; border: 2px solid var(--text); }
+.dot.connected { background: var(--ok); }
+.dot.disconnected { background: var(--err); }
+.dot.reconnecting { background: var(--warn); }
+
+/* Orientation: μόνο landscape */
+.rotate { display: none; }
+@media (orientation: portrait) and (max-width: 900px) {
+  .rotate { position: fixed; inset: 0; z-index: 999; background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; text-align: center; padding: 1em; font-weight: 700; }
+}
