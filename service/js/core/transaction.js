@@ -104,6 +104,21 @@
           if (!t) return;
           st.txn = S.newTransaction(t.id); st.chat = []; st.popup = null;
           st.phase = 'paths'; st.ball = 'citizen'; break;
+        case 'back':                                  // [↩ ΠΙΣΩ] βήμα-βήμα
+          if (!t) return;
+          if (st.phase === 'online' || st.phase === 'category') st.phase = 'paths';
+          else if (st.phase === 'service') st.phase = 'category';
+          else if (st.phase === 'questions' || st.phase === 'docs') {
+            svc = findService(t);
+            if (st.phase === 'docs') {               // καθάρισμα εγγράφων που δεν έχουν ζητηθεί
+              t.items = t.items.filter(function (i) { return !(i.kind === 'doc' && i.status === 'idle'); });
+              t.docsList = [];
+              if (svc && svc.questions.length) { t.answers.pop(); t.qIndex = svc.questions.length - 1; st.phase = 'questions'; }
+              else st.phase = 'service';
+            } else if (t.qIndex > 0) { t.answers.pop(); t.qIndex--; }
+            else st.phase = 'service';
+          }
+          break;
         case 'chat':
           if (!d.text) return;
           st.chat.push({ from: 'citizen', text: String(d.text).slice(0, 300), ts: now() }); break;
