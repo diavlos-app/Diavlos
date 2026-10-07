@@ -107,7 +107,7 @@
         online: 'Σας ευχαριστούμε για την επίσκεψη. Καλή σας μέρα.',
         done: 'Ευχαριστούμε, θα ενημερωθείτε για την πορεία του αιτήματός σας',
         cancelled: 'Η συναλλαγή ακυρώθηκε', timeout: 'Η συνεδρία έληξε. Ευχαριστούμε.',
-        missing: 'Σας περιμένουμε ξανά όταν έχετε τα έγγραφα. Καλή σας μέρα.', terminated: 'Η συναλλαγή διακόπηκε. Ευχαριστούμε.'
+        missing: 'Σας περιμένουμε ξανά όταν έχετε τα έγγραφα. Καλή σας μέρα.', terminated: 'Η συναλλαγή διακόπηκε. Ευχαρισ[...]
       }[r] || 'Ευχαριστούμε.';
       out.push(h('h1', {}, [msg]));
       if (r === 'done' && t.farewell) out.push(h('h2', {}, [t.farewell]));
@@ -137,7 +137,6 @@
       if (e) { errEl.textContent = '✗ ' + e; return; }
       delete drafts[it.id]; act('submit', { id: it.id, value: v });
     }
-    setTimeout(function () { input.focus(); }, 50);
     return h('div', { class: 'modal', role: 'dialog' }, [
       h('h1', {}, [f.label]), h('p', {}, [f.hint]), input, errEl,
       h('div', { class: 'row' }, [
