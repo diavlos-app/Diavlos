@@ -7,7 +7,7 @@ window.DiavlosData.fields = [
   { key: 'patronymo',     label: 'Πατρώνυμο',     level: 1, kb: 'greek',   type: 'name',    hint: 'Γράψτε το όνομα του πατέρα σας' },
   { key: 'mitronymo',     label: 'Μητρώνυμο',     level: 1, kb: 'greek',   type: 'name',    hint: 'Γράψτε το όνομα της μητέρας σας' },
   { key: 'imgennisis',    label: 'Ημ. Γέννησης',  level: 1, kb: 'date',    type: 'date',    hint: 'Επιλέξτε την ημερομηνία γέννησής σας' },
-  { key: 'adt',           label: 'ΑΔΤ',           level: 1, kb: 'numeric', type: 'adt',     hint: 'Γράψτε τον αριθμό της ταυτότητάς σας (π.χ. ΑΙ 123456)' },
+  { key: 'adt',           label: 'ΑΔΤ',           level: 1, kb: 'greek',   type: 'adt',     hint: 'Γράψτε τον αριθμό της ταυτότητάς σας (π.χ. ΑΙ 123456)' },
   { key: 'afm',           label: 'ΑΦΜ',           level: 1, kb: 'numeric', type: 'afm',     hint: 'Γράψτε τον ΑΦΜ σας (9 ψηφία)' },
   { key: 'amka',          label: 'ΑΜΚΑ',          level: 1, kb: 'numeric', type: 'amka',    hint: 'Γράψτε τον ΑΜΚΑ σας (11 ψηφία)' },
   { key: 'doy',           label: 'ΔΟΥ',           level: 1, kb: 'greek',   type: 'text',    hint: 'Γράψτε τη ΔΟΥ σας' },
