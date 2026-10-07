@@ -86,6 +86,6 @@ export async function onRequestPost({ request, env }) {
     if (/neuron|quota|limit|4006/i.test(msg)) return json({ error: "limit" }, 429);
     // ΠΡΟΣΩΡΙΝΟ για τις δοκιμές: το detail δείχνει το πραγματικό σφάλμα.
     // Αφαίρεσέ το (κράτα μόνο {error:"upstream"}) όταν δουλέψει.
-    return json({ error: "upstream", detail: msg }, 502);
+    return json({ error: "upstream" }, 502);
   }
 }
