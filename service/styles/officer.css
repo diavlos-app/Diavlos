@@ -31,3 +31,9 @@ body { user-select: text; -webkit-user-select: text; font-size: clamp(15px, 2vmi
 .modal input[type=text] { font: inherit; padding: .4em; border: 2px solid var(--text); border-radius: 12px; width: 100%; min-height: 48px; }
 .chk { display: flex; gap: .6em; align-items: center; padding: .4em 0; }
 .chk input { width: 28px; height: 28px; }
+
+/* Πλαϊνό chat υπαλλήλου — πάντα ορατό */
+body { display: flex; }
+#app { flex: 1; min-width: 0; }
+#chatPanel { width: min(380px, 32vw); border-left: 3px solid var(--border); background: var(--card); overflow-y: auto; }
+#chatPanel .chat-list { max-height: none; }
