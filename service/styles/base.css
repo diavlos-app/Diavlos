@@ -44,3 +44,16 @@ h2 { font-size: 1.3em; margin: 0 0 .4em; }
 @media (orientation: portrait) and (max-width: 900px) {
   .rotate { position: fixed; inset: 0; z-index: 999; background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; text-align: center; padding: 1em; font-weight: 700; }
 }
+
+/* Chat (κοινό) — διάκριση αποστολέα με ετικέτα + στοίχιση, όχι μόνο χρώμα */
+.chat-list { flex: 1; min-height: 140px; max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: .5em; padding: .4em; border: 2px solid var(--border); border-radius: var(--radius); background: var(--card); text-align: left; }
+.msg { max-width: 80%; padding: .4em .8em; border-radius: 14px; border: 2px solid var(--border); background: var(--bg); user-select: text; -webkit-user-select: text; }
+.msg.me { align-self: flex-end; border-color: var(--blue); }
+.msg.them { align-self: flex-start; }
+.msg .who { font-size: .75em; font-weight: 800; color: var(--text2); }
+.msg .when { font-size: .7em; color: var(--text2); text-align: right; }
+.typing { min-height: 1.4em; color: var(--text2); font-weight: 700; }
+.chat-row { display: flex; gap: .5em; }
+.chat-row input { flex: 1; font: inherit; padding: .4em .6em; border: 3px solid var(--text); border-radius: var(--radius); min-height: 56px; background: var(--bg); color: var(--text); user-select: text; -webkit-user-select: text; }
+.cnt { font-size: .75em; color: var(--text2); text-align: right; }
+.chat-panel { display: flex; flex-direction: column; gap: .5em; height: 100%; padding: .8em; }
