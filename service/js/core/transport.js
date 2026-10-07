@@ -78,7 +78,12 @@
       peer.on('open', function () {
         if (opts.role === 'citizen') dial(); else if (!everConnected) setStatus('disconnected');
       });
-      peer.on('connection', function (c) { if (opts.role === 'officer') attach(c); });
+      peer.on('connection', function (c) {
+        if (opts.role !== 'officer') return;
+        // Ένα ζεύγος = μία ζωντανή σύνδεση. Ξένη σύνδεση ΔΕΝ διώχνει τον πολίτη που είναι ήδη συνδεδεμένος.
+        if (conn && conn.open && Date.now() - lastSeen < DEAD_MS) { c.on('open', function () { try { c.close(); } catch (e) {} }); return; }
+        attach(c);
+      });
       peer.on('disconnected', function () {      // χάθηκε ο signaling server — όχι απαραίτητα και το P2P
         if (stopped) return;
         try { peer.reconnect(); } catch (e) {}

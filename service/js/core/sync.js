@@ -12,8 +12,8 @@
     var id = null;
     try {
       var q = new URLSearchParams(global.location.search).get('room');
-      if (q && /^\d{6}$/.test(q)) { id = q; localStorage.setItem('diavlos-pair-id', q); }
-      if (!id) { var s = localStorage.getItem('diavlos-pair-id'); if (s && /^\d{6}$/.test(s)) id = s; }
+      if (q && /^[A-Za-z0-9_-]{6,32}$/.test(q)) { id = q; localStorage.setItem('diavlos-pair-id', q); }
+      if (!id) { var s = localStorage.getItem('diavlos-pair-id'); if (s && /^[A-Za-z0-9_-]{6,32}$/.test(s)) id = s; }
     } catch (e) {}
     return id || DEMO_ROOM;
   }

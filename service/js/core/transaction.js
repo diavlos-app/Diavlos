@@ -82,7 +82,9 @@
           break;
         case 'proceed':                               // [ΠΡΟΧΩΡΑ] → η μπάλα στον υπάλληλο
           if (!t) return;
-          st.phase = 'waiting'; st.ball = 'officer'; break;
+          // Αν ο πολίτης είχε κλείσει το modal με [ΠΙΣΩ] → αναμονή. Αλλιώς ανοίγει ό,τι πεδίο ζητήθηκε νωρίτερα.
+          if (st.phase === 'field') { st.phase = 'waiting'; st.ball = 'officer'; } else syncQueue(st);
+          break;
         case 'submit':                                // [ΑΠΟΣΤΟΛΗ] πεδίου
           if (!t) return;
           it = S.findItem(t, d.id); if (!it || it.kind !== 'field') return;
