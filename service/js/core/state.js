@@ -15,13 +15,13 @@
   };
 
   // Φάσεις οθόνης πολίτη
-  var PHASES = ['locked', 'welcome', 'paths', 'online', 'category', 'service',
+  var PHASES = ['welcome', 'paths', 'online', 'category', 'service',
     'questions', 'docs', 'waiting', 'field', 'missing', 'redirect', 'chat',
     'done', 'closed'];
 
   function initialPublicState() {
     return {
-      phase: 'locked',      // τρέχουσα φάση οθόνης πολίτη
+      phase: 'welcome',     // τρέχουσα φάση οθόνης πολίτη
       txn: null,            // ενεργή συναλλαγή (βλ. newTransaction)
       chat: [],             // ιστορικό chat {from:'citizen'|'officer', text, ts}
       popup: null,          // bubble που στέλνει ο υπάλληλος {text, ts}
