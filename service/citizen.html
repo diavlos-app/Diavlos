@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Δίαυλος — Πολίτης</title>
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/citizen.css">
+</head>
+<body>
+<div class="rotate">Παρακαλούμε γυρίστε τη συσκευή οριζόντια.</div>
+<div id="app">
+  <header id="top"><span id="dot" class="dot disconnected" role="img" aria-label="Σύνδεση"></span><div id="bar"></div></header>
+  <main id="screen"></main>
+  <nav id="nav"></nav>
+</div>
+<div id="popup"></div>
+<div id="modalLayer" class="overlay"></div>
+<div id="okLayer" class="overlay"></div>
+<div id="idleLayer" class="overlay"></div>
+<div id="connLayer" class="overlay"></div>
+
+<!-- Βιβλιοθήκες (CDN) -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<!-- Πυρήνας και δεδομένα -->
+<script src="js/core/state.js"></script>
+<script src="js/core/transport.js"></script>
+<script src="js/core/sync.js"></script>
+<script src="data/fields.js"></script>
+<script src="data/documents.js"></script>
+<script src="data/services.js"></script>
+<script src="js/shared/validation.js"></script>
+<script src="js/citizen/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Δίαυλος — Service</title>
+<link rel="stylesheet" href="styles/base.css">
+<script>
+  // Προώθηση βάσει ?view=citizen | officer (κρατά και το ?room=)
+  (function () {
+    var p = new URLSearchParams(location.search), v = p.get('view');
+    if (v === 'citizen' || v === 'officer') { p.delete('view'); location.replace(v + '.html' + (p.toString() ? '?' + p.toString() : '')); }
+  })();
+</script>
+</head>
+<body>
+<main class="center">
+  <h1>Δίαυλος — Service</h1>
+  <p>Επιλέξτε την οθόνη αυτής της συσκευής:</p>
+  <a class="btn btn-primary" href="citizen.html">Οθόνη πολίτη</a>
+  <a class="btn btn-secondary" href="officer.html">Οθόνη υπαλλήλου</a>
+</main>
+</body>
+</html>
