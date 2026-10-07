@@ -1,7 +1,7 @@
 // Δίαυλος — Service Worker
 // Cache-first για το app shell, ώστε η εφαρμογή να δουλεύει offline.
 
-const CACHE_NAME = "diavlos-v30";
+const CACHE_NAME = "diavlos-v31";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -71,7 +71,8 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
-  if (url.pathname.startsWith("/responder/")) return;
+  // Οι υπο-εφαρμογές έχουν δικούς τους service workers (includes: δουλεύει και σε υποφάκελο, π.χ. GitHub Pages)
+  if (url.pathname.includes("/responder/") || url.pathname.includes("/service/")) return;
   if (isExcludedHost(url.hostname)) return;
 
   event.respondWith(
