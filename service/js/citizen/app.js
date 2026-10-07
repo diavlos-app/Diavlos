@@ -4,7 +4,8 @@
   'use strict';
   var S = DiavlosState, D = DiavlosData;
   var store = S.createStore();
-  var sync = DiavlosSync.start({ role: 'citizen', store: store });
+  var sync = DiavlosSync.start({ role: 'citizen', store: store,
+    onEvent: function (n, d) { if (window.DiavlosChat) DiavlosChat.onEvent(n, d); } });
   function act(n, d) { sync.act(n, d); }
 
   // ---- Τοπική κατάσταση UI (δεν συγχρονίζεται) ----
@@ -12,7 +13,7 @@
   var hiddenId = null;      // modal που έκλεισε με [ΠΙΣΩ]
   var showWhere = false;    // «από πού θα το βρω;»
   var okUntil = 0, okText = '', seenOk = null, adopt = true;
-  var errEl = null;
+  var errEl = null, autoChat = false;
 
   // ---- Βοηθητικά DOM (χωρίς innerHTML) ----
   function h(tag, attrs, kids) {
@@ -96,6 +97,7 @@
         btn('ΑΠΟ ΠΟΥ ΘΑ ΤΟ ΒΡΩ;', '', function () { showWhere = !showWhere; render(); })]));
     } else if (p === 'chat') {
       out.push.apply(out, spinner('Ο υπάλληλος θα σας απαντήσει στο chat'));
+      out.push(btn('💬 Άνοιγμα chat', 'btn-primary', function () { DiavlosChat.open(); }));
     } else if (p === 'done') {
       out.push(h('h1', {}, ['Ευχαριστούμε. Θα χρειαστείτε κάτι άλλο;']), h('div', { class: 'grid' }, [
         btn('ΝΑΙ, ΚΑΤΙ ΑΛΛΟ', 'btn-primary', function () { act('more'); }),
@@ -162,6 +164,8 @@
   // ---- Κεντρική ζωγραφική ----
   function render() {
     var st = store.get(), lo = store.local(), t = st.txn, now = Date.now();
+    // Μονοπάτι ❓: ανοίγει απευθείας το chat (μία φορά)
+    if (st.phase === 'chat') { if (!autoChat) { autoChat = true; DiavlosChat.open(); } } else autoChat = false;
     if (hiddenId && (!t || t.current !== hiddenId || st.phase !== 'field')) hiddenId = null;
 
     $('dot').className = 'dot ' + lo.conn;
@@ -186,7 +190,7 @@
     });
 
     // Modal πεδίου: όχι όσο φαίνεται το «εντάξει» (1-2") ή αν ο πολίτης πάτησε [ΠΙΣΩ]
-    var showModal = st.phase === 'field' && t && t.current && hiddenId !== t.current && now >= okUntil;
+    var showModal = st.phase === 'field' && t && t.current && hiddenId !== t.current && now >= okUntil && !DiavlosChat.isOpen();
     region($('modalLayer'), showModal ? 'm' + t.current + '|' + t.error : 'none', function () { return showModal ? buildModal(t) : null; });
     region($('okLayer'), now < okUntil ? 'ok' + okText : 'none', function () {
       return now < okUntil ? h('div', { class: 'ok-big', role: 'status' }, ['✓ ' + okText]) : null;
@@ -242,5 +246,6 @@
     if (asking && !idleActive()) cancelAsk();
     render(); resetIdle();
   });
+  DiavlosChat.mount({ role: 'citizen', store: store, sync: sync, onChange: render });
   render();
 })();
