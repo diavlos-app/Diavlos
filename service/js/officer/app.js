@@ -14,7 +14,8 @@
   var log = load('diavlos-log', []), loggedId = null;
   store.update(function (st) { st.stats = load('diavlos-stats', { total: 0, done: 0, cancelled: 0 }); });
 
-  var sync = DiavlosSync.start({ role: 'officer', store: store, onAction: function (n, d) { T.act(store, n, d); } });
+  var sync = DiavlosSync.start({ role: 'officer', store: store, onAction: function (n, d) { T.act(store, n, d); },
+    onEvent: function (n, d) { DiavlosChat.onEvent(n, d); } });
 
   // ---- Τοπική κατάσταση UI ----
   var modal = null, showMore = false, showGen = false, missSel = {}, barScroll = 0;
@@ -234,5 +235,6 @@
     }
     render();
   });
+  DiavlosChat.mount({ role: 'officer', store: store, sync: sync, container: $('chatPanel') });
   render();
 })();
