@@ -50,6 +50,11 @@ body { display: flex; flex-direction: row; }
 #chatPanel { flex: none; width: clamp(240px, 30vw, 380px); border-left: 3px solid var(--border); background: var(--card); overflow-y: auto; }
 #chatPanel .chat-list { max-height: none; }
 
+/* Στενό πλαϊνό πάνελ (οθόνη 844-932px): το πεδίο και το κουμπί πάνε σε δύο γραμμές για να μην κυλά οριζόντια */
+#chatPanel .chat-row { flex-wrap: wrap; }
+#chatPanel .chat-row input { flex: 1 1 100%; }
+#chatPanel .chat-row .btn { flex: 1 1 100%; }
+
 /* Κάτω από 820px (κινητό): το chat γίνεται κάτω λωρίδα, πάντα ορατό. Λίστα αριστερά, πεδίο γραφής δεξιά. */
 @media (max-width: 819px) {
   body { flex-direction: column; }
@@ -59,8 +64,9 @@ body { display: flex; flex-direction: row; }
   #chatPanel .chat-list { grid-column: 1; grid-row: 1 / span 3; min-height: 0; max-height: none; padding: .2em; }
   #chatPanel .chat-panel > div:nth-of-type(1) { grid-column: 2; grid-row: 1; min-width: 0; }      /* «Popup στον πολίτη» */
   #chatPanel .typing { grid-column: 2; grid-row: 2; min-height: 0; }
-  #chatPanel .chat-row { grid-column: 2; grid-row: 3; align-self: end; }
-  #chatPanel .chat-row input { min-height: 44px; min-width: 0; }
+  #chatPanel .chat-row { grid-column: 2; grid-row: 3; align-self: end; flex-wrap: nowrap; }
+  #chatPanel .chat-row input { flex: 1; min-height: 44px; min-width: 0; }
+  #chatPanel .chat-row .btn { flex: 0 1 auto; }
   #chatPanel .chat-panel > div:nth-of-type(1) .row { flex-wrap: nowrap; }
   #chatPanel .chat-panel > div:nth-of-type(1) .sub { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; min-width: 0; flex: 1 1 0; }
 }
