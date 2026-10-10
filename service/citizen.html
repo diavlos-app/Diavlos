@@ -2,10 +2,11 @@
 <html lang="el">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Δίαυλος — Πολίτης</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1D4ED8">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#1E40AF">
 <link rel="stylesheet" href="styles/base.css">
 <link rel="stylesheet" href="styles/citizen.css">
 </head>
@@ -22,9 +23,9 @@
 <div id="idleLayer" class="overlay"></div>
 <div id="connLayer" class="overlay"></div>
 
-<!-- Βιβλιοθήκες (CDN) -->
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<!-- Βιβλιοθήκες (τοπικά αντίγραφα, χωρίς CDN) -->
+<script src="vendor/peerjs.min.js"></script>
+<script src="vendor/qrcode.min.js"></script>
 <!-- Πυρήνας και δεδομένα -->
 <script src="js/core/state.js"></script>
 <script src="js/core/transport.js"></script>
@@ -33,6 +34,7 @@
 <script src="data/documents.js"></script>
 <script src="data/services.js"></script>
 <script src="js/shared/validation.js"></script>
+<script src="js/shared/search.js"></script>
 <script src="js/shared/chat.js"></script>
 <script src="js/core/register-sw.js"></script>
 <script src="js/citizen/app.js"></script>
