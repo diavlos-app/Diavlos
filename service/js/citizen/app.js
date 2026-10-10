@@ -294,24 +294,27 @@
     tick(); cdT = setInterval(tick, 1000);
   }
   function resetIdle() {
+    if (asking) return;
     clearTimeout(idleT);
     if (idleActive()) idleT = setTimeout(ask, IDLE_MS);
   }
 
-  store.subscribe(function () {
-    var st = store.get();
-    if (st.lastOk && st.lastOk !== seenOk) {
-      seenOk = st.lastOk;
-      okText = st.lastOk.text || 'Εντάξει';
-      okUntil = Date.now() + 1500;
-      setTimeout(function () { render(); }, 1600);
+  var prevConn = '';
+  store.subscribe(function (st, lo, kind) {
+    if (kind === 'public') {
+      var first = adopt; adopt = false;
+      if (st.lastOk && st.lastOk.ts !== seenOk) {
+        seenOk = st.lastOk.ts;
+        if (!first) { okText = st.lastOk.text; okUntil = Date.now() + 1500; setTimeout(render, 1600); }
+      }
     }
-    render();
-    resetIdle();
+    if (lo.conn !== prevConn) { if (lo.conn === 'connected') adopt = true; prevConn = lo.conn; }
+    if (asking && !idleActive()) cancelAsk();
+    render(); resetIdle();
   });
 
-  document.addEventListener('pointerdown', resetIdle);
-  document.addEventListener('keydown', resetIdle);
-  if (window.DiavlosChat) DiavlosChat.init({ role: 'citizen', store: store, sync: sync, onChange: function () { render(); resetIdle(); } });
+  ['pointerdown', 'touchstart', 'keydown', 'input', 'wheel'].forEach(function (e) { document.addEventListener(e, resetIdle, true); });
+  document.addEventListener('scroll', resetIdle, true);
+  DiavlosChat.mount({ role: 'citizen', store: store, sync: sync, onChange: function () { render(); resetIdle(); } });
   render();
 })();
