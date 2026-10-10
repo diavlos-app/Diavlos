@@ -27,7 +27,7 @@
 ## Lucide 1.54.0 (εικονίδια)
 - **Χρήση:** γραμμικά εικονίδια SVG (`vendor/icons-sprite.svg`, 17 εικονίδια)
 - **Άδεια:** ISC License (για μέρος των εικονιδίων που προέρχονται από το Feather: MIT)
-- **Copyright:** © 2026 Lucide Icons and Contributors
+- **Copyright:** © 2022- 2026 Lucide Icons and Contributors
 - **Πηγή:** https://lucide.dev
 - Το πλήρες κείμενο των αδειών: `vendor/LICENSE-lucide.txt`.
 
