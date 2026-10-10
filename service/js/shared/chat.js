@@ -1,4 +1,4 @@
-// /service/js/shared/chat.js — chat πολίτη ↔ υπαλλήλου (κοινό και για τις δύο οθόνες).
+// /service/js/shared/chat.js — chat πολίτη και υπαλλήλου (κοινό και για τις δύο οθόνες).
 // Ο υπάλληλος κρατά το ιστορικό (πηγή αλήθειας). Ο πολίτης στέλνει ενέργεια 'chat'.
 // Όριο 300 χαρακτήρες, ένδειξη «...γράφει...» και στις δύο πλευρές, κανένα badge/ήχος.
 (function (global) {
@@ -18,6 +18,13 @@
     }
     (kids || []).forEach(function (c) { if (c != null) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
     return e;
+  }
+  // Εικονίδιο από το sprite (πάντα με κείμενο δίπλα, γι' αυτό aria-hidden)
+  function iconNode(name) {
+    var ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg'), use = document.createElementNS(ns, 'use');
+    svg.setAttribute('class', 'icon'); svg.setAttribute('aria-hidden', 'true');
+    use.setAttribute('href', 'vendor/icons-sprite.svg#i-' + name); svg.appendChild(use);
+    return svg;
   }
   function hhmm(ts) { return new Date(ts).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' }); }
 
@@ -68,7 +75,7 @@
     if (ui.popupRow) {                       // μόνο στον υπάλληλο: ο υπάλληλος κλείνει το popup του πολίτη
       ui.popupRow.textContent = '';
       if (st.popup) ui.popupRow.appendChild(h('div', { class: 'row' }, [
-        h('span', { class: 'sub' }, ['Popup στον πολίτη: «' + st.popup.text + '»']),
+        h('span', { class: 'sub' }, ['Popup στον πολίτη: «' + st.popup.text + '»' + (st.popup.sub ? ' (' + st.popup.sub + ')' : '')]),
         h('button', { type: 'button', class: 'btn mini', onclick: function () { DiavlosTxn.closePopup(cfg.store); } }, ['Κλείσιμο popup'])]));
     }
   }
@@ -89,7 +96,7 @@
           h('div', { class: 'row' }, [h('h2', { style: 'flex:1;margin:0' }, ['Συνομιλία με τον υπάλληλο']),
             h('button', { type: 'button', class: 'btn btn-secondary', onclick: close }, ['ΚΛΕΙΣΙΜΟ'])]),
           cc.list, cc.typingEl, cc.row, cc.cnt])]);
-      var icon = h('button', { type: 'button', class: 'btn', id: 'chatIcon', 'aria-label': 'Chat με τον υπάλληλο', onclick: open }, ['💬']);
+      var icon = h('button', { type: 'button', class: 'btn', id: 'chatIcon', 'aria-label': 'Chat με τον υπάλληλο', onclick: open }, [iconNode('message-circle'), h('span', {}, ['Chat'])]);
       document.body.appendChild(layer); document.body.appendChild(icon);
     }
     cfg.store.subscribe(function (st, lo, kind) { if (kind === 'public') refresh(); });
