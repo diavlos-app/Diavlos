@@ -7,10 +7,10 @@
 
   // Ομαδοποίηση πεδίων στην πλήρη αναφορά
   var GROUPS = [
-    { label: 'Ταυτότητα', keys: ['onomateponymo', 'patronymo', 'mitronymo', 'imgennisis', 'adt', 'amka'] },
+    { label: 'Ταυτότητα', keys: ['onomateponymo', 'patronymo', 'mitronymo', 'imgennisis', 'topos-gennisis', 'adt', 'amka'] },
     { label: 'Φορολογικά', keys: ['afm', 'doy'] },
     { label: 'Επικοινωνία', keys: ['dieythynsi', 'tk', 'kinito', 'stathero', 'email'] },
-    { label: 'Ειδικά', keys: ['foreas', 'iban', 'arprotokollou', 'arkykloforias', 'amkatexnou', 'syzygos', 'afmergodoti'] }
+    { label: 'Ειδικά', keys: ['foreas', 'iban', 'arprotokollou', 'arkykloforias', 'amkatexnou', 'syzygos', 'afmergodoti', 'etos', 'pinakida', 'exousiodotoumenos'] }
   ];
   var SUMMARY_KEYS = ['onomateponymo', 'afm', 'amka', 'adt'];   // κρίσιμα πεδία (σειρά του spec)
 
@@ -21,9 +21,19 @@
     return 'diavlos-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()) + '-' + pad(t.id) + '.pdf';
   }
   function service(t) {
-    var cat = D.categories.filter(function (c) { return c.id === t.categoryId; })[0], svc = null;
-    if (cat) svc = cat.services.filter(function (s) { return s.id === t.serviceId; })[0] || null;
-    return { cat: cat ? cat.icon + ' ' + cat.label : '—', svc: svc ? svc.label : '—' };
+    var cat = D.categories.filter(function (c) { return c.id === t.categoryId; })[0];
+    var svc = t.serviceId ? D.serviceById(t.serviceId) : null;
+    return { cat: cat ? cat.label : '—', svc: svc ? svc.label : '—' };
+  }
+  // Έγγραφα για το PDF: τα έγγραφα της υπηρεσίας (με την κατάστασή τους) + όσα ζητήθηκαν επιπλέον
+  function docRows(t) {
+    var svc = t.serviceId ? D.serviceById(t.serviceId) : null, seen = {}, rows = [];
+    (svc ? svc.docs : []).forEach(function (d) {
+      var it = S.findItem(t, 'doc:' + d.key); seen[d.key] = true;
+      rows.push([d.label, S.STATUS_META[it ? it.status : 'idle'].label]);
+    });
+    t.items.forEach(function (i) { if (i.kind === 'doc' && !seen[i.key]) rows.push([i.label, S.STATUS_META[i.status].label]); });
+    return rows;
   }
   // Τιμή πεδίου για το PDF: τιμή, ή «δεν δόθηκε» (παράλειψη), ή «—»
   function fieldValue(t, key) {
@@ -45,7 +55,7 @@
         ['Κατηγορία + Υπηρεσία', sv.cat + ' › ' + sv.svc], ['Ημερομηνία / ώρα', fmtDate(t.startedAt)]
       ],
       answers: t.answers || [],
-      docs: t.items.filter(function (i) { return i.kind === 'doc'; }).map(function (i) { var m = S.STATUS_META[i.status]; return [i.label, m.symbol + ' ' + m.label]; }),
+      docs: docRows(t),
       groups: GROUPS.map(function (g) {
         return { label: g.label, rows: g.keys.map(function (k) {
           var v = fieldValue(t, k), f = D.fieldByKey(k); return v == null ? null : [f.label, v];
@@ -82,7 +92,7 @@
 
   function make(st, full) {
     if (!st || !st.txn) return;
-    if (!global.html2pdf) { alert('Η βιβλιοθήκη PDF δεν φορτώθηκε. Χρειάζεται σύνδεση στο internet.'); return; }
+    if (!global.html2pdf) { alert('Η βιβλιοθήκη PDF δεν φορτώθηκε.'); return; }
     var m = model(st);
     var host = h('div', 'position:fixed;left:-10000px;top:0;'); host.appendChild(render(m, full)); document.body.appendChild(host);
     var done = function () { if (host.parentNode) host.parentNode.removeChild(host); };
