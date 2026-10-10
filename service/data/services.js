@@ -103,7 +103,7 @@ window.DiavlosData.categories = [
         { key: 'parastatiko-trapezis', label: 'Παραστατικό Τραπέζης (τέλη μεταβίβασης + άδειας)' },
         { key: 'ypeuthini-dilosi', label: 'Υπεύθυνη Δήλωση - Εξουσιοδότηση (αν δεν παρίσταται κάποιος)' }
       ],
-      fields: ['onomateponymo', 'afm', 'adt', 'pinakida', 'arkykloforias', 'dieythynsi', 'kinito'] },
+      fields: ['onomateponymo', 'afm', 'adt', 'pinakida', 'dieythynsi', 'kinito'] },
     { id: 'vevaiosi-monimis-katoikias', label: 'Βεβαίωση Μόνιμης Κατοικίας', categoryId: 'politis-kathimerinotita', status: 'implemented',
       keywords: ['κατοικία', 'διεύθυνση', 'μόνιμη', 'εντοπιότητα', 'δήμος'],
       questions: [],
