@@ -81,7 +81,7 @@
         case 'category':                              // κατηγορία -> λίστα υπηρεσιών της
           if (!t) return;
           t.categoryId = d.id; st.phase = 'category'; break;
-        case 'service':                               // από αναζήτηση, δημοφιλές ή κατηγορία
+        case 'service':                               // από αναζήτηση, δημοφιλείς ή κατηγορία
           if (!t) return;
           svc = global.DiavlosData.serviceById(d.id);
           if (!svc) return;
@@ -161,7 +161,7 @@
       // Interrupt: αν ο πολίτης ήδη γράφει, δεν χάνει το κείμενο - ειδοποίηση και ουρά
       if (st.phase === 'field' && t.current && t.current !== it.id) {
         st.popup = { text: 'Ο υπάλληλος ζητάει: ' + f.label, ts: now(), system: true };
-      } else if (st.phase === 'waiting') syncQueue(st);
+      } else if (st.phase === 'waiting' || st.phase === 'home') syncQueue(st);
     });
   }
   function requestDoc(store, key) {
