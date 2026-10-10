@@ -1,34 +1,96 @@
-/* /service/styles/citizen.css — οθόνη πολίτη */
+/* service/styles/citizen.css — οθόνη πολίτη. Landscape 640px έως 1366px· σε χαμηλό ύψος (κινητό) μικραίνουν κενά και ύψη κουμπιών, ΟΧΙ τα γράμματα. */
 #app { height: 100%; display: flex; flex-direction: column; position: relative; }
 #top { display: flex; align-items: center; gap: .8em; padding: .5em .8em; border-bottom: 2px solid var(--border); min-height: 56px; }
 #bar { display: flex; gap: .4em; overflow-x: auto; flex: 1; align-items: center; }
-.tab { white-space: nowrap; padding: .15em .7em; border-radius: 999px; border: 3px solid; font-size: .8em; font-weight: 700; background: var(--bg); }
-.count { white-space: nowrap; font-size: .8em; color: var(--text2); font-weight: 700; }
-#screen { flex: 1; overflow-y: auto; padding: 1em 1.4em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .9em; text-align: center; }
+.tab { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: .3em; padding: .15em .7em; border-radius: 999px; border: 3px solid; font-weight: 700; background: var(--bg); }
+.count { order: -1; flex: none; white-space: nowrap; color: var(--text2); font-weight: 700; }     /* πάντα ορατό στην αρχή της μπάρας, τα tabs κυλούν μετά */
+#screen { flex: 1; min-height: 0; overflow-y: auto; padding: 1em 1.4em 4.5em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .9em; text-align: center; }
 #screen.top { justify-content: flex-start; }
+.logo { width: 96px; height: 96px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .8em; width: 100%; max-width: 1000px; }
 .grid .btn { min-height: 92px; }
 .list { width: 100%; max-width: 900px; text-align: left; display: flex; flex-direction: column; gap: .4em; }
-.list .card { font-size: .9em; padding: .5em .9em; }
+.list .card { display: flex; align-items: center; gap: .6em; padding: .5em .9em; }
+.result { width: 100%; justify-content: flex-start; text-align: left; min-height: 72px; }
 #nav { display: flex; gap: .8em; padding: .6em .8em; border-top: 2px solid var(--border); }
 #nav:empty { display: none; }
 .spinner { width: 64px; height: 64px; border: 8px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
-.ok-big { color: var(--ok); font-size: 1.8em; font-weight: 800; }
+.ok-big { display: flex; align-items: center; gap: .4em; color: var(--ok); font-size: 1.8em; font-weight: 800; }
+.ok-big .icon { width: 1.3em; height: 1.3em; }
+
+/* Αρχική οθόνη: αναζήτηση + δημοφιλή + κατηγορίες */
+.home { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: .9em; text-align: left; }
+.home h2 { margin: .3em 0 0; }
+.search-row { display: flex; align-items: center; gap: .6em; }
+.search-field { position: relative; flex: 1; display: flex; align-items: center; }
+.search { width: 100%; min-height: 72px; font: inherit; font-size: 1.3em; font-weight: 600; color: var(--text); background: var(--bg);
+  padding: .3em 3.4em .3em 2.2em; border: 3px solid var(--text); border-radius: var(--radius); user-select: text; -webkit-user-select: text; }
+.search-icon { position: absolute; left: .7em; width: 1.3em; height: 1.3em; pointer-events: none; }
+.clear { position: absolute; right: .4em; min-height: 52px; min-width: 52px; padding: 0; border-radius: 12px; }
+.tile { text-align: center; }
+.categories .tile { flex-direction: column; gap: .3em; }
+.categories .tile .icon { width: 1.7em; height: 1.7em; }
+
+/* Fallback κάρτα (σταθερό μέγεθος QR: τίποτα δεν μετακινείται όταν ζωγραφιστεί) */
+.fallback-card { width: 100%; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: .6em; padding: 1em 1.2em; text-align: center;
+  background: var(--card); border: 3px solid var(--text2); border-radius: 24px; }
+.fallback-card h2, .fallback-card p { margin: 0; }
+.qr { position: relative; width: 200px; height: 200px; flex: none; background: #fff; }
+.qr > * { position: absolute; inset: 0; width: 200px; height: 200px; }
 
 /* Modal πεδίου: ημιδιαφανές φόντο, θολή προηγούμενη οθόνη */
 .overlay { position: fixed; inset: 0; z-index: 50; background: rgba(15, 23, 42, .45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; padding: .5em; overflow-y: auto; }
 .overlay:empty { display: none; }
 .modal { background: var(--bg); border: 3px solid var(--text); border-radius: 24px; padding: 1em 1.4em; width: min(900px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: .8em; }
-.modal input { font: inherit; font-size: 1.8em; font-weight: 700; text-align: center; padding: .3em; border: 3px solid var(--text); border-radius: var(--radius); width: 100%; min-height: 64px; color: inherit; }
+.modal input { font: inherit; font-size: 1.8em; font-weight: 700; text-align: center; padding: .3em; border: 3px solid var(--text); border-radius: var(--radius); width: 100%; min-height: 64px; color: inherit; user-select: text; -webkit-user-select: text; }
 .modal .row { display: flex; flex-wrap: wrap; gap: .6em; justify-content: center; }
 .modal .row .btn { flex: 1 1 180px; }
-.err { color: var(--err); font-weight: 800; min-height: 1.4em; }
-#okLayer { z-index: 60; background: rgba(255, 255, 255, .92); }
+.err { display: flex; align-items: center; justify-content: center; gap: .3em; color: var(--err); font-weight: 800; min-height: 1.4em; }
+#okLayer { z-index: 60; background: rgba(255, 255, 255, .92); align-items: center; }
 #idleLayer, #connLayer { z-index: 90; background: rgba(255, 255, 255, .96); backdrop-filter: none; }
 
-/* Chat popup + εικονίδιο (κάτω δεξιά) */
+/* Chat popup + κουμπί chat (κάτω δεξιά) */
 #popup { position: fixed; right: 16px; bottom: 84px; z-index: 70; max-width: min(420px, 80vw); }
-.bubble { background: var(--blue); color: #fff; border-radius: 24px 24px 4px 24px; padding: .7em 1em; font-weight: 700; text-align: left; border: 3px solid #1E3A8A; }
-#chatIcon { position: fixed; right: 16px; bottom: 16px; z-index: 70; width: 56px; height: 56px; min-height: 56px; padding: 0; border-radius: 50%; font-size: 1.2em; }
+.bubble { background: var(--blue); color: #fff; border-radius: 24px 24px 4px 24px; padding: .7em 1em; font-weight: 700; text-align: left; border: 3px solid var(--blue-dark); }
+.bubble .sub { margin-top: .2em; font-weight: 600; }
+.bubble-alert { background: #7F1D1D; border-color: #450A0A; }     /* απόρριψη εγγράφου: μένει μέχρι να το κλείσει ο υπάλληλος */
+#chatIcon { position: fixed; right: 16px; bottom: 16px; z-index: 70; min-height: 56px; padding: .3em 1.1em; border-radius: 999px; }
+
+/* ---- Χαμηλό ύψος (κινητό landscape, 360-520px): συμπαγής διάταξη, γράμματα όχι κάτω από 18px ---- */
+@media (max-height: 520px) {
+  .btn { min-height: 52px; padding: .3em 1em; }          /* πάνω από τα 44px του WCAG AAA */
+  h1 { font-size: 1.35em; margin-bottom: .2em; }
+  h2 { font-size: 1.12em; margin-bottom: .2em; }
+  #top { min-height: 44px; padding: .25em .6em; }
+  #screen { padding: .5em 1em 4em; gap: .5em; }
+  #nav { padding: .3em .6em; gap: .5em; }
+  .logo { width: 56px; height: 56px; }
+  .spinner { width: 44px; height: 44px; border-width: 6px; }
+  .grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .5em; }
+  .grid .btn { min-height: 60px; }
+  .categories .tile { flex-direction: row; }
+  .categories .tile .icon { width: 1.3em; height: 1.3em; }
+  .home { gap: .5em; }
+  .home h2 { margin-top: .1em; }
+  .search { min-height: 56px; font-size: 1.1em; }
+  .clear { min-height: 44px; min-width: 44px; }
+  .result { min-height: 56px; }
+  .modal { padding: .6em 1em; gap: .5em; border-radius: 18px; }
+  .modal h1 { font-size: 1.25em; margin: 0; }
+  .modal p { margin: 0; }
+  .modal input { font-size: 1.3em; min-height: 52px; }
+  .modal .row .btn { flex: 1 1 110px; }
+  .err { min-height: 1.2em; }
+  #popup { bottom: 68px; }
+  #chatIcon { min-height: 48px; }
+}
+/* Fallback κάρτα σε χαμηλό ύψος: κείμενο αριστερά, QR δεξιά */
+@media (max-height: 520px) and (min-width: 560px) {
+  .fallback-card { display: grid; grid-template-columns: 1fr 200px; grid-template-areas: "t q" "p q" "b q"; column-gap: 1em; align-items: center; text-align: left; }
+  .fallback-card h2 { grid-area: t; align-self: end; }
+  .fallback-card p { grid-area: p; align-self: start; }
+  .fallback-card .qr { grid-area: q; }
+  .fallback-card .btn { grid-area: b; justify-self: start; }
+}

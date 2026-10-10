@@ -1,35 +1,56 @@
-/* /service/styles/base.css — χρώματα, τυπογραφία, κοινά στοιχεία (WCAG 2.1 AAA παλέτα) */
+/* service/styles/base.css — χρώματα, τυπογραφία, κοινά στοιχεία (WCAG 2.1 AAA παλέτα, αναλογία κειμένου 7:1 και άνω).
+   Σχεδιασμένο για οριζόντια οθόνη από 640px έως 1366px πλάτος (κινητό landscape έως tablet/PC). */
 :root {
   --bg: #FFFFFF; --card: #F8FAFC; --border: #CBD5E1;
   --text: #0F172A; --text2: #475569;
-  --blue: #1D4ED8; --ok: #047857; --err: #B91C1C; --warn: #B45309;
+  --blue: #1E40AF; --blue-dark: #1E3A8A; --blue-tint: #DBEAFE;
+  --ok: #065F46; --err: #991B1B; --err-tint: #FEF2F2;
+  --warn: #92400E; --warn-text: #78350F; --warn-tint: #FFFBEB;
   --radius: 16px;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; margin: 0; }
+@supports (height: 100dvh) { html, body { height: 100dvh; } }      /* το κινητό: χωρίς το «πήδημα» της γραμμής διευθύνσεων */
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; }   /* χωρίς zoom με διπλό άγγιγμα */
 body {
   background: var(--bg); color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   font-size: clamp(18px, 2.6vmin, 28px); line-height: 1.35;
   user-select: none; -webkit-user-select: none; overflow: hidden;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);   /* εγκοπή οθόνης σε landscape */
 }
 h1 { font-size: 1.6em; margin: 0 0 .4em; }
 h2 { font-size: 1.3em; margin: 0 0 .4em; }
 .center { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1em; text-align: center; padding: 1em; }
 
+/* Το χαρακτηριστικό hidden πρέπει να νικά κάθε display (π.χ. .btn, .list) */
+[hidden] { display: none !important; }
+/* Κείμενο μόνο για αναγνώστες οθόνης */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* Εικονίδια από το vendor/icons-sprite.svg (γραμμικά, παίρνουν το χρώμα του κειμένου) */
+.icon { width: 1.2em; height: 1.2em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-inline { width: 1em; height: 1em; vertical-align: -.15em; margin-inline-end: .25em; }
+
+/* Ορατό focus για πληκτρολόγιο (WCAG 2.4.7 / 2.4.13) */
+:focus-visible { outline: 4px solid var(--text); outline-offset: 3px; }
+::placeholder { color: var(--text2); opacity: 1; }
+
 /* Κουμπιά: ≥44px, feedback ΜΟΝΟ με αλλαγή χρώματος */
 .btn {
   min-height: 64px; min-width: 44px; padding: .5em 1.4em; border-radius: var(--radius);
   border: 3px solid var(--blue); background: var(--bg); color: var(--blue);
-  font: inherit; font-weight: 700; cursor: pointer; text-decoration: none;
+  font: inherit; font-weight: 700; cursor: pointer; text-decoration: none; max-width: 100%;
   display: inline-flex; align-items: center; justify-content: center; gap: .5em; text-align: center;
 }
-.btn:active { background: #DBEAFE; }
+.btn:active { background: var(--blue-tint); }
 .btn-primary { background: var(--blue); color: #fff; }
-.btn-primary:active { background: #1E3A8A; }
+.btn-primary:active { background: var(--blue-dark); }
 .btn-danger { border-color: var(--err); color: var(--err); }
-.btn-danger:active { background: #FEE2E2; }
+.btn-danger:active { background: var(--err-tint); }
 .btn-secondary { border-color: var(--text2); color: var(--text2); }
+.btn-outline { background: transparent; border-width: 2px; font-weight: 600; }   /* δευτερεύον: περίγραμμα, όχι γέμισμα */
+.btn-small { min-height: 48px; padding: .3em 1em; }
 .btn[disabled] { opacity: .5; }
 
 /* Κάρτες και κουκκίδα σύνδεσης */
@@ -50,10 +71,10 @@ h2 { font-size: 1.3em; margin: 0 0 .4em; }
 .msg { max-width: 80%; padding: .4em .8em; border-radius: 14px; border: 2px solid var(--border); background: var(--bg); user-select: text; -webkit-user-select: text; }
 .msg.me { align-self: flex-end; border-color: var(--blue); }
 .msg.them { align-self: flex-start; }
-.msg .who { font-size: .75em; font-weight: 800; color: var(--text2); }
-.msg .when { font-size: .7em; color: var(--text2); text-align: right; }
+.msg .who { font-size: max(.85em, 14px); font-weight: 800; color: var(--text2); }
+.msg .when { font-size: max(.85em, 14px); color: var(--text2); text-align: right; }
 .typing { min-height: 1.4em; color: var(--text2); font-weight: 700; }
 .chat-row { display: flex; gap: .5em; }
 .chat-row input { flex: 1; font: inherit; padding: .4em .6em; border: 3px solid var(--text); border-radius: var(--radius); min-height: 56px; background: var(--bg); color: var(--text); user-select: text; -webkit-user-select: text; }
-.cnt { font-size: .75em; color: var(--text2); text-align: right; }
+.cnt { font-size: max(.85em, 14px); color: var(--text2); text-align: right; }
 .chat-panel { display: flex; flex-direction: column; gap: .5em; height: 100%; padding: .8em; }

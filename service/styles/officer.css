@@ -1,29 +1,42 @@
-/* /service/styles/officer.css — dashboard υπαλλήλου (PC, landscape) */
+/* service/styles/officer.css — dashboard υπαλλήλου. Landscape 640px έως 1366px (κινητό έως PC).
+   Στήλες ανά πλάτος του κεντρικού χώρου (container query), chat πλαϊνό από 820px, κάτω λωρίδα αλλιώς. */
 body { user-select: text; -webkit-user-select: text; font-size: clamp(15px, 2vmin, 20px); }
 .btn { min-height: 48px; border-width: 2px; padding: .3em 1em; }
-#app { height: 100%; display: flex; flex-direction: column; }
+#app { flex: 1 1 0; min-width: 0; min-height: 0; display: flex; flex-direction: column; container-type: inline-size; container-name: office; }
 #top { display: flex; align-items: center; gap: .8em; padding: .5em 1em; border-bottom: 2px solid var(--border); min-height: 56px; }
 #top h1 { margin: 0; font-size: 1.3em; flex: 1; }
 #alerts:empty { display: none; }
 .alert { padding: .5em 1em; font-weight: 800; border-bottom: 3px solid; display: flex; gap: 1em; align-items: center; justify-content: space-between; }
-.alert.err { color: var(--err); border-color: var(--err); background: #FEF2F2; }
-.alert.warn { color: var(--warn); border-color: var(--warn); background: #FFFBEB; }
-#main { flex: 1; overflow-y: auto; padding: .8em 1em; display: grid; grid-template-columns: 3fr 2fr; gap: 1em; align-content: start; }
+.alert.err { color: var(--err); border-color: var(--err); background: var(--err-tint); }
+.alert.warn { color: var(--warn-text); border-color: var(--warn); background: var(--warn-tint); }
+#main { flex: 1; min-height: 0; overflow-y: auto; padding: .8em 1em; display: grid; grid-template-columns: 1fr; gap: 1em; align-content: start; }   /* μία στήλη: πεδία, μετά έγγραφα */
+@container office (min-width: 760px) { #main { grid-template-columns: 3fr 2fr; } }     /* δύο στήλες μόνο όταν χωράνε */
+@supports not (container-type: inline-size) { @media (min-width: 1100px) { #main { grid-template-columns: 3fr 2fr; } } }
 #main.idle { display: flex; align-items: center; justify-content: center; text-align: center; font-size: 1.6em; color: var(--text2); }
 .col { display: flex; flex-direction: column; gap: .6em; min-width: 0; }
 .sub { color: var(--text2); font-weight: 700; }
 .bar { display: flex; gap: .4em; overflow-x: auto; padding-bottom: .3em; }
-.bar .btn { white-space: nowrap; min-height: 44px; }
+.bar .btn { white-space: nowrap; min-height: 44px; flex: none; }      /* να μη συμπιέζονται τα κουμπιά πάνω στο κείμενο */
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: .5em; }
 .item { display: flex; flex-direction: column; gap: .4em; }
 .item .val { font-size: 1.4em; font-weight: 800; word-break: break-all; }
-.sym { font-weight: 800; }
-.st-requested, .st-submitted { color: var(--warn); } .st-approved { color: var(--ok); } .st-rejected { color: var(--err); } .st-idle, .st-skipped { color: var(--text2); }
+.sym { display: flex; align-items: center; gap: .3em; font-weight: 800; }
+.st-requested, .st-submitted { color: var(--warn-text); } .st-approved { color: var(--ok); } .st-rejected { color: var(--err); } .st-idle, .st-skipped { color: var(--text2); }
+.btn.st-requested, .btn.st-submitted { border-color: var(--warn); } .btn.st-approved { border-color: var(--ok); } .btn.st-rejected { border-color: var(--err); }
+.bar .btn[class*="st-"] { text-decoration: underline; text-underline-offset: 4px; }     /* η κατάσταση δεν δίνεται μόνο με χρώμα */
 .item { border-left: 8px solid var(--border); }
 .item.st-requested, .item.st-submitted { border-left-color: var(--warn); } .item.st-approved { border-left-color: var(--ok); } .item.st-rejected { border-left-color: var(--err); }
-.mini { min-height: 40px; padding: .1em .7em; font-size: .9em; }
+.mini { min-height: 44px; padding: .1em .7em; }      /* στόχος αφής ≥44px (WCAG AAA) */
+.item .row .btn { flex: 1 1 auto; }
+.item .row .mini { text-align: center; }
+
+/* Απαντήσεις ερωτήσεων του πολίτη: το «Δεν ξέρω» ξεχωρίζει με πλαίσιο και έντονο κείμενο */
+.ans { justify-content: space-between; padding: .3em 0; border-bottom: 1px solid var(--border); }
+.ans.unknown { background: var(--warn-tint); border-left: 6px solid var(--warn); padding-left: .5em; }
+.ans.unknown strong { color: var(--warn-text); text-decoration: underline; }
+
 #actions { display: flex; flex-wrap: wrap; gap: .6em; padding: .6em 1em; border-top: 2px solid var(--border); }
-#stats { padding: .2em 1em .5em; color: var(--text2); font-size: .85em; }
+#stats { padding: .2em 1em .5em; color: var(--text2); font-size: 1em; }
 #chatPanel:empty { display: none; }
 .overlay { position: fixed; inset: 0; z-index: 50; background: rgba(15, 23, 42, .45); display: flex; align-items: center; justify-content: center; padding: 1em; }
 .overlay:empty { display: none; }
@@ -33,7 +46,47 @@ body { user-select: text; -webkit-user-select: text; font-size: clamp(15px, 2vmi
 .chk input { width: 28px; height: 28px; }
 
 /* Πλαϊνό chat υπαλλήλου — πάντα ορατό */
-body { display: flex; }
-#app { flex: 1; min-width: 0; }
-#chatPanel { width: min(380px, 32vw); border-left: 3px solid var(--border); background: var(--card); overflow-y: auto; }
+body { display: flex; flex-direction: row; }
+#chatPanel { flex: none; width: clamp(240px, 30vw, 380px); border-left: 3px solid var(--border); background: var(--card); overflow-y: auto; }
 #chatPanel .chat-list { max-height: none; }
+
+/* Κάτω από 820px (κινητό): το chat γίνεται κάτω λωρίδα, πάντα ορατό. Λίστα αριστερά, πεδίο γραφής δεξιά. */
+@media (max-width: 819px) {
+  body { flex-direction: column; }
+  #chatPanel { width: auto; height: clamp(104px, 30dvh, 200px); border-left: 0; border-top: 3px solid var(--border); overflow: hidden; }
+  #chatPanel .chat-panel { display: grid; grid-template-columns: 1fr minmax(300px, 52%); grid-template-rows: auto auto 1fr; column-gap: .6em; row-gap: .2em; padding: .3em .6em; }
+  #chatPanel .chat-panel h2, #chatPanel .cnt { display: none; }
+  #chatPanel .chat-list { grid-column: 1; grid-row: 1 / span 3; min-height: 0; max-height: none; padding: .2em; }
+  #chatPanel .chat-panel > div:nth-of-type(1) { grid-column: 2; grid-row: 1; min-width: 0; }      /* «Popup στον πολίτη» */
+  #chatPanel .typing { grid-column: 2; grid-row: 2; min-height: 0; }
+  #chatPanel .chat-row { grid-column: 2; grid-row: 3; align-self: end; }
+  #chatPanel .chat-row input { min-height: 44px; min-width: 0; }
+  #chatPanel .chat-panel > div:nth-of-type(1) .row { flex-wrap: nowrap; }
+  #chatPanel .chat-panel > div:nth-of-type(1) .sub { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; min-width: 0; flex: 1 1 0; }
+}
+
+/* ---- Χαμηλό ύψος (κινητό, 360-520px): όλη η σελίδα κυλά, οι ενέργειες ακριβώς κάτω από την κεφαλίδα, το chat μένει καρφωμένο ---- */
+@media (max-height: 520px) {
+  html, body { height: auto; min-height: 100dvh; }
+  body { overflow-y: auto; }
+  #app { flex: 1 1 auto; }
+  #alerts { order: 0; } #top { order: 1; } #actions { order: 2; } #main { order: 3; } #stats { order: 4; }
+  #main { flex: none; overflow: visible; padding: .4em .6em; gap: .5em; }
+  #actions { border-top: 0; border-bottom: 2px solid var(--border); padding: .3em .6em; gap: .4em; }
+  #stats { display: none; }
+  .btn { min-height: 44px; }
+  #top { min-height: 40px; padding: .2em .6em; gap: .5em; }
+  #top h1 { font-size: 1.05em; flex: 0 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #top .sub { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alert { padding: .3em .6em; }
+  .col { gap: .4em; }
+  .modal { padding: .6em 1em; gap: .5em; }
+  .overlay { padding: .4em; }
+}
+@media (max-height: 520px) and (min-width: 820px) {
+  #chatPanel { position: sticky; top: 0; align-self: flex-start; height: 100dvh; }     /* πλαϊνό chat καρφωμένο όσο κυλά η σελίδα */
+}
+@media (max-height: 520px) and (max-width: 819px) {
+  body { min-height: 100dvh; }
+  #chatPanel { position: sticky; bottom: 0; z-index: 20; }                            /* κάτω λωρίδα καρφωμένη */
+}
