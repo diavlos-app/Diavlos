@@ -1,30 +1,34 @@
-// /service/js/core/state.js
+// service/js/core/state.js
 // Μηχανή κατάστασης (state engine) του Δίαυλος Service.
 // Καμία γνώση δικτύου εδώ. Τα δεδομένα μένουν ΜΟΝΟ στη μνήμη (όχι αποθήκευση).
 (function (global) {
   'use strict';
 
-  // Καταστάσεις στοιχείου (πεδίου ή εγγράφου) + χρώμα + σύμβολο (WCAG 1.4.1)
+  // Καταστάσεις στοιχείου (πεδίου ή εγγράφου) + χρώμα + εικονίδιο (WCAG 1.4.1: όχι μόνο χρώμα)
+  // icon = όνομα εικονιδίου από το vendor/icons-sprite.svg (null = μόνο κείμενο)
   var STATUS_META = {
-    idle:      { label: 'Δεν ζητήθηκε', color: '#475569', symbol: '—' },
-    requested: { label: 'Εκκρεμεί',     color: '#B45309', symbol: '⏳' },
-    submitted: { label: 'Περιμένει έγκριση', color: '#B45309', symbol: '⏳' },
-    approved:  { label: 'Εγκρίθηκε',    color: '#047857', symbol: '✓' },
-    rejected:  { label: 'Απορρίφθηκε',  color: '#B91C1C', symbol: '✗' },
-    skipped:   { label: 'Δεν δόθηκε',   color: '#475569', symbol: '—' }
+    idle:      { label: 'Δεν ζητήθηκε',      color: '#475569', icon: null },
+    requested: { label: 'Εκκρεμεί',          color: '#B45309', icon: null },
+    submitted: { label: 'Περιμένει έγκριση', color: '#B45309', icon: null },
+    approved:  { label: 'Εγκρίθηκε',         color: '#047857', icon: 'check' },
+    rejected:  { label: 'Απορρίφθηκε',       color: '#B91C1C', icon: 'x' },
+    skipped:   { label: 'Δεν δόθηκε',        color: '#475569', icon: null }
   };
 
   // Φάσεις οθόνης πολίτη
-  var PHASES = ['welcome', 'paths', 'online', 'category', 'service',
-    'questions', 'docs', 'waiting', 'field', 'missing', 'redirect', 'chat',
-    'done', 'closed'];
+  //   home     = αρχική (αναζήτηση + δημοφιλή + κατηγορίες)
+  //   category = λίστα υπηρεσιών μιας κατηγορίας
+  //   questions = ερωτήσεις διευκρίνισης (μία-μία)
+  //   waiting  = «Περιμένετε...» (η μπάλα στον υπάλληλο)
+  var PHASES = ['welcome', 'home', 'category', 'questions', 'waiting', 'field',
+    'missing', 'chat', 'done', 'closed'];
 
   function initialPublicState() {
     return {
       phase: 'welcome',     // τρέχουσα φάση οθόνης πολίτη
       txn: null,            // ενεργή συναλλαγή (βλ. newTransaction)
       chat: [],             // ιστορικό chat {from:'citizen'|'officer', text, ts}
-      popup: null,          // bubble που στέλνει ο υπάλληλος {text, ts}
+      popup: null,          // bubble που στέλνει ο υπάλληλος {text, sub?, ts}
       ball: 'citizen',      // ποιος έχει τη «μπάλα»: 'citizen' | 'officer'
       lastOk: null,         // μήνυμα «ΑΦΜ: εντάξει» (1-2")
       banner: null,         // banner υπαλλήλου (π.χ. «Ο πολίτης τερμάτισε τη συνεδρία»)
@@ -41,8 +45,10 @@
       startedAt: Date.now(),
       categoryId: null,
       serviceId: null,
+      origin: null,               // από πού διάλεξε υπηρεσία: 'home' | 'category' (για το ΠΙΣΩ)
+      catalogOnly: false,         // true = υπηρεσία χωρίς ροή, συνεχίζει στο chat
       answers: [],                // [{q, a}] ερωτήσεις διευκρίνισης
-      docsList: [],               // έγγραφα που θα ζητηθούν (μόνο προβολή)
+      qIndex: 0,                  // ποια ερώτηση απαντά τώρα
       items: [],                  // [{id, kind:'field'|'doc', key, label, status, value}]
       current: null,              // id στοιχείου που ζητείται τώρα
       error: null                 // μήνυμα λάθους επικύρωσης (ένα από τα 3)
@@ -95,16 +101,16 @@
     if (it) it.status = status;
     return it;
   }
-  // Πρόοδος: πόσα ολοκληρώθηκαν / πόσα μένουν (μόνο όσα έχουν ζητηθεί)
-  function progress(txn) {
-    var asked = txn.items.filter(function (i) { return i.status !== 'idle'; });
-    var done = asked.filter(function (i) { return i.status === 'approved' || i.status === 'skipped'; }).length;
-    return { done: done, total: asked.length, left: asked.length - done };
+  // Μπάρα προόδου πολίτη: ΜΟΝΟ τα πεδία που εγκρίθηκε, με τη σειρά έγκρισης.
+  // Δεν υπάρχει «πόσα μένουν» και δεν μπαίνουν έγγραφα.
+  function approvedFields(txn) {
+    return txn.items.filter(function (i) { return i.kind === 'field' && i.status === 'approved'; })
+      .sort(function (a, b) { return (a.approvedAt || 0) - (b.approvedAt || 0); });
   }
 
   global.DiavlosState = {
     STATUS_META: STATUS_META, PHASES: PHASES,
     createStore: createStore, newTransaction: newTransaction,
-    findItem: findItem, upsertItem: upsertItem, setStatus: setStatus, progress: progress
+    findItem: findItem, upsertItem: upsertItem, setStatus: setStatus, approvedFields: approvedFields
   };
 })(window);
