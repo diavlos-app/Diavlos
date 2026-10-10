@@ -21,7 +21,7 @@ body {
 }
 h1 { font-size: 1.6em; margin: 0 0 .4em; }
 h2 { font-size: 1.3em; margin: 0 0 .4em; }
-.center { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1em; text-align: center; padding: 1em; }
+.center { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 1em; text-align: center; padding: 1em; overflow-y: auto; }
 
 /* Το χαρακτηριστικό hidden πρέπει να νικά κάθε display (π.χ. .btn, .list) */
 [hidden] { display: none !important; }
@@ -54,6 +54,8 @@ h2 { font-size: 1.3em; margin: 0 0 .4em; }
 .btn[disabled] { opacity: .5; }
 
 /* Κάρτες και κουκκίδα σύνδεσης */
+/* Δευτερεύον κείμενο (ετικέτες, επεξηγήσεις) — κοινό σε πολίτη και υπάλληλο */
+.sub { color: var(--text2); font-weight: 700; }
 .card { background: var(--card); border: 2px solid var(--border); border-radius: var(--radius); padding: .8em 1em; }
 .dot { width: 18px; height: 18px; border-radius: 50%; display: inline-block; border: 2px solid var(--text); }
 .dot.connected { background: var(--ok); }
@@ -75,6 +77,16 @@ h2 { font-size: 1.3em; margin: 0 0 .4em; }
 .msg .when { font-size: max(.85em, 14px); color: var(--text2); text-align: right; }
 .typing { min-height: 1.4em; color: var(--text2); font-weight: 700; }
 .chat-row { display: flex; gap: .5em; }
-.chat-row input { flex: 1; font: inherit; padding: .4em .6em; border: 3px solid var(--text); border-radius: var(--radius); min-height: 56px; background: var(--bg); color: var(--text); user-select: text; -webkit-user-select: text; }
+.chat-row input { flex: 1; min-width: 0; font: inherit; padding: .4em .6em; border: 3px solid var(--text); border-radius: var(--radius); min-height: 56px; background: var(--bg); color: var(--text); user-select: text; -webkit-user-select: text; }
 .cnt { font-size: max(.85em, 14px); color: var(--text2); text-align: right; }
 .chat-panel { display: flex; flex-direction: column; gap: .5em; height: 100%; padding: .8em; }
+
+/* Λογότυπο στην κεφαλίδα των σελίδων πολίτη και υπαλλήλου (διακοσμητικό, χωρίς κείμενο) */
+#top::before { content: ""; flex: none; width: 28px; height: 28px; background: url("../icons/icon-192.png") center / contain no-repeat; }
+
+/* Αρχική σελίδα επιλογής οθόνης (index.html): κυλά αν δεν χωράει, συμπαγής σε χαμηλό ύψος */
+@media (max-height: 520px) {
+  .center { gap: .5em; padding: .5em; }
+  .center img { width: 56px; height: 56px; }
+  .center .btn { min-height: 52px; }
+}
