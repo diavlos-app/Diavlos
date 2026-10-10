@@ -19,7 +19,6 @@ window.DiavlosData.fields = [
   { key: 'email',         label: 'Email',         level: 1, kb: 'latin',   type: 'email',   hint: 'Γράψτε το email σας' },
   { key: 'iban',          label: 'IBAN',          level: 2, kb: 'latin',   type: 'iban',    hint: 'Γράψτε τον IBAN σας (GR + 25 ψηφία)' },
   { key: 'arprotokollou', label: 'Αρ. Πρωτοκόλλου', level: 2, kb: 'latin', type: 'alnum',   hint: 'Γράψτε τον αριθμό πρωτοκόλλου' },
-  { key: 'arkykloforias', label: 'Αρ. Κυκλοφορίας', level: 2, kb: 'numeric', type: 'digits', hint: 'Γράψτε τον αριθμό κυκλοφορίας' },
   { key: 'amkatexnou',    label: 'ΑΜΚΑ τέκνου',   level: 2, kb: 'numeric', type: 'amka',    hint: 'Γράψτε τον ΑΜΚΑ του τέκνου (11 ψηφία)' },
   { key: 'syzygos',       label: 'Σύζυγος',       level: 2, kb: 'greek',   type: 'name',    hint: 'Γράψτε το ονοματεπώνυμο του/της συζύγου' },
   { key: 'afmergodoti',   label: 'ΑΦΜ εργοδότη',  level: 2, kb: 'numeric', type: 'afm',     hint: 'Γράψτε τον ΑΦΜ του εργοδότη (9 ψηφία)' },
