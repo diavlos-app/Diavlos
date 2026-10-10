@@ -23,6 +23,7 @@
 /* Αρχική οθόνη: αναζήτηση + δημοφιλή + κατηγορίες */
 .home { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: .9em; text-align: left; }
 .home h2 { margin: .3em 0 0; }
+.browse { display: flex; flex-direction: column; gap: .9em; }
 .search-row { display: flex; align-items: center; gap: .6em; }
 .search-field { position: relative; flex: 1; display: flex; align-items: center; }
 .search { width: 100%; min-height: 72px; font: inherit; font-size: 1.3em; font-weight: 600; color: var(--text); background: var(--bg);
@@ -74,6 +75,7 @@
   .categories .tile .icon { width: 1.3em; height: 1.3em; }
   .home { gap: .5em; }
   .home h2 { margin-top: .1em; }
+  .browse { gap: .5em; }
   .search { min-height: 56px; font-size: 1.1em; }
   .clear { min-height: 44px; min-width: 44px; }
   .result { min-height: 56px; }
