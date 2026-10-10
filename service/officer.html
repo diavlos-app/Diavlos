@@ -2,10 +2,11 @@
 <html lang="el">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Δίαυλος — Υπάλληλος</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1D4ED8">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#1E40AF">
 <link rel="stylesheet" href="styles/base.css">
 <link rel="stylesheet" href="styles/officer.css">
 </head>
@@ -21,9 +22,9 @@
 <aside id="chatPanel"></aside>
 <div id="modalLayer" class="overlay"></div>
 
-<!-- Βιβλιοθήκες (CDN) -->
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+<!-- Βιβλιοθήκες (τοπικά αντίγραφα, χωρίς CDN) -->
+<script src="vendor/peerjs.min.js"></script>
+<script src="vendor/html2pdf.bundle.min.js"></script>
 <!-- Πυρήνας και δεδομένα -->
 <script src="js/core/state.js"></script>
 <script src="js/core/transport.js"></script>
