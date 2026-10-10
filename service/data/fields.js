@@ -22,7 +22,11 @@ window.DiavlosData.fields = [
   { key: 'arkykloforias', label: 'Αρ. Κυκλοφορίας', level: 2, kb: 'numeric', type: 'digits', hint: 'Γράψτε τον αριθμό κυκλοφορίας' },
   { key: 'amkatexnou',    label: 'ΑΜΚΑ τέκνου',   level: 2, kb: 'numeric', type: 'amka',    hint: 'Γράψτε τον ΑΜΚΑ του τέκνου (11 ψηφία)' },
   { key: 'syzygos',       label: 'Σύζυγος',       level: 2, kb: 'greek',   type: 'name',    hint: 'Γράψτε το ονοματεπώνυμο του/της συζύγου' },
-  { key: 'afmergodoti',   label: 'ΑΦΜ εργοδότη',  level: 2, kb: 'numeric', type: 'afm',     hint: 'Γράψτε τον ΑΦΜ του εργοδότη (9 ψηφία)' }
+  { key: 'afmergodoti',   label: 'ΑΦΜ εργοδότη',  level: 2, kb: 'numeric', type: 'afm',     hint: 'Γράψτε τον ΑΦΜ του εργοδότη (9 ψηφία)' },
+  { key: 'topos-gennisis', label: 'Τόπος Γέννησης', level: 2, kb: 'greek', type: 'text', hint: 'Γράψτε τον τόπο γέννησής σας' },
+  { key: 'etos',          label: 'Έτος',          level: 2, kb: 'numeric', type: 'digits',  hint: 'Γράψτε το έτος (π.χ. 2025)' },
+  { key: 'pinakida',      label: 'Αρ. Πινακίδας', level: 2, kb: 'latin',   type: 'alnum',   hint: 'Γράψτε τον αριθμό πινακίδας του οχήματος' },
+  { key: 'exousiodotoumenos', label: 'Εξουσιοδοτούμενος', level: 2, kb: 'greek', type: 'name', hint: 'Γράψτε το ονοματεπώνυμο του εξουσιοδοτούμενου' }
 ];
 window.DiavlosData.fieldByKey = function (k) {
   return window.DiavlosData.fields.filter(function (f) { return f.key === k; })[0] || null;
